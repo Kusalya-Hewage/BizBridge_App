@@ -43,8 +43,10 @@ class AdminProfileSecurityFragment : Fragment() {
 
         // Log out of admin
         view.findViewById<View>(R.id.btn_logout_admin)?.setOnClickListener {
+            FirebaseAuthManager.signOut()
+            UserSessionManager.clear()
             Toast.makeText(requireContext(), "Logged out of Admin Operations.", Toast.LENGTH_SHORT).show()
-            mainActivity?.navigateTo(RoleSelectionFragment(), addToBackStack = false)
+            mainActivity?.navigateTo(LoginFragment(), addToBackStack = false)
         }
     }
 }
