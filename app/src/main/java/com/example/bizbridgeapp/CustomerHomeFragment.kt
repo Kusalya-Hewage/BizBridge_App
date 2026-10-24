@@ -20,6 +20,7 @@ class CustomerHomeFragment : Fragment() {
 
     private var activeBusinesses: List<Business> = emptyList()
     private var upcomingBooking: Booking? = null
+    private var businessesListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -149,46 +150,44 @@ class CustomerHomeFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance("biz_daily_cut"), addToBackStack = true)
         }
 
-        // ─── Fetch Real Approved Businesses ────────────────────────────
-        BusinessRepository.getApprovedActiveBusinesses(
-            onSuccess = { list ->
-                if (!isAdded) return@getApprovedActiveBusinesses
-                activeBusinesses = list
+        // ─── Real-Time Approved Businesses Sync ────────────────────────
+        businessesListener?.remove()
+        businessesListener = BusinessRepository.listenToApprovedBusinesses { list ->
+            if (!isAdded) return@listenToApprovedBusinesses
+            activeBusinesses = list
 
-                val b0 = list.getOrNull(0)
-                val b1 = list.getOrNull(1)
-                val b2 = list.getOrNull(2)
+            val b0 = list.getOrNull(0)
+            val b1 = list.getOrNull(1)
+            val b2 = list.getOrNull(2)
 
-                // Nearby card
-                if (b0 != null) {
-                    view.findViewById<TextView>(R.id.tv_nearby_name)?.text = b0.name
-                    view.findViewById<TextView>(R.id.tv_nearby_category)?.text = b0.category
-                    view.findViewById<TextView>(R.id.tv_nearby_rating)?.text = String.format("%.1f", b0.rating ?: 4.9)
-                    view.findViewById<TextView>(R.id.tv_nearby_reviews)?.text = "(${b0.reviewCount} reviews)"
-                    view.findViewById<LinearLayout>(R.id.card_nearby_business)?.setOnClickListener {
-                        (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
-                    }
+            // Nearby card
+            if (b0 != null) {
+                view.findViewById<TextView>(R.id.tv_nearby_name)?.text = b0.name
+                view.findViewById<TextView>(R.id.tv_nearby_category)?.text = b0.category
+                view.findViewById<TextView>(R.id.tv_nearby_rating)?.text = String.format("%.1f", b0.rating ?: 4.9)
+                view.findViewById<TextView>(R.id.tv_nearby_reviews)?.text = "(${b0.reviewCount} reviews)"
+                view.findViewById<LinearLayout>(R.id.card_nearby_business)?.setOnClickListener {
+                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
                 }
+            }
 
-                // Popular cards
-                if (b0 != null) {
-                    view.findViewById<LinearLayout>(R.id.card_popular_1)?.setOnClickListener {
-                        (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
-                    }
+            // Popular cards
+            if (b0 != null) {
+                view.findViewById<LinearLayout>(R.id.card_popular_1)?.setOnClickListener {
+                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
                 }
-                if (b1 != null) {
-                    view.findViewById<LinearLayout>(R.id.card_popular_2)?.setOnClickListener {
-                        (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b1.id), addToBackStack = true)
-                    }
+            }
+            if (b1 != null) {
+                view.findViewById<LinearLayout>(R.id.card_popular_2)?.setOnClickListener {
+                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b1.id), addToBackStack = true)
                 }
-                if (b2 != null) {
-                    view.findViewById<LinearLayout>(R.id.card_popular_3)?.setOnClickListener {
-                        (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b2.id), addToBackStack = true)
-                    }
+            }
+            if (b2 != null) {
+                view.findViewById<LinearLayout>(R.id.card_popular_3)?.setOnClickListener {
+                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b2.id), addToBackStack = true)
                 }
-            },
-            onFailure = {}
-        )
+            }
+        }
 
         // ─── See all popular ───────────────────────────────────────────
         val tvSeeAllPopular = view.findViewById<TextView>(R.id.tv_see_all_popular)
@@ -218,5 +217,10 @@ class CustomerHomeFragment : Fragment() {
         navProfile?.setOnClickListener {
             (activity as? MainActivity)?.navigateTo(CustomerProfileFragment(), addToBackStack = true)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        businessesListener?.remove()
     }
 }

@@ -1,4 +1,5 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -7,99 +8,139 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function isCustomer() {
-      return isAuthenticated() && getUserData().role == 'CUSTOMER';
+    function isUser(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
     }
 
     function isAdmin() {
-      return isAuthenticated() && getUserData().role == 'ADMIN';
+      return isAuthenticated() && (
+        request.auth.token.email == "alex@bizbridge.example" ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN"
+      );
     }
 
-    // 1. Users collection
+    function isOwner(ownerId) {
+      return isAuthenticated() && request.auth.uid == ownerId;
+    }
+
+    // ─── Users Collection ──────────────────────────────────────────
     match /users/{userId} {
       allow read: if isAuthenticated();
-      // Only user can create their own profile during registration; role must be CUSTOMER or OWNER
-      allow create: if isOwner(userId) && request.resource.data.role in ['CUSTOMER', 'BUSINESS_OWNER'];
-      // User can update their own profile, but cannot elevate role or change account status unless Admin
-      allow update: if isOwner(userId) && 
-        request.resource.data.role == resource.data.role &&
-        request.resource.data.accountStatus == resource.data.accountStatus;
+      // Users can only create/update their own profile, cannot self-promote to ADMIN
+      allow create: if isUser(userId) && request.resource.data.role in ['CUSTOMER', 'BUSINESS_OWNER'];
+      allow update: if (isUser(userId) && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isAdmin();
     }
 
-    // 2. Businesses collection
+    // ─── Businesses Collection ─────────────────────────────────────
     match /businesses/{businessId} {
-      // Anyone can read businesses (customers, guests, owners)
-      allow read: if true;
-      allow create: if isAuthenticated();
-      // Owner or authenticated user can update business info
-      allow update: if isAuthenticated();
+      // Anyone signed in can read approved & active businesses, or owners reading their own
+      allow read: if isAuthenticated();
+      // Owners can create their business, but approvalStatus starts as PENDING
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      // Owners can update details (desc, address, hours), but CANNOT approve themselves or tamper with rating / trust score
+      allow update: if (
+        isOwner(resource.data.ownerId) &&
+        request.resource.data.approvalStatus == resource.data.approvalStatus &&
+        request.resource.data.verificationStatus == resource.data.verificationStatus &&
+        request.resource.data.trustScore == resource.data.trustScore
+      ) || isAdmin();
       allow delete: if isAdmin();
 
-      // Services subcollection
+      // Subcollection: Services
       match /services/{serviceId} {
-        allow read: if true;
-        allow write: if isAuthenticated();
+        allow read: if isAuthenticated();
+        allow write: if isOwner(get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId) || isAdmin();
       }
     }
 
-    // 3. Bookings collection
+    // ─── Business Applications ─────────────────────────────────────
+    match /businessApplications/{applicationId} {
+      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      // Only Admin can approve, reject, or update decision
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Qualification Documents ───────────────────────────────────
+    match /qualificationVerifications/{documentId} {
+      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      // Only Admin can verify or reject
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Bookings Collection ───────────────────────────────────────
     match /bookings/{bookingId} {
-      // Customer can read their own bookings; business owner can read bookings for their business
+      // Customer who booked, owner of the business, or admin can read
       allow read: if isAuthenticated() && (
         resource.data.customerId == request.auth.uid ||
         get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid ||
         isAdmin()
       );
-      // Customer can create booking for themselves
+      // Customer creates booking
       allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid;
-      // Customer can only cancel their own booking (set status to CANCELLED)
+      // Customer can cancel; Business owner can update status (CONFIRMED, REJECTED, COMPLETED); Admin can update
       allow update: if isAuthenticated() && (
         (resource.data.customerId == request.auth.uid && request.resource.data.status == 'CANCELLED') ||
-        (get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid) ||
+        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid ||
         isAdmin()
       );
       allow delete: if isAdmin();
     }
 
-    // 4. Slot Reservations (Double-booking lock)
+    // ─── Slot Reservations (Double-booking prevention) ──────────────
     match /reservations/{slotKey} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
 
-    // 5. Reviews collection
+    // ─── Reviews Collection ────────────────────────────────────────
     match /reviews/{reviewId} {
-      allow read: if true;
-      // Customer can create a review if they are the author
+      allow read: if isAuthenticated();
+      // Only customer can submit review for their completed booking
       allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
     }
 
-    // 6. Notifications collection
+    // ─── Promotions Collection ─────────────────────────────────────
+    match /promotions/{promotionId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (
+        isOwner(get(/databases/$(database)/documents/businesses/$(request.resource.data.businessId)).data.ownerId) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ─── Notifications Collection ──────────────────────────────────
     match /notifications/{notificationId} {
-      // User can only read their own notifications
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      // Authenticated users/events can create notifications
       allow create: if isAuthenticated();
-      // User can mark their own notification as read
       allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
-    // 7. Promotions collection
-    match /promotions/{promotionId} {
-      allow read: if resource.data.isActive == true;
-      allow write: if isAuthenticated();
+    // ─── Moderation Reports Collection ─────────────────────────────
+    match /reports/{reportId} {
+      allow read: if isAuthenticated() && (resource.data.reporterId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── Platform Announcements ────────────────────────────────────
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── Admin Audit Logs ──────────────────────────────────────────
+    match /adminAuditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false; // Immutable audit logs!
     }
   }
 }

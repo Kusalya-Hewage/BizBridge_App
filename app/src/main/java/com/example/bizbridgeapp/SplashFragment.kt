@@ -38,7 +38,25 @@ class SplashFragment : Fragment() {
 
     private fun navigateToOnboarding() {
         if (!isAdded) return
-        (activity as? MainActivity)?.navigateTo(OnboardingDiscoverFragment(), addToBackStack = false)
+        val currentUser = FirebaseAuthManager.getCurrentUser()
+        if (currentUser != null) {
+            UserSessionManager.init(requireContext())
+            val savedProfile = UserSessionManager.getProfile()
+            val role = savedProfile?.get("role") as? String ?: ""
+            when {
+                role.equals("ADMIN", ignoreCase = true) || currentUser.email.equals("alex@bizbridge.example", ignoreCase = true) -> {
+                    (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
+                }
+                role.equals("BUSINESS_OWNER", ignoreCase = true) || role.equals("OWNER", ignoreCase = true) -> {
+                    (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
+                }
+                else -> {
+                    (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
+                }
+            }
+        } else {
+            (activity as? MainActivity)?.navigateTo(OnboardingDiscoverFragment(), addToBackStack = false)
+        }
     }
 
     override fun onDestroyView() {

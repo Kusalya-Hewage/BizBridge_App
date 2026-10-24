@@ -93,6 +93,7 @@
                 android:layout_marginBottom="14dp">
 
                 <TextView
+                    android:id="@+id/tv_review_business_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"

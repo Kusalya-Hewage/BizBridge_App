@@ -209,6 +209,7 @@
                     android:layout_marginBottom="6dp">
 
                     <TextView
+                        android:id="@+id/tv_willow_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
@@ -219,6 +220,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/badge_willow_status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
@@ -231,6 +233,7 @@
                 </RelativeLayout>
 
                 <TextView
+                    android:id="@+id/tv_willow_owner"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
@@ -239,6 +242,7 @@
                     android:textSize="13sp" />
 
                 <TextView
+                    android:id="@+id/tv_willow_category"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"

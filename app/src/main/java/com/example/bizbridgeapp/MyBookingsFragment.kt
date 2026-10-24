@@ -139,6 +139,8 @@ class MyBookingsFragment : Fragment() {
         }
     }
 
+    private var bookingsListener: com.google.firebase.firestore.ListenerRegistration? = null
+
     private fun loadCustomerBookings() {
         val user = FirebaseAuth.getInstance().currentUser
         val uid = user?.uid.orEmpty().ifEmpty { "demo_customer" }
@@ -147,23 +149,19 @@ class MyBookingsFragment : Fragment() {
         llEmptyState?.visibility = View.GONE
         tvBookingsCount?.text = "Loading..."
 
-        BookingRepository.getBookingsForCustomer(uid,
-            onSuccess = { bookings ->
-                if (!isAdded) return@getBookingsForCustomer
-                pbLoading?.visibility = View.GONE
-                allBookings = bookings
-                updateTabStyles()
-                filterAndRenderBookings()
-            },
-            onFailure = { e ->
-                if (!isAdded) return@getBookingsForCustomer
-                pbLoading?.visibility = View.GONE
-                // Fallback to local cache in repository
-                allBookings = BookingRepository.defaultDemoBookings
-                updateTabStyles()
-                filterAndRenderBookings()
-            }
-        )
+        bookingsListener?.remove()
+        bookingsListener = BookingRepository.listenToBookingsForCustomer(uid) { bookings ->
+            if (!isAdded) return@listenToBookingsForCustomer
+            pbLoading?.visibility = View.GONE
+            allBookings = bookings
+            updateTabStyles()
+            filterAndRenderBookings()
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bookingsListener?.remove()
     }
 
     private fun filterAndRenderBookings() {
