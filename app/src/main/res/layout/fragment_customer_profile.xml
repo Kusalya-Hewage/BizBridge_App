@@ -20,6 +20,15 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+        <!-- Loading indicator -->
+        <ProgressBar
+            android:id="@+id/profile_progress"
+            style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
             <!-- Top Header -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -109,6 +118,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/inter_variable"
+                    android:id="@+id/tv_profile_name"
                     android:text="Maya Chen"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
@@ -119,6 +129,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:fontFamily="@font/inter_variable"
+                    android:id="@+id/tv_profile_email"
                     android:text="maya.chen@example.com"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
@@ -128,6 +139,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:fontFamily="@font/inter_variable"
+                    android:id="@+id/tv_profile_phone"
                     android:text="(415) 555-0192"
                     android:textColor="@color/text_muted"
                     android:textSize="12sp" />

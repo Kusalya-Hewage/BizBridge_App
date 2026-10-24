@@ -97,20 +97,28 @@
                         android:src="@drawable/ic_nav_search"
                         app:tint="@color/text_muted" />
 
-                    <TextView
+                    <EditText
+                        android:id="@+id/et_search_input"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_marginStart="10dp"
                         android:layout_weight="1"
+                        android:background="@null"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Business, service or neighbourhood"
-                        android:textColor="@color/text_placeholder"
+                        android:hint="Search business, service or area..."
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_placeholder"
                         android:textSize="14sp" />
 
                     <ImageView
+                        android:id="@+id/btn_clear_search"
                         android:layout_width="18dp"
                         android:layout_height="18dp"
-                        android:src="@drawable/ic_filter"
+                        android:src="@drawable/ic_cancel"
+                        android:visibility="gone"
                         app:tint="@color/text_muted" />
 
                 </LinearLayout>
@@ -140,7 +148,7 @@
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/inter_variable"
                                 android:text="All"
-                                android:textColor="@color/primary"
+                                android:textColor="@color/surface_white"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -213,12 +221,13 @@
                 android:paddingEnd="20dp">
 
                 <TextView
+                    android:id="@+id/tv_results_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:fontFamily="@font/inter_variable"
-                    android:text="13 businesses nearby"
+                    android:text="Discovering businesses..."
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -238,6 +247,7 @@
                     android:paddingBottom="6dp">
 
                     <TextView
+                        android:id="@+id/tv_sort_label"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
@@ -255,8 +265,9 @@
                 </LinearLayout>
             </RelativeLayout>
 
-            <!-- Business list -->
+            <!-- Dynamic Business list -->
             <LinearLayout
+                android:id="@+id/business_list_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -264,359 +275,43 @@
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp">
 
-                <!-- Business Card 1: Juniper Studio -->
+                <!-- Loading Spinner -->
+                <ProgressBar
+                    android:id="@+id/pb_loading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginBottom="32dp"
+                    android:visibility="gone" />
+
+                <!-- Empty State -->
                 <LinearLayout
-                    android:id="@+id/card_business_1"
+                    android:id="@+id/ll_empty_state"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/bg_card_business"
-                    android:clickable="true"
-                    android:elevation="2dp"
-                    android:focusable="true"
-                    android:orientation="vertical">
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingTop="40dp"
+                    android:paddingBottom="40dp"
+                    android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="140dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/img_salon_interior" />
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_nav_search"
+                        app:tint="@color/text_muted" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tv_empty_message"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentStart="true"
-                                android:layout_centerVertical="true"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:fontFamily="@font/inter_variable"
-                                    android:text="Juniper Studio"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <ImageView
-                                        android:layout_width="12dp"
-                                        android:layout_height="12dp"
-                                        android:src="@drawable/ic_map_pin"
-                                        app:tint="@color/text_muted" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="3dp"
-                                        android:fontFamily="@font/inter_variable"
-                                        android:text="Hair salon · 0.4 mi"
-                                        android:textColor="@color/text_muted"
-                                        android:textSize="12sp" />
-                                </LinearLayout>
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:layout_centerVertical="true"
-                                android:orientation="vertical"
-                                android:gravity="end">
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:background="@drawable/bg_tag_verified"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal"
-                                    android:paddingStart="7dp"
-                                    android:paddingEnd="8dp"
-                                    android:paddingTop="3dp"
-                                    android:paddingBottom="3dp">
-                                    <ImageView
-                                        android:layout_width="11dp"
-                                        android:layout_height="11dp"
-                                        android:src="@drawable/ic_verified"
-                                        app:tint="@color/secondary" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="3dp"
-                                        android:fontFamily="@font/inter_variable"
-                                        android:text="Verified"
-                                        android:textColor="@color/secondary"
-                                        android:textSize="11sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="6dp"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-                                    <ImageView
-                                        android:layout_width="12dp"
-                                        android:layout_height="12dp"
-                                        android:src="@drawable/ic_star_filled" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="3dp"
-                                        android:fontFamily="@font/inter_variable"
-                                        android:text="4.9 (124)"
-                                        android:textColor="@color/text_primary"
-                                        android:textSize="12sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="4dp"
-                                    android:fontFamily="@font/inter_variable"
-                                    android:text="From $35"
-                                    android:textColor="@color/primary"
-                                    android:textSize="12sp"
-                                    android:textStyle="bold" />
-
-                            </LinearLayout>
-                        </RelativeLayout>
-
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Business Card 2: Oliver Beauty Bar -->
-                <LinearLayout
-                    android:id="@+id/card_business_2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/bg_card_business"
-                    android:clickable="true"
-                    android:elevation="2dp"
-                    android:focusable="true"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="140dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/img_spa_treatment" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentStart="true"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:fontFamily="@font/inter_variable"
-                                    android:text="Oliver Beauty Bar"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-                                    <ImageView
-                                        android:layout_width="12dp"
-                                        android:layout_height="12dp"
-                                        android:src="@drawable/ic_map_pin"
-                                        app:tint="@color/text_muted" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="3dp"
-                                        android:fontFamily="@font/inter_variable"
-                                        android:text="Beauty · 0.8 mi"
-                                        android:textColor="@color/text_muted"
-                                        android:textSize="12sp" />
-                                </LinearLayout>
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:layout_centerVertical="true"
-                                android:gravity="end"
-                                android:orientation="vertical">
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-                                    <ImageView
-                                        android:layout_width="12dp"
-                                        android:layout_height="12dp"
-                                        android:src="@drawable/ic_star_filled" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="3dp"
-                                        android:fontFamily="@font/inter_variable"
-                                        android:text="4.7 (86)"
-                                        android:textColor="@color/text_primary"
-                                        android:textSize="12sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="4dp"
-                                    android:fontFamily="@font/inter_variable"
-                                    android:text="From $28"
-                                    android:textColor="@color/primary"
-                                    android:textSize="12sp"
-                                    android:textStyle="bold" />
-
-                            </LinearLayout>
-                        </RelativeLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Business Card 3: Nova Beauty Bar -->
-                <LinearLayout
-                    android:id="@+id/card_business_3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/bg_card_business"
-                    android:clickable="true"
-                    android:elevation="2dp"
-                    android:focusable="true"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="140dp"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/img_salon_interior" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentStart="true"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:fontFamily="@font/inter_variable"
-                                    android:text="Nova Beauty Bar"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="15sp"
-                                    android:textStyle="bold" />
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-                                    <ImageView
-                                        android:layout_width="12dp"
-                                        android:layout_height="12dp"
-                                        android:src="@drawable/ic_map_pin"
-                                        app:tint="@color/text_muted" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="3dp"
-                                        android:fontFamily="@font/inter_variable"
-                                        android:text="Salon · 1.1 mi"
-                                        android:textColor="@color/text_muted"
-                                        android:textSize="12sp" />
-                                </LinearLayout>
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentEnd="true"
-                                android:layout_centerVertical="true"
-                                android:gravity="end"
-                                android:orientation="vertical">
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-                                    <ImageView
-                                        android:layout_width="12dp"
-                                        android:layout_height="12dp"
-                                        android:src="@drawable/ic_star_filled" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="3dp"
-                                        android:fontFamily="@font/inter_variable"
-                                        android:text="4.5 (62)"
-                                        android:textColor="@color/text_primary"
-                                        android:textSize="12sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="4dp"
-                                    android:fontFamily="@font/inter_variable"
-                                    android:text="From $30"
-                                    android:textColor="@color/primary"
-                                    android:textSize="12sp"
-                                    android:textStyle="bold" />
-
-                            </LinearLayout>
-                        </RelativeLayout>
-                    </LinearLayout>
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/inter_variable"
+                        android:gravity="center"
+                        android:text="No businesses found."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
                 </LinearLayout>
 
             </LinearLayout>

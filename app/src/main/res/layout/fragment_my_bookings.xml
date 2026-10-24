@@ -90,16 +90,19 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:background="@drawable/bg_chip_selected"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:gravity="center"
                             android:paddingStart="16dp"
                             android:paddingEnd="16dp">
 
                             <TextView
+                                android:id="@+id/tv_tab_all"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/inter_variable"
                                 android:text="All"
-                                android:textColor="@color/primary"
+                                android:textColor="@color/surface_white"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -111,11 +114,14 @@
                             android:layout_height="34dp"
                             android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip_default"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:gravity="center"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp">
 
                             <TextView
+                                android:id="@+id/tv_tab_upcoming"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/inter_variable"
@@ -131,11 +137,14 @@
                             android:layout_height="34dp"
                             android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip_default"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:gravity="center"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp">
 
                             <TextView
+                                android:id="@+id/tv_tab_pending"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/inter_variable"
@@ -151,11 +160,14 @@
                             android:layout_height="34dp"
                             android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip_default"
+                            android:clickable="true"
+                            android:focusable="true"
                             android:gravity="center"
                             android:paddingStart="14dp"
                             android:paddingEnd="14dp">
 
                             <TextView
+                                android:id="@+id/tv_tab_cancelled"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/inter_variable"
@@ -169,7 +181,7 @@
 
             </LinearLayout>
 
-            <!-- Section 1: Coming up -->
+            <!-- Section header: Count -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -178,393 +190,93 @@
                 android:paddingEnd="20dp">
 
                 <TextView
+                    android:id="@+id/tv_section_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Coming up"
+                    android:text="Your appointments"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_bookings_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:fontFamily="@font/inter_variable"
-                    android:text="2 appointments"
+                    android:text="Loading..."
                     android:textColor="@color/text_muted"
                     android:textSize="12sp" />
 
             </RelativeLayout>
 
-            <!-- Booking Card 1: BB-24102 (Confirmed) -->
+            <!-- Dynamic Bookings list container -->
             <LinearLayout
-                android:id="@+id/card_booking_1"
+                android:id="@+id/ll_bookings_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="BB-24102"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_tag_verified"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="3dp"
-                        android:paddingBottom="3dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Confirmed"
-                            android:textColor="@color/secondary_dark"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Juniper Studio"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Signature haircut • $45 • 45 min"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/ic_calendar"
-                        app:tint="@color/primary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Sat, Oct 24 • 10:00 AM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@color/border_subtle" />
-
-                <!-- Action buttons -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/btn_details_1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="View details"
-                        android:textColor="@color/primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/btn_cancel_1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Cancel booking"
-                        android:textColor="@color/error_text"
-                        android:textSize="13sp" />
-                </RelativeLayout>
-
-            </LinearLayout>
-
-            <!-- Booking Card 2: BB-24110 (Pending) -->
-            <LinearLayout
-                android:id="@+id/card_booking_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp">
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="BB-24110"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@color/badge_pending_bg"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="3dp"
-                        android:paddingBottom="3dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Pending"
-                            android:textColor="@color/badge_pending_text"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </RelativeLayout>
-
-                <TextView
+                <!-- Loading Spinner -->
+                <ProgressBar
+                    android:id="@+id/pb_loading"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Juniper Studio"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginBottom="32dp"
+                    android:visibility="gone" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Color refresh • $65 • 60 min"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
+                <!-- Empty State -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:id="@+id/ll_empty_state"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingTop="40dp"
+                    android:paddingBottom="40dp"
+                    android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
-                        android:src="@drawable/ic_calendar"
-                        app:tint="@color/primary" />
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_nav_bookings"
+                        app:tint="@color/text_muted" />
 
                     <TextView
+                        android:id="@+id/tv_empty_message"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
+                        android:layout_marginTop="12dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Tue, Oct 27 • 2:00 PM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:text="No bookings found in this category."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
+
+                    <Button
+                        android:id="@+id/btn_explore_now"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:fontFamily="@font/inter_variable"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:text="Explore businesses"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@color/border_subtle" />
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/btn_details_2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="View details"
-                        android:textColor="@color/primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/btn_cancel_2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Cancel request"
-                        android:textColor="@color/text_muted"
-                        android:textSize="13sp" />
-                </RelativeLayout>
-
-            </LinearLayout>
-
-            <!-- Section 2: Past appointments -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginTop="20dp"
-                android:fontFamily="@font/inter_variable"
-                android:text="Past appointments"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <!-- Past Booking Card: BB-23914 (Completed) -->
-            <LinearLayout
-                android:id="@+id/card_booking_3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="BB-23914"
-                        android:textColor="@color/text_muted"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@color/badge_completed_bg"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="3dp"
-                        android:paddingBottom="3dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Completed"
-                            android:textColor="@color/badge_completed_text"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Juniper Studio"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Signature haircut • $45 • 45 min"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@color/border_subtle" />
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/btn_details_3"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="View details"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/btn_write_review"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Write a review"
-                        android:textColor="@color/primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
 
             </LinearLayout>
 

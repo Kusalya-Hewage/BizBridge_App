@@ -130,7 +130,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
                             android:text="Map"
-                            android:textColor="@color/primary"
+                            android:textColor="@color/surface_white"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>

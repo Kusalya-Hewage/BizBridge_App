@@ -13,15 +13,38 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 
+import com.example.bizbridgeapp.model.Review
+import com.example.bizbridgeapp.repository.ReviewRepository
+import com.example.bizbridgeapp.UserSessionManager
+import com.google.firebase.auth.FirebaseAuth
+
 class WriteReviewFragment : Fragment() {
 
     private var currentRating = 4
+    private var bookingId: String = ""
+    private var businessId: String = ""
+    private var businessName: String = ""
+
+    companion object {
+        fun newInstance(bookingId: String, businessId: String, businessName: String): WriteReviewFragment {
+            val frag = WriteReviewFragment()
+            val args = Bundle()
+            args.putString("bookingId", bookingId)
+            args.putString("businessId", businessId)
+            args.putString("businessName", businessName)
+            frag.arguments = args
+            return frag
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        bookingId = arguments?.getString("bookingId").orEmpty()
+        businessId = arguments?.getString("businessId").orEmpty()
+        businessName = arguments?.getString("businessName").orEmpty()
         return inflater.inflate(R.layout.fragment_write_review, container, false)
     }
 
@@ -43,6 +66,7 @@ class WriteReviewFragment : Fragment() {
         val tvRatingLabel = view.findViewById<TextView>(R.id.tv_rating_score_label)
         val etReview = view.findViewById<EditText>(R.id.et_review_text)
         val tvCharCount = view.findViewById<TextView>(R.id.tv_char_count)
+        val btnSubmit = view.findViewById<Button>(R.id.btn_submit_review)
 
         fun updateRating(rating: Int) {
             currentRating = rating
@@ -70,9 +94,49 @@ class WriteReviewFragment : Fragment() {
         })
 
         // Submit Review button
-        view.findViewById<Button>(R.id.btn_submit_review)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Thank you! Your review has been submitted.", Toast.LENGTH_LONG).show()
-            parentFragmentManager.popBackStack()
+        btnSubmit?.setOnClickListener {
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user == null) {
+                Toast.makeText(requireContext(), "Please log in to submit a review.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val comment = etReview?.text?.toString()?.trim().orEmpty()
+            if (comment.isEmpty()) {
+                Toast.makeText(requireContext(), "Please write a comment for your review.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val profile = UserSessionManager.getProfile()
+            val customerName = (profile?.get("fullName") as? String) ?: "Customer"
+
+            btnSubmit.isEnabled = false
+
+            val review = Review(
+                bookingId = if (bookingId.isNotEmpty()) bookingId else "booking_${System.currentTimeMillis()}",
+                businessId = if (businessId.isNotEmpty()) businessId else "business_juniper",
+                customerId = user.uid,
+                customerName = customerName,
+                rating = currentRating,
+                comment = comment
+            )
+
+            ReviewRepository.submitReview(
+                review = review,
+                onSuccess = {
+                    if (isAdded) {
+                        btnSubmit.isEnabled = true
+                        Toast.makeText(requireContext(), "Thank you! Your review has been submitted.", Toast.LENGTH_LONG).show()
+                        parentFragmentManager.popBackStack()
+                    }
+                },
+                onFailure = { e ->
+                    if (isAdded) {
+                        btnSubmit.isEnabled = true
+                        Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to submit review.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
         }
     }
 }

@@ -22,6 +22,15 @@ class RegisterCustomerFragment : Fragment() {
 
     private var isPasswordVisible = false
     private var isConfirmPasswordVisible = false
+    private var selectedImageUri: android.net.Uri? = null
+
+    private val pickImageLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            selectedImageUri = uri
+            view?.findViewById<TextView>(R.id.tv_add_profile_image)?.text = "Image Selected"
+            Toast.makeText(requireContext(), "Profile picture selected", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,7 +45,12 @@ class RegisterCustomerFragment : Fragment() {
 
         val btnBack = view.findViewById<ImageView>(R.id.btn_back)
         val tvAvatarInitials = view.findViewById<TextView>(R.id.tv_avatar_initials)
+        val tvAddProfileImage = view.findViewById<TextView>(R.id.tv_add_profile_image)
         val etFullName = view.findViewById<EditText>(R.id.et_full_name)
+
+        tvAddProfileImage?.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
         val etEmail = view.findViewById<EditText>(R.id.et_email)
         val etPhone = view.findViewById<EditText>(R.id.et_phone)
         val etPassword = view.findViewById<EditText>(R.id.et_password)
@@ -138,17 +152,19 @@ class RegisterCustomerFragment : Fragment() {
                 email = email,
                 phone = phone,
                 password = password,
+                profileImageUri = selectedImageUri,
                 onSuccess = { firebaseUser ->
                     activity?.runOnUiThread {
-                // Initialize session manager and save profile locally
-                UserSessionManager.init(requireContext())
-                UserSessionManager.saveProfile(mapOf(
-                    "uid" to firebaseUser.uid,
-                    "fullName" to name,
-                    "email" to email,
-                    "phone" to phone,
-                    "role" to "CUSTOMER"
-                ))
+                        // Initialize session manager and save profile locally
+                        UserSessionManager.init(requireContext())
+                        UserSessionManager.saveProfile(mapOf(
+                            "uid" to firebaseUser.uid,
+                            "fullName" to name,
+                            "email" to email,
+                            "phone" to phone,
+                            "role" to "CUSTOMER",
+                            "accountStatus" to "ACTIVE"
+                        ))
                         btnCreateAccount.isEnabled = true
                         AlertDialog.Builder(requireContext())
                             .setTitle("Account Created")

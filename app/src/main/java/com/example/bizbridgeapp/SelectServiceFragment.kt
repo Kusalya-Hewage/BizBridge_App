@@ -14,12 +14,27 @@ import androidx.fragment.app.Fragment
 class SelectServiceFragment : Fragment() {
 
     private var selectedIndex = 0
+    private var businessId: String = ""
+    private var businessName: String = ""
+
+    companion object {
+        fun newInstance(businessId: String, businessName: String): SelectServiceFragment {
+            val frag = SelectServiceFragment()
+            val args = Bundle()
+            args.putString("businessId", businessId)
+            args.putString("businessName", businessName)
+            frag.arguments = args
+            return frag
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        businessId = arguments?.getString("businessId").orEmpty()
+        businessName = arguments?.getString("businessName").orEmpty()
         return inflater.inflate(R.layout.fragment_select_service, container, false)
     }
 
@@ -44,7 +59,9 @@ class SelectServiceFragment : Fragment() {
 
         val cards = listOf(card1, card2, card3)
         val radios = listOf(radio1, radio2, radio3)
-        val prices = listOf(45, 65, 35)
+        val serviceNames = listOf("Signature haircut", "Cut + Full Highlights", "Beard trim & styling")
+        val serviceIds = listOf("service_haircut", "service_highlights", "service_beard")
+        val prices = listOf(45.0, 65.0, 35.0)
         val durations = listOf(45, 60, 30)
 
         fun updateSelection(index: Int) {
@@ -59,16 +76,24 @@ class SelectServiceFragment : Fragment() {
                 }
             }
             tvSummary?.text = "1 service selected • ${durations[index]} minutes"
-            btnContinue?.text = "Continue - $${prices[index]}"
+            btnContinue?.text = "Continue - $${prices[index].toInt()}"
         }
 
         card1?.setOnClickListener { updateSelection(0) }
         card2?.setOnClickListener { updateSelection(1) }
         card3?.setOnClickListener { updateSelection(2) }
 
-        // Continue button navigates to C06 ChooseDateTimeFragment
+        // Continue button navigates to ChooseDateTimeFragment with selected service
         btnContinue?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(ChooseDateTimeFragment(), addToBackStack = true)
+            val frag = ChooseDateTimeFragment.newInstance(
+                businessId = businessId,
+                businessName = businessName,
+                serviceId = serviceIds[selectedIndex],
+                serviceName = serviceNames[selectedIndex],
+                servicePrice = prices[selectedIndex],
+                serviceDuration = durations[selectedIndex]
+            )
+            (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
     }
 }

@@ -26,19 +26,19 @@ class SplashFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Tap anywhere to skip waiting
+        // Tap anywhere to skip 2.5s timer and proceed immediately
         view.setOnClickListener {
             handler.removeCallbacks(navigateRunnable)
             navigateToOnboarding()
         }
 
-        // Auto transition after 2 seconds
-        handler.postDelayed(navigateRunnable, 2000)
+        // Keep Splash visible for 2.5 seconds so user sees branding, logo, and tagline
+        handler.postDelayed(navigateRunnable, 2500)
     }
 
     private fun navigateToOnboarding() {
         if (!isAdded) return
-        (activity as? MainActivity)?.navigateTo(OnboardingDiscoverFragment())
+        (activity as? MainActivity)?.navigateTo(OnboardingDiscoverFragment(), addToBackStack = false)
     }
 
     override fun onDestroyView() {
