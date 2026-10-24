@@ -103,15 +103,37 @@ class RegisterOwnerFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // Success dialog matching design specification
-            AlertDialog.Builder(requireContext())
-                .setTitle("Application Submitted")
-                .setMessage("Your business registration for $businessName has been submitted for administrator approval. You can prepare your profile while you wait.")
-                .setPositiveButton("Back to Login") { _, _ ->
-                    (activity as? MainActivity)?.navigateTo(LoginFragment())
+            val category = tvCategory?.text?.toString()?.ifBlank { "Hair salon" } ?: "Hair salon"
+
+            btnCreateOwnerAccount.isEnabled = false
+            Toast.makeText(requireContext(), "Submitting business application...", Toast.LENGTH_SHORT).show()
+
+            FirebaseAuthManager.registerOwner(
+                ownerName = ownerName,
+                businessName = businessName,
+                category = category,
+                email = email,
+                password = password,
+                onSuccess = { _, _ ->
+                    activity?.runOnUiThread {
+                        btnCreateOwnerAccount.isEnabled = true
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Application Submitted")
+                            .setMessage("Your business registration for $businessName has been submitted for administrator approval. You can log in and manage your services and profile.")
+                            .setPositiveButton("Proceed to Login") { _, _ ->
+                                (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = false)
+                            }
+                            .setCancelable(false)
+                            .show()
+                    }
+                },
+                onFailure = { e ->
+                    activity?.runOnUiThread {
+                        btnCreateOwnerAccount.isEnabled = true
+                        Toast.makeText(requireContext(), "Registration failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                    }
                 }
-                .setCancelable(false)
-                .show()
+            )
         }
     }
 }
