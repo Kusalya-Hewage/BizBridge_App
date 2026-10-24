@@ -20,6 +20,7 @@ class CustomerHomeFragment : Fragment() {
 
     private var activeBusinesses: List<Business> = emptyList()
     private var upcomingBooking: Booking? = null
+    private var businessesListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
