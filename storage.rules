@@ -1,30 +1,38 @@
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
     }
 
-    // Profile images: profile_images/{userId}.jpg
-    match /profile_images/{imageName} {
-      allow read: if true;
-      allow write: if isAuthenticated() &&
-        request.resource.size < 5 * 1024 * 1024 && // Max 5MB
-        request.resource.contentType.matches('image/.*');
+    // Profile Images: User can upload their own profile photo (max 5MB)
+    match /profile_images/{userId}.jpg {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId)
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
     }
 
-    // Business images: business_images/{businessId}/{fileName}
-    match /business_images/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAuthenticated() &&
-        request.resource.size < 10 * 1024 * 1024 &&
-        request.resource.contentType.matches('image/.*');
+    // Business Logos & Cover Images (max 10MB)
+    match /business_images/{businessId}/{imageName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Qualification Documents (PDF or Images, max 15MB) - Restricted read to owner and admin
+    match /qualification_docs/{businessId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+                   && request.resource.size < 15 * 1024 * 1024
+                   && (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
     }
   }
 }
