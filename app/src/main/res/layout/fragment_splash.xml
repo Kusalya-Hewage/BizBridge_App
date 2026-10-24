@@ -41,7 +41,7 @@
             android:layout_width="112dp"
             android:layout_height="112dp"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_bizbridge_logo" />
+            android:src="@drawable/ic_bizbridge_logo_new" />
 
         <!-- App Name with Dual-Color Branding -->
         <LinearLayout
