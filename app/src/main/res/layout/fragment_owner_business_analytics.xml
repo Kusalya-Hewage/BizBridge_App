@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="70dp"
+        android:orientation="vertical">
+
+        <!-- Top Header -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@color/surface_white"
+            android:elevation="1dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:fontFamily="@font/inter_variable"
+                android:text="Business analytics"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_analytics_timeframe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:fontFamily="@font/inter_variable"
+                android:text="This month: Oct 1–23 ⌄"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- 2 Top Metric Cards -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Total Bookings -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_card_white"
+                        android:elevation="1dp"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="Total bookings"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="96"
+                            android:textColor="@color/text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="+14% vs last month"
+                            android:textColor="@color/secondary_dark"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Completed -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_card_white"
+                        android:elevation="1dp"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="Completed"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="62"
+                            android:textColor="@color/text_primary"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="65% completion rate"
+                            android:textColor="@color/text_muted"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Status Subtitle -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="3 Pending · 24 Confirmed · 7 Cancelled"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <!-- Bookings over time Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_card_white"
+                    android:elevation="1dp"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="Bookings over time"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <!-- Toggle Pills: Weekly / Monthly -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/pill_chart_weekly"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:background="@drawable/bg_chip_selected"
+                                android:fontFamily="@font/inter_variable"
+                                android:gravity="center"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:text="Weekly"
+                                android:textColor="@color/white"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/pill_chart_monthly"
+                                android:layout_width="wrap_content"
+                                android:layout_height="30dp"
+                                android:layout_marginStart="6dp"
+                                android:background="@drawable/bg_chip_default"
+                                android:fontFamily="@font/inter_variable"
+                                android:gravity="center"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:text="Monthly"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+
+                    <!-- Weekly Bar Chart -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:layout_marginTop="16dp"
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
+
+                        <!-- Mon -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="40dp"
+                                android:background="@drawable/bg_tab_selected"
+                                android:backgroundTint="@color/admin_chart_bar_inactive" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="M"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <!-- Tue -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="65dp"
+                                android:background="@drawable/bg_tab_selected"
+                                android:backgroundTint="@color/admin_chart_bar_inactive" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="T"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <!-- Wed -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="55dp"
+                                android:background="@drawable/bg_tab_selected"
+                                android:backgroundTint="@color/admin_chart_bar_inactive" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="W"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <!-- Thu -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="75dp"
+                                android:background="@drawable/bg_tab_selected"
+                                android:backgroundTint="@color/admin_chart_bar_inactive" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="T"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <!-- Fri -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="90dp"
+                                android:background="@drawable/bg_tab_selected"
+                                android:backgroundTint="@color/primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="F"
+                                android:textColor="@color/primary"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Sat -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="100dp"
+                                android:background="@drawable/bg_tab_selected"
+                                android:backgroundTint="@color/primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="S"
+                                android:textColor="@color/primary"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Sun -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="bottom|center_horizontal"
+                            android:orientation="vertical">
+
+                            <View
+                                android:layout_width="20dp"
+                                android:layout_height="25dp"
+                                android:background="@drawable/bg_tab_selected"
+                                android:backgroundTint="@color/admin_chart_bar_inactive" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="S"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Basic booking counts for this analytics"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- Popular services Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="24dp"
+                    android:background="@drawable/bg_card_white"
+                    android:elevation="1dp"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Popular services"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <!-- Service 1 -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="Signature haircut"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="48 bookings · 50% of all services"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </RelativeLayout>
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="50"
+                        android:progressTint="@color/primary" />
+
+                    <!-- Service 2 -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="Color refresh"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="28 bookings · 29% of all services"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </RelativeLayout>
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="29"
+                        android:progressTint="@color/primary" />
+
+                    <!-- Service 3 -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="Blow-dry &amp; style"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="20 bookings · 21% of all services"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </RelativeLayout>
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="6dp"
+                        android:max="100"
+                        android:progress="21"
+                        android:progressTint="@color/secondary" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
+
+    <!-- Bottom Navigation Bar -->
+    <include
+        layout="@layout/layout_owner_bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_gravity="bottom" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
