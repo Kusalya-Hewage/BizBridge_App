@@ -73,7 +73,7 @@ class AdminApplicationReviewFragment : Fragment() {
                     if (app != null && isAdded) {
                         currentApplication = app
                         // Bind views
-                        view.findViewById<TextView>(R.id.tv_willow_wellness)?.text = app.businessName
+                        view.findViewById<TextView>(R.id.tv_review_business_name)?.text = app.businessName
                     }
                 },
                 onFailure = {}
