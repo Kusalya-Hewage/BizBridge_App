@@ -6,8 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.repository.AdminRepository
+import com.google.firebase.firestore.ListenerRegistration
+import java.text.NumberFormat
+import java.util.Locale
 
 class AdminOverviewFragment : Fragment() {
+
+    private var statsListener: ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,5 +60,20 @@ class AdminOverviewFragment : Fragment() {
         view.findViewById<View>(R.id.btn_notifications)?.setOnClickListener {
             mainActivity?.navigateTo(AdminAnnouncementsFragment(), addToBackStack = true)
         }
+
+        // Real-time Overview Statistics
+        statsListener = AdminRepository.listenToOverviewStats { stats ->
+            if (!isAdded) return@listenToOverviewStats
+            val formatter = NumberFormat.getNumberInstance(Locale.US)
+            view.findViewById<TextView>(R.id.tv_stat_users)?.text = formatter.format(stats.totalUsers)
+            view.findViewById<TextView>(R.id.tv_stat_businesses)?.text = formatter.format(stats.totalBusinesses)
+            view.findViewById<TextView>(R.id.tv_stat_pending)?.text = formatter.format(stats.pendingApplications)
+            view.findViewById<TextView>(R.id.tv_stat_verified)?.text = formatter.format(stats.verifiedBusinesses)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        statsListener?.remove()
     }
 }
