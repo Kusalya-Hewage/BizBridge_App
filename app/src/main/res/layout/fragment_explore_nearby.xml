@@ -26,6 +26,7 @@
             android:paddingBottom="14dp">
 
             <TextView
+                android:id="@+id/tv_header_tag"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_subheader_tag"
@@ -33,7 +34,7 @@
                 android:paddingEnd="8dp"
                 android:paddingTop="4dp"
                 android:paddingBottom="4dp"
-                android:text="CUSTOMER · DEMONSTRATION DATA"
+                android:text="SRI LANKA · NEARBY BUSINESSES"
                 android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                 android:textSize="10sp" />
 
@@ -81,16 +82,20 @@
                     android:src="@drawable/ic_nav_search"
                     app:tint="@color/text_muted" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/et_search_map"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
+                    android:background="@null"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Mission District"
+                    android:hint="Search nearby businesses in Colombo..."
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textColorHint="@color/text_muted"
+                    android:textSize="14sp" />
 
                 <ImageView
                     android:layout_width="18dp"
@@ -189,115 +194,37 @@
 
         </LinearLayout>
 
-        <!-- Stylized Map View Area -->
+        <!-- Real Google Map View -->
         <FrameLayout
             android:id="@+id/map_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/header_container"
-            android:background="#E9EDF5">
+            android:layout_below="@id/header_container">
 
-            <!-- Decorative map roads & blocks -->
-            <View
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
                 android:layout_width="match_parent"
-                android:layout_height="240dp"
-                android:layout_marginTop="60dp"
-                android:background="#E0E6F0" />
+                android:layout_height="match_parent" />
 
-            <View
-                android:layout_width="220dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="80dp"
-                android:background="#E2E7F2" />
-
-            <!-- Map grid road lines -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="120dp"
-                android:background="#FFFFFF" />
-
-            <View
-                android:layout_width="8dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="140dp"
-                android:background="#FFFFFF" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="6dp"
-                android:layout_marginTop="220dp"
-                android:background="#FFFFFF" />
-
-            <!-- Stylized Mission District Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="80dp"
-                android:alpha="0.4"
-                android:fontFamily="@font/inter_variable"
-                android:letterSpacing="0.15"
-                android:text="MISSION DISTRICT"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <!-- Secondary Map Pin -->
+            <!-- Re-center on User Location button -->
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:id="@+id/btn_my_location"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:layout_gravity="top|end"
-                android:layout_marginTop="100dp"
-                android:layout_marginEnd="60dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_location_pin"
-                    app:tint="@color/text_muted" />
-            </LinearLayout>
-
-            <!-- Main Map Pin for Juniper Studio (Selected) -->
-            <LinearLayout
-                android:id="@+id/pin_juniper"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginBottom="60dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_circle_white"
+                android:clickable="true"
                 android:elevation="6dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card_white"
-                    android:elevation="4dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Juniper Studio"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                android:focusable="true"
+                android:gravity="center">
 
                 <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:layout_marginTop="-2dp"
-                    android:src="@drawable/ic_map_pin"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_location_pin"
                     app:tint="@color/primary" />
             </LinearLayout>
 
@@ -330,6 +257,7 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tv_business_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
@@ -339,11 +267,12 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_business_category_dist"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Hair salon • 0.8 mi away"
+                        android:text="Hair salon • 0.8 km away"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
@@ -361,6 +290,7 @@
                             android:src="@drawable/ic_star_filled" />
 
                         <TextView
+                            android:id="@+id/tv_business_rating"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
@@ -381,6 +311,7 @@
                     android:orientation="vertical">
 
                     <LinearLayout
+                        android:id="@+id/badge_verified"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_tag_verified"
@@ -409,11 +340,12 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tv_business_price"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="From $45"
+                        android:text="From $35"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
