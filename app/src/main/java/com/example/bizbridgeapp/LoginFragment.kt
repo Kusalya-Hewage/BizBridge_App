@@ -40,6 +40,13 @@ class LoginFragment : Fragment() {
         val tvSignUp = view.findViewById<TextView>(R.id.tv_sign_up)
         val btnLogin = view.findViewById<Button>(R.id.btn_login)
 
+        UserSessionManager.init(requireContext())
+        val savedEmail = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email
+            ?: (UserSessionManager.getProfile()?.get("email") as? String)
+        if (!savedEmail.isNullOrBlank() && etEmail?.text.isNullOrBlank()) {
+            etEmail?.setText(savedEmail)
+        }
+
         // Password visibility toggle
         btnTogglePassword?.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
@@ -103,16 +110,22 @@ class LoginFragment : Fragment() {
                         uid = firebaseUser.uid,
                         onSuccess = { profile ->
                             val role = profile["role"] as? String ?: ""
+                            val status = profile["accountStatus"] as? String ?: "ACTIVE"
                             // Save the whole profile locally for quick access later
                             com.example.bizbridgeapp.UserSessionManager.init(requireContext())
                             com.example.bizbridgeapp.UserSessionManager.saveProfile(profile)
                             activity?.runOnUiThread {
                                 btnLogin.isEnabled = true
-                                if (role == "CUSTOMER") {
+                                if (status.equals("SUSPENDED", ignoreCase = true) || status.equals("INACTIVE", ignoreCase = true)) {
+                                    Toast.makeText(requireContext(), "Account is inactive or suspended.", Toast.LENGTH_LONG).show()
+                                    com.example.bizbridgeapp.FirebaseAuthManager.signOut()
+                                    com.example.bizbridgeapp.UserSessionManager.clear()
+                                } else if (role == "CUSTOMER") {
                                     (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
                                 } else {
                                     Toast.makeText(requireContext(), "Access denied: not a customer account.", Toast.LENGTH_LONG).show()
                                     com.example.bizbridgeapp.FirebaseAuthManager.signOut()
+                                    com.example.bizbridgeapp.UserSessionManager.clear()
                                 }
                             }
                         },
