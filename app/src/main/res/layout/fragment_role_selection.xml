@@ -164,6 +164,73 @@
                     android:textSize="@dimen/text_button"
                     android:textStyle="bold" />
             </LinearLayout>
+
+            <!-- Card 3: Platform Administrator (Admin App) -->
+            <LinearLayout
+                android:id="@+id/card_admin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_admin_banner_info"
+                android:elevation="1dp"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:contentDescription="Admin"
+                        android:src="@drawable/ic_shield_check"
+                        app:tint="@color/admin_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_admin_demo_pill"
+                        android:fontFamily="@font/inter_variable"
+                        android:letterSpacing="0.08"
+                        android:text="ADMIN · DEMO"
+                        android:textColor="@color/admin_badge_demo_text"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/TextAppearance.BizBridge.SectionHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Platform Administrator"
+                    android:textColor="@color/admin_text_title" />
+
+                <TextView
+                    style="@style/TextAppearance.BizBridge.Body"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Alex Morgan · Privileged administration, verification and moderation (Demonstration data)"
+                    android:textSize="@dimen/text_body_small" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btn_continue_admin"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/height_primary_action"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_admin_button_primary"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="Open Admin App (Alex Morgan) →"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_button"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
