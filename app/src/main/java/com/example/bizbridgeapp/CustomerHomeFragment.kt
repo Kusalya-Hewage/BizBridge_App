@@ -218,4 +218,9 @@ class CustomerHomeFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(CustomerProfileFragment(), addToBackStack = true)
         }
     }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        businessesListener?.remove()
+    }
 }
