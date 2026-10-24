@@ -104,7 +104,7 @@ class OwnerDashboardFragment : Fragment() {
         } else if (biz.approvalStatus == "REJECTED") {
             badgeApproval?.text = "APPLICATION REJECTED"
             badgeApproval?.setBackgroundResource(R.drawable.bg_input_field_error)
-            badgeApproval?.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.error))
+            badgeApproval?.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.error_text))
             bannerStatus?.visibility = View.VISIBLE
             tvNotice?.text = "Your business listing application was rejected. Please contact support or update your application."
         } else {
@@ -169,37 +169,43 @@ class OwnerDashboardFragment : Fragment() {
 
         for (bk in sorted) {
             val card = LayoutInflater.from(requireContext()).inflate(R.layout.item_booking_card, container, false)
+            card.findViewById<TextView>(R.id.tv_booking_ref)?.text = "REF: ${bk.qrReference.take(8).uppercase()}"
             card.findViewById<TextView>(R.id.tv_business_name)?.text = bk.serviceNameSnapshot
-            card.findViewById<TextView>(R.id.tv_service_title)?.text = "Customer Notes: ${bk.customerNotes.ifEmpty { "None" }}"
-            card.findViewById<TextView>(R.id.tv_date_time)?.text = "${bk.appointmentDate} • ${bk.appointmentTime}"
-            card.findViewById<TextView>(R.id.tv_price)?.text = String.format(Locale.US, "$%.2f", bk.priceAtBooking)
-            card.findViewById<TextView>(R.id.tv_status_badge)?.text = bk.status
+            val notes = if (bk.customerNotes.isNotEmpty()) "Notes: ${bk.customerNotes} • " else ""
+            card.findViewById<TextView>(R.id.tv_service_info)?.text = "${notes}\$${String.format(Locale.US, "%.2f", bk.priceAtBooking)}"
+            card.findViewById<TextView>(R.id.tv_appointment_date_time)?.text = "${bk.appointmentDate} • ${bk.appointmentTime}"
+            card.findViewById<TextView>(R.id.tv_booking_status)?.text = bk.status
 
-            val btnAction = card.findViewById<TextView>(R.id.btn_view_details)
-            val btnSecondary = card.findViewById<TextView>(R.id.btn_manage)
+            val btnViewDetails = card.findViewById<TextView>(R.id.btn_view_details)
+            val btnAction = card.findViewById<TextView>(R.id.btn_action)
 
             when (bk.status) {
                 "PENDING" -> {
-                    btnAction?.text = "Confirm"
-                    btnAction?.setOnClickListener {
+                    btnViewDetails?.visibility = View.VISIBLE
+                    btnViewDetails?.text = "Confirm Booking"
+                    btnViewDetails?.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.primary))
+                    btnViewDetails?.setOnClickListener {
                         BookingRepository.updateBookingStatus(bk.id, "CONFIRMED", onSuccess = {}, onFailure = {})
                     }
-                    btnSecondary?.visibility = View.VISIBLE
-                    btnSecondary?.text = "Reject"
-                    btnSecondary?.setOnClickListener {
+                    btnAction?.visibility = View.VISIBLE
+                    btnAction?.text = "Reject"
+                    btnAction?.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.error_text))
+                    btnAction?.setOnClickListener {
                         showRejectDialog(bk.id)
                     }
                 }
                 "CONFIRMED" -> {
-                    btnAction?.text = "Complete"
-                    btnAction?.setOnClickListener {
+                    btnViewDetails?.visibility = View.VISIBLE
+                    btnViewDetails?.text = "Mark Completed"
+                    btnViewDetails?.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.secondary_dark))
+                    btnViewDetails?.setOnClickListener {
                         BookingRepository.updateBookingStatus(bk.id, "COMPLETED", onSuccess = {}, onFailure = {})
                     }
-                    btnSecondary?.visibility = View.GONE
+                    btnAction?.visibility = View.GONE
                 }
                 else -> {
+                    btnViewDetails?.visibility = View.GONE
                     btnAction?.visibility = View.GONE
-                    btnSecondary?.visibility = View.GONE
                 }
             }
 
