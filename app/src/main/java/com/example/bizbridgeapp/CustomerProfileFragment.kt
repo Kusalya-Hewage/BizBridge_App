@@ -128,6 +128,9 @@ class CustomerProfileFragment : Fragment() {
                     .show()
             }
         }
+        view.findViewById<LinearLayout>(R.id.row_admin_workspace)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
+        }
         view.findViewById<LinearLayout>(R.id.row_privacy_policy)?.setOnClickListener {
             Toast.makeText(requireContext(), "BizBridge connects customers to local verified businesses. Your data is protected.", Toast.LENGTH_LONG).show()
         }
