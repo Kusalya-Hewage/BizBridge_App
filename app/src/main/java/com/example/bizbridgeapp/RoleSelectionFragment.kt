@@ -39,5 +39,10 @@ class RoleSelectionFragment : Fragment() {
         btnContinueOwner?.setOnClickListener {
             (activity as? MainActivity)?.navigateTo(RegisterOwnerFragment(), addToBackStack = true)
         }
+
+        // Continue as Admin
+        view.findViewById<View>(R.id.btn_continue_admin)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
+        }
     }
 }
