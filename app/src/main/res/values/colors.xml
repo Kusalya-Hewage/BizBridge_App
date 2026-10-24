@@ -48,4 +48,29 @@
     <!-- Accent and Pill Chips -->
     <color name="chip_default_bg">#FFFFFF</color>
     <color name="chip_default_text">#5A5D72</color>
+
+    <!-- Admin Design System Palette -->
+    <color name="admin_primary">#4338CA</color>
+    <color name="admin_primary_dark">#3730A3</color>
+    <color name="admin_primary_light">#EEF2FF</color>
+    <color name="admin_primary_border">#C7D2FE</color>
+    <color name="admin_bg">#F8F9FD</color>
+    <color name="admin_card_bg">#FFFFFF</color>
+    <color name="admin_card_border">#E2E8F0</color>
+    <color name="admin_text_title">#0F172A</color>
+    <color name="admin_text_body">#334155</color>
+    <color name="admin_text_muted">#64748B</color>
+    <color name="admin_badge_demo_bg">#E0E7FF</color>
+    <color name="admin_badge_demo_text">#4338CA</color>
+    <color name="admin_badge_active_bg">#DCFCE7</color>
+    <color name="admin_badge_active_text">#15803D</color>
+    <color name="admin_badge_pending_bg">#FEF3C7</color>
+    <color name="admin_badge_pending_text">#B45309</color>
+    <color name="admin_badge_scheduled_bg">#FEF3C7</color>
+    <color name="admin_badge_scheduled_text">#D97706</color>
+    <color name="admin_chart_bar_active">#4F46E5</color>
+    <color name="admin_chart_bar_inactive">#C7D2FE</color>
+    <color name="admin_nav_active">#4338CA</color>
+    <color name="admin_nav_inactive">#94A3B8</color>
+    <color name="admin_divider">#F1F5F9</color>
 </resources>
