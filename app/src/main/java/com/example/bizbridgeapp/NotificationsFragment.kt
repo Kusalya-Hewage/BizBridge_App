@@ -118,21 +118,25 @@ class NotificationsFragment : Fragment() {
         }
     }
 
+    private var notificationsListener: com.google.firebase.firestore.ListenerRegistration? = null
+
     private fun loadNotifications(uid: String) {
-        NotificationRepository.getNotificationsForUser(uid,
-            onSuccess = { list ->
-                if (!isAdded) return@getNotificationsForUser
-                userNotifications = list
-                // Dynamic items can update or link to relevant booking
-                val n1 = list.firstOrNull { it.relatedBookingId.isNotEmpty() }
-                if (n1 != null) {
-                    view?.findViewById<LinearLayout>(R.id.notif_item_1)?.setOnClickListener {
-                        val frag = BookingDetailsFragment.newInstance(n1.relatedBookingId)
-                        (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
-                    }
+        notificationsListener?.remove()
+        notificationsListener = NotificationRepository.listenToNotificationsForUser(uid) { list ->
+            if (!isAdded) return@listenToNotificationsForUser
+            userNotifications = list
+            val n1 = list.firstOrNull { it.relatedBookingId.isNotEmpty() }
+            if (n1 != null) {
+                view?.findViewById<LinearLayout>(R.id.notif_item_1)?.setOnClickListener {
+                    val frag = BookingDetailsFragment.newInstance(n1.relatedBookingId)
+                    (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
                 }
-            },
-            onFailure = {}
-        )
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        notificationsListener?.remove()
     }
 }
