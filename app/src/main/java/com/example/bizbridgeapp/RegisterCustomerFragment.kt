@@ -16,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.UserSessionManager
 
 class RegisterCustomerFragment : Fragment() {
 
@@ -139,6 +140,15 @@ class RegisterCustomerFragment : Fragment() {
                 password = password,
                 onSuccess = { firebaseUser ->
                     activity?.runOnUiThread {
+                // Initialize session manager and save profile locally
+                UserSessionManager.init(requireContext())
+                UserSessionManager.saveProfile(mapOf(
+                    "uid" to firebaseUser.uid,
+                    "fullName" to name,
+                    "email" to email,
+                    "phone" to phone,
+                    "role" to "CUSTOMER"
+                ))
                         btnCreateAccount.isEnabled = true
                         AlertDialog.Builder(requireContext())
                             .setTitle("Account Created")

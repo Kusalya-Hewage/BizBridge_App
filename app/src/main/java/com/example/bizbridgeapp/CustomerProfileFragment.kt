@@ -53,6 +53,18 @@ class CustomerProfileFragment : Fragment() {
 
         // Log out -> navigates back to RoleSelectionFragment
         view.findViewById<TextView>(R.id.btn_logout)?.setOnClickListener {
+    com.example.bizbridgeapp.FirebaseAuthManager.signOut()
+    com.example.bizbridgeapp.UserSessionManager.clear()
+    Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
+    (activity as? MainActivity)?.navigateTo(RoleSelectionFragment(), addToBackStack = false)
+}
+                // Sign out from Firebase
+                com.example.bizbridgeapp.FirebaseAuthManager.signOut()
+                // Clear cached profile
+                com.example.bizbridgeapp.UserSessionManager.clear()
+                Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
+                (activity as? MainActivity)?.navigateTo(RoleSelectionFragment(), addToBackStack = false)
+            }
             Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
             (activity as? MainActivity)?.navigateTo(RoleSelectionFragment(), addToBackStack = false)
         }

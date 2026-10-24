@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.example.bizbridgeapp.UserSessionManager
 import androidx.fragment.app.Fragment
 
 class LoginFragment : Fragment() {
@@ -102,6 +103,9 @@ class LoginFragment : Fragment() {
                         uid = firebaseUser.uid,
                         onSuccess = { profile ->
                             val role = profile["role"] as? String ?: ""
+                            // Save the whole profile locally for quick access later
+                            com.example.bizbridgeapp.UserSessionManager.init(requireContext())
+                            com.example.bizbridgeapp.UserSessionManager.saveProfile(profile)
                             activity?.runOnUiThread {
                                 btnLogin.isEnabled = true
                                 if (role == "CUSTOMER") {
