@@ -13,6 +13,9 @@ object FirebaseAuthManager {
     private const val TAG = "FirebaseAuthManager"
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val storage = com.google.firebase.storage.FirebaseStorage.getInstance()
+
+    fun getCurrentUser() = auth.currentUser
 
     /** Register a new customer and persist profile in Firestore */
     fun registerCustomer(
@@ -20,6 +23,7 @@ object FirebaseAuthManager {
         email: String,
         phone: String,
         password: String,
+        profileImageUri: android.net.Uri? = null,
         onSuccess: (firebaseUser: com.google.firebase.auth.FirebaseUser) -> Unit,
         onFailure: (exception: Exception) -> Unit
     ) {
@@ -29,28 +33,66 @@ object FirebaseAuthManager {
                     onFailure(Exception("Firebase returned null user after registration"))
                     return@addOnSuccessListener
                 }
-                // Build profile map – never store password!
-                val profile = hashMapOf(
-                    "uid" to user.uid,
-                    "fullName" to fullName,
-                    "email" to email,
-                    "phone" to phone,
-                    "role" to "CUSTOMER",
-                    "createdAt" to FieldValue.serverTimestamp()
-                )
-                // Write profile to Firestore under users/{uid}
-                firestore.collection("users").document(user.uid).set(profile)
-                    .addOnSuccessListener {
-                        Log.d(TAG, "Profile saved for uid=${user.uid}")
-                        onSuccess(user)
-                    }
-                    .addOnFailureListener { e ->
-                        // Profile write failed – keep the auth account but surface the error.
-                        Log.e(TAG, "Failed to save profile for uid=${user.uid}", e)
-                        onFailure(e)
-                    }
+
+                fun saveFirestoreProfile(imageUrl: String) {
+                    val profile = hashMapOf(
+                        "uid" to user.uid,
+                        "fullName" to fullName,
+                        "email" to email,
+                        "phone" to phone,
+                        "role" to "CUSTOMER",
+                        "profileImageUrl" to imageUrl,
+                        "accountStatus" to "ACTIVE",
+                        "createdAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                    firestore.collection("users").document(user.uid).set(profile)
+                        .addOnSuccessListener {
+                            Log.d(TAG, "Profile saved for uid=${user.uid}")
+                            onSuccess(user)
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e(TAG, "Failed to save profile for uid=${user.uid}", e)
+                            onFailure(e)
+                        }
+                }
+
+                if (profileImageUri != null) {
+                    uploadProfileImage(user.uid, profileImageUri,
+                        onSuccess = { downloadUrl -> saveFirestoreProfile(downloadUrl) },
+                        onFailure = {
+                            // If image upload fails, don't fail registration; continue with empty image URL
+                            saveFirestoreProfile("")
+                        }
+                    )
+                } else {
+                    saveFirestoreProfile("")
+                }
             }
             .addOnFailureListener { e -> onFailure(e) }
+    }
+
+    /** Upload profile image to Firebase Storage and retrieve download URL */
+    fun uploadProfileImage(
+        uid: String,
+        uri: android.net.Uri,
+        onSuccess: (downloadUrl: String) -> Unit,
+        onFailure: (exception: Exception) -> Unit
+    ) {
+        val ref = storage.reference.child("profile_images/$uid.jpg")
+        ref.putFile(uri)
+            .continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let { throw it }
+                }
+                ref.downloadUrl
+            }
+            .addOnSuccessListener { uriResult ->
+                onSuccess(uriResult.toString())
+            }
+            .addOnFailureListener { e ->
+                onFailure(e)
+            }
     }
 
     /** Sign in existing user */
