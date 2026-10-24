@@ -40,17 +40,17 @@ class ExploreNearbyFragment : Fragment() {
 
         // View Details button
         view.findViewById<Button>(R.id.btn_view_details)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment(), addToBackStack = true)
+            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance("biz_juniper_studio"), addToBackStack = true)
         }
 
         // Card click
         view.findViewById<LinearLayout>(R.id.card_selected_business)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment(), addToBackStack = true)
+            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance("biz_juniper_studio"), addToBackStack = true)
         }
 
         // Pin click
         view.findViewById<LinearLayout>(R.id.pin_juniper)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Juniper Studio selected", Toast.LENGTH_SHORT).show()
+            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance("biz_juniper_studio"), addToBackStack = true)
         }
     }
 }
