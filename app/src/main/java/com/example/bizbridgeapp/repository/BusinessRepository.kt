@@ -252,4 +252,50 @@ object BusinessRepository {
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { e -> onFailure(e) }
     }
+
+    /** Find business owned by given user ID */
+    fun getBusinessByOwnerId(
+        ownerId: String,
+        onSuccess: (Business?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection(COLLECTION)
+            .whereEqualTo("ownerId", ownerId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val biz = snapshot.documents.firstOrNull()?.toObject(Business::class.java)?.copy(id = snapshot.documents.first().id)
+                onSuccess(biz)
+            }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+    /** Real-time listener for a single business document */
+    fun listenToBusiness(
+        businessId: String,
+        onUpdate: (Business?) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration {
+        return db.collection(COLLECTION).document(businessId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+                val biz = if (snapshot.exists()) snapshot.toObject(Business::class.java)?.copy(id = snapshot.id) else null
+                onUpdate(biz)
+            }
+    }
+
+    /** Real-time listener for all approved & active businesses */
+    fun listenToApprovedBusinesses(
+        onUpdate: (List<Business>) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration {
+        return db.collection(COLLECTION)
+            .whereEqualTo("approved", true)
+            .whereEqualTo("active", true)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    onUpdate(defaultDemoBusinesses)
+                    return@addSnapshotListener
+                }
+                val list = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
+                onUpdate(if (list.isNotEmpty()) list else defaultDemoBusinesses)
+            }
+    }
 }
