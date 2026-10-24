@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN · DEMONSTRATION DATA"
+                    android:text="ADMIN · LIVE FIRESTORE DATA"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -134,6 +134,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_stat_users"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
@@ -167,6 +168,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_stat_businesses"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
@@ -207,6 +209,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_stat_pending"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
@@ -240,6 +243,7 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_stat_verified"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
