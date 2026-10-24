@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+
+    <!-- Top Left Position Marker -->
+    <path
+        android:fillColor="#20233A"
+        android:pathData="M16,16 h40 v40 h-40 z M24,24 v24 h24 v-24 z M30,30 h12 v12 h-12 z" />
+
+    <!-- Top Right Position Marker -->
+    <path
+        android:fillColor="#20233A"
+        android:pathData="M104,16 h40 v40 h-40 z M112,24 v24 h24 v-24 z M118,30 h12 v12 h-12 z" />
+
+    <!-- Bottom Left Position Marker -->
+    <path
+        android:fillColor="#20233A"
+        android:pathData="M16,104 h40 v40 h-40 z M24,112 v24 h24 v-24 z M30,118 h12 v12 h-12 z" />
+
+    <!-- Data Blocks & Timing Patterns -->
+    <path
+        android:fillColor="#20233A"
+        android:pathData="M64,18 h8 v8 h-8 z M80,18 h8 v8 h-8 z M64,34 h8 v8 h-8 z M88,34 h8 v8 h-8 z M72,46 h8 v8 h-8 z M88,46 h8 v8 h-8 z
+                          M18,64 h8 v8 h-8 z M34,64 h8 v8 h-8 z M50,64 h8 v8 h-8 z M66,64 h8 v8 h-8 z M82,64 h8 v8 h-8 z M98,64 h8 v8 h-8 z M114,64 h8 v8 h-8 z M130,64 h8 v8 h-8 z
+                          M22,78 h8 v8 h-8 z M46,78 h8 v8 h-8 z M70,78 h16 v8 h-16 z M94,78 h8 v8 h-8 z M118,78 h16 v8 h-16 z
+                          M18,92 h8 v8 h-8 z M38,92 h8 v8 h-8 z M58,92 h8 v8 h-8 z M78,92 h12 v8 h-12 z M102,92 h8 v8 h-8 z M126,92 h12 v8 h-12 z
+                          M66,106 h12 v8 h-12 z M88,106 h8 v8 h-8 z M104,106 h16 v8 h-16 z M128,106 h8 v8 h-8 z
+                          M64,120 h8 v8 h-8 z M80,120 h16 v8 h-16 z M104,120 h8 v8 h-8 z M120,120 h16 v8 h-16 z
+                          M66,134 h16 v8 h-16 z M92,134 h8 v8 h-8 z M110,134 h12 v8 h-12 z M132,134 h8 v8 h-8 z" />
+</vector>

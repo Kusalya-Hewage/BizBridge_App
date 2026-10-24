@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:paddingStart="@dimen/screen_inset_horizontal"
+    android:paddingTop="@dimen/screen_inset_top"
+    android:paddingEnd="@dimen/screen_inset_horizontal"
+    android:paddingBottom="@dimen/screen_inset_bottom">
+
+    <!-- Top Subheader Tag -->
+    <TextView
+        android:id="@+id/tv_auth_tag"
+        style="@style/TextAppearance.BizBridge.SubheaderTag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/shared_auth_demo_tag"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Top Bar with Back Arrow and Title -->
+    <LinearLayout
+        android:id="@+id/ll_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/tv_auth_tag">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/btn_back"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back" />
+
+        <TextView
+            style="@style/TextAppearance.BizBridge.Title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="@string/role_title"
+            android:textSize="21sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_role_subtitle"
+        style="@style/TextAppearance.BizBridge.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="@string/role_subtitle"
+        app:layout_constraintTop_toBottomOf="@id/ll_top_bar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="16dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/ll_info_box"
+        app:layout_constraintTop_toBottomOf="@id/tv_role_subtitle">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Card 1: Customer (Highlighted lavender background) -->
+            <LinearLayout
+                android:id="@+id/card_customer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_lavender"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="Customer"
+                    android:src="@drawable/ic_person" />
+
+                <TextView
+                    style="@style/TextAppearance.BizBridge.SectionHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/role_customer_title" />
+
+                <TextView
+                    style="@style/TextAppearance.BizBridge.Body"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/role_customer_desc"
+                    android:textSize="@dimen/text_body_small" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btn_continue_customer"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/height_primary_action"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_button_primary"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="@string/btn_continue_customer"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_button"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Card 2: Business Owner (White background with 1dp border) -->
+            <LinearLayout
+                android:id="@+id/card_owner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_card_white"
+                android:elevation="1dp"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:contentDescription="Business Owner"
+                    android:src="@drawable/ic_storefront" />
+
+                <TextView
+                    style="@style/TextAppearance.BizBridge.SectionHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/role_owner_title" />
+
+                <TextView
+                    style="@style/TextAppearance.BizBridge.Body"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/role_owner_desc"
+                    android:textSize="@dimen/text_body_small" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btn_continue_owner"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/height_primary_action"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="@string/btn_continue_owner"
+                    android:textAllCaps="false"
+                    android:textColor="@color/primary"
+                    android:textSize="@dimen/text_button"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Info Box -->
+    <LinearLayout
+        android:id="@+id/ll_info_box"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_card_lavender"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="14dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="Info"
+            android:src="@drawable/ic_info_clock" />
+
+        <TextView
+            style="@style/TextAppearance.BizBridge.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="@string/role_review_info"
+            android:textColor="@color/primary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Core Brand Colors from Figma Design System -->
+    <color name="primary">#5B4BDB</color>
+    <color name="primary_dark">#4738C2</color>
+    <color name="primary_light">#EEF0FB</color>
+    <color name="primary_light_border">#D9DCF3</color>
+    <color name="primary_disabled">#CCD0E5</color>
+    <color name="primary_disabled_text">#8C90A8</color>
+
+    <color name="secondary">#20B8A6</color>
+    <color name="secondary_dark">#169686</color>
+    <color name="secondary_light">#E6F9F5</color>
+
+    <!-- Backgrounds and Surfaces -->
+    <color name="background">#F7F8FC</color>
+    <color name="surface_white">#FFFFFF</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Typography Colors -->
+    <color name="text_primary">#20233A</color>
+    <color name="text_secondary">#5A5D72</color>
+    <color name="text_muted">#8C90A8</color>
+    <color name="text_placeholder">#A6AABF</color>
+
+    <!-- Borders and Dividers -->
+    <color name="border_subtle">#E7E9F2</color>
+    <color name="border_focused">#5B4BDB</color>
+    <color name="border_error">#E53E3E</color>
+    <color name="error_text">#DC2626</color>
+    <color name="error_light">#FDF2F2</color>
+
+    <!-- Status Badges -->
+    <color name="badge_pending_bg">#FFF4E5</color>
+    <color name="badge_pending_text">#D97706</color>
+    <color name="badge_approved_bg">#E6F9F5</color>
+    <color name="badge_approved_text">#0D9488</color>
+    <color name="badge_rejected_bg">#FEE2E2</color>
+    <color name="badge_rejected_text">#DC2626</color>
+    <color name="badge_cancelled_bg">#FFE4E6</color>
+    <color name="badge_cancelled_text">#E11D48</color>
+    <color name="badge_confirmed_bg">#E0F2FE</color>
+    <color name="badge_confirmed_text">#0284C7</color>
+    <color name="badge_completed_bg">#ECFDF5</color>
+    <color name="badge_completed_text">#059669</color>
+
+    <!-- Accent and Pill Chips -->
+    <color name="chip_default_bg">#FFFFFF</color>
+    <color name="chip_default_text">#5A5D72</color>
+</resources>

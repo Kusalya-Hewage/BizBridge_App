@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:paddingStart="@dimen/screen_inset_horizontal"
+    android:paddingTop="@dimen/screen_inset_top"
+    android:paddingEnd="@dimen/screen_inset_horizontal"
+    android:paddingBottom="@dimen/screen_inset_bottom">
+
+    <!-- Top Subheader Tag -->
+    <TextView
+        android:id="@+id/tv_auth_tag"
+        style="@style/TextAppearance.BizBridge.SubheaderTag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/shared_auth_demo_tag"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Top Bar with Back Arrow, Header Title, and Bell Icon -->
+    <LinearLayout
+        android:id="@+id/ll_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/tv_auth_tag">
+
+        <ImageView
+            android:id="@+id/btn_top_back"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/btn_back"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/tv_top_title"
+            style="@style/TextAppearance.BizBridge.Title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:text="@string/onboarding_1_top_title"
+            android:textSize="20sp" />
+
+        <ImageView
+            android:id="@+id/iv_top_bell"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="Notifications"
+            android:src="@drawable/ic_bell" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/ll_bottom_actions"
+        app:layout_constraintTop_toBottomOf="@id/ll_top_bar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Illustration Card -->
+            <FrameLayout
+                android:id="@+id/fl_illustration_card"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:background="@drawable/bg_card_lavender"
+                android:padding="16dp">
+
+                <!-- 3 Cards Layout -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <!-- Left Card (Storefront) -->
+                    <LinearLayout
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:background="@drawable/bg_card_white"
+                        android:elevation="2dp"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:contentDescription="Store"
+                            android:src="@drawable/ic_storefront" />
+                    </LinearLayout>
+
+                    <!-- Center Pill (Active Feature) -->
+                    <LinearLayout
+                        android:id="@+id/ll_center_feature_pill"
+                        android:layout_width="52dp"
+                        android:layout_height="80dp"
+                        android:layout_marginStart="14dp"
+                        android:layout_marginEnd="14dp"
+                        android:background="@drawable/bg_chip_selected"
+                        android:elevation="4dp"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:id="@+id/iv_center_pill_icon"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:contentDescription="Feature"
+                            android:src="@drawable/ic_location_pin" />
+                    </LinearLayout>
+
+                    <!-- Right Card (User / Community) -->
+                    <LinearLayout
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:background="@drawable/bg_card_white"
+                        android:elevation="2dp"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:contentDescription="Community"
+                            android:src="@drawable/ic_person" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Bridge Curve and Tag at Bottom of Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="160dp"
+                        android:layout_height="1.5dp"
+                        android:background="@color/primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="@string/onboarding_badge_connections"
+                        android:textColor="@color/primary"
+                        android:textSize="9.5sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Step Chips Row -->
+            <LinearLayout
+                android:id="@+id/ll_step_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/chip_step_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_chip_selected"
+                    android:gravity="center"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:text="@string/onboarding_step_1"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/chip_step_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_chip_default"
+                    android:gravity="center"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:text="@string/onboarding_step_2"
+                    android:textColor="@color/chip_default_text"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/chip_step_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_chip_default"
+                    android:gravity="center"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:text="@string/onboarding_step_3"
+                    android:textColor="@color/chip_default_text"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Headline Title -->
+            <TextView
+                android:id="@+id/tv_content_title"
+                style="@style/TextAppearance.BizBridge.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/onboarding_1_title"
+                android:textSize="24sp" />
+
+            <!-- Description Body -->
+            <TextView
+                android:id="@+id/tv_content_desc"
+                style="@style/TextAppearance.BizBridge.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/onboarding_1_desc" />
+
+            <!-- Bold Highlight / Secondary Note -->
+            <TextView
+                android:id="@+id/tv_content_highlight"
+                style="@style/TextAppearance.BizBridge.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/onboarding_1_highlight"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <!-- Info Box (Used in Steps 2 & 3) -->
+            <LinearLayout
+                android:id="@+id/ll_info_box"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_card_lavender"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/iv_info_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:contentDescription="Info"
+                    android:src="@drawable/ic_info_clock" />
+
+                <TextView
+                    android:id="@+id/tv_info_text"
+                    style="@style/TextAppearance.BizBridge.Body"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="@string/onboarding_2_info"
+                    android:textColor="@color/primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Actions Container -->
+    <LinearLayout
+        android:id="@+id/ll_bottom_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Two Button Flow (Steps 1 & 2) -->
+        <LinearLayout
+            android:id="@+id/ll_dual_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Secondary Action (Skip / Back) -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_secondary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_primary_action"
+                android:background="@drawable/bg_button_secondary"
+                android:fontFamily="@font/inter_variable"
+                android:text="@string/btn_skip"
+                android:textAllCaps="false"
+                android:textColor="@color/primary"
+                android:textSize="@dimen/text_button"
+                android:textStyle="bold" />
+
+            <!-- Primary Action (Next) -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_primary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/height_primary_action"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_button_primary"
+                android:fontFamily="@font/inter_variable"
+                android:text="@string/btn_next"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="@dimen/text_button"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Single Button Flow (Step 3: Get Started) -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_get_started"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/height_primary_action"
+            android:background="@drawable/bg_button_primary"
+            android:fontFamily="@font/inter_variable"
+            android:text="@string/btn_get_started"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_button"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:visibility="gone" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

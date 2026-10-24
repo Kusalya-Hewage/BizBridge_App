@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+    <!-- Star filled -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M10,2 L12.06,7.26 L17.72,7.64 L13.5,11.26 L14.9,16.74 L10,13.77 L5.1,16.74 L6.5,11.26 L2.28,7.64 L7.94,7.26 Z" />
+</vector>

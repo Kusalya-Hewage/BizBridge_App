@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Screen insets from Figma spec -->
+    <dimen name="screen_inset_horizontal">22dp</dimen>
+    <dimen name="screen_inset_top">16dp</dimen>
+    <dimen name="screen_inset_bottom">24dp</dimen>
+
+    <!-- Standard Spacing: 4 / 8 / 12 / 16 / 24 -->
+    <dimen name="spacing_4">4dp</dimen>
+    <dimen name="spacing_8">8dp</dimen>
+    <dimen name="spacing_12">12dp</dimen>
+    <dimen name="spacing_16">16dp</dimen>
+    <dimen name="spacing_20">20dp</dimen>
+    <dimen name="spacing_24">24dp</dimen>
+    <dimen name="spacing_32">32dp</dimen>
+
+    <!-- Corner Radii -->
+    <dimen name="radius_card">16dp</dimen>
+    <dimen name="radius_input">14dp</dimen>
+    <dimen name="radius_button">14dp</dimen>
+    <dimen name="radius_chip">16dp</dimen>
+    <dimen name="radius_badge">6dp</dimen>
+
+    <!-- Component Heights -->
+    <dimen name="height_primary_action">50dp</dimen>
+    <dimen name="height_input_field">52dp</dimen>
+    <dimen name="stroke_subtle">1dp</dimen>
+    <dimen name="stroke_focused">1.5dp</dimen>
+
+    <!-- Typography -->
+    <dimen name="text_sub_header">11sp</dimen>
+    <dimen name="text_label">12sp</dimen>
+    <dimen name="text_caption">12sp</dimen>
+    <dimen name="text_body_small">13sp</dimen>
+    <dimen name="text_body">14sp</dimen>
+    <dimen name="text_input">15sp</dimen>
+    <dimen name="text_button">15sp</dimen>
+    <dimen name="text_tagline">16sp</dimen>
+    <dimen name="text_section">18sp</dimen>
+    <dimen name="text_screen_title">22sp</dimen>
+    <dimen name="text_hero_title">26sp</dimen>
+</resources>

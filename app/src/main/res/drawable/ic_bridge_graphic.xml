@@ -1,0 +1,55 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="80dp"
+    android:viewportWidth="200"
+    android:viewportHeight="80">
+
+    <!-- Bridge Arch Left -->
+    <path
+        android:strokeColor="#5B4BDB"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M 15,62 C 30,12 70,12 100,62" />
+
+    <!-- Bridge Arch Right -->
+    <path
+        android:strokeColor="#5B4BDB"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M 100,62 C 130,12 170,12 185,62" />
+
+    <!-- Horizontal Deck / Roadway -->
+    <path
+        android:strokeColor="#5B4BDB"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M 10,62 L 190,62" />
+
+    <!-- Vertical Pillar Left -->
+    <path
+        android:strokeColor="#5B4BDB"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 40,32 L 40,62" />
+
+    <!-- Center Pillar 1 -->
+    <path
+        android:strokeColor="#5B4BDB"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 75,32 L 75,62" />
+
+    <!-- Center Pillar 2 -->
+    <path
+        android:strokeColor="#5B4BDB"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 125,32 L 125,62" />
+
+    <!-- Vertical Pillar Right -->
+    <path
+        android:strokeColor="#5B4BDB"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 160,32 L 160,62" />
+</vector>

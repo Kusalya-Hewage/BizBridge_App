@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BizBridge</string>
+    <string name="shared_auth_demo_tag">SHARED AUTHENTICATION · DEMONSTRATION DATA</string>
+    <string name="tagline_connect_book_grow">Connect. Book. Grow.</string>
+    <string name="tagline_neighborhood">Your neighborhood, connected.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_1_top_title">Meet your neighborhood</string>
+    <string name="onboarding_badge_connections">LOCAL CONNECTIONS, REAL POSSIBILITIES.</string>
+    <string name="onboarding_step_1">01 Discover</string>
+    <string name="onboarding_step_2">02 Book</string>
+    <string name="onboarding_step_3">03 Enjoy</string>
+    <string name="onboarding_1_title">Discover Local Businesses</string>
+    <string name="onboarding_1_desc">Find trusted salons, repair experts and wellness spaces, right around the corner.</string>
+    <string name="onboarding_1_highlight">Good things are closer than you think.</string>
+    <string name="btn_skip">Skip</string>
+    <string name="btn_next">Next</string>
+
+    <string name="onboarding_2_top_title">Make time for you</string>
+    <string name="onboarding_2_title">Book Services Easily</string>
+    <string name="onboarding_2_desc">Choose your service, find a time that fits, and keep every appointment in one place.</string>
+    <string name="onboarding_2_info">Clear prices and appointment details. No payment processing in BizBridge.</string>
+    <string name="btn_back">Back</string>
+
+    <string name="onboarding_3_top_title">A little peace of mind</string>
+    <string name="onboarding_3_title">Never Miss an Appointment</string>
+    <string name="onboarding_3_desc">Stay on top of your plans with booking updates and friendly reminders.</string>
+    <string name="onboarding_3_info">Notification examples are static demonstrations, not live reminders.</string>
+    <string name="btn_get_started">Get Started</string>
+
+    <!-- Login -->
+    <string name="login_welcome">Welcome back</string>
+    <string name="login_subtitle">Your next local connection starts here.</string>
+    <string name="login_card_title">Log in to BizBridge</string>
+    <string name="login_card_subtitle">For customers and business owners</string>
+    <string name="label_email">Email address</string>
+    <string name="label_password">Password</string>
+    <string name="hint_email">name@example.com</string>
+    <string name="hint_password">••••••••••••</string>
+    <string name="default_email">maya.chen@example.com</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="btn_login">Log In</string>
+    <string name="prompt_new_here">New here? </string>
+    <string name="prompt_sign_up">Sign Up</string>
+    <string name="security_card_title">Your information stays yours</string>
+    <string name="security_card_subtitle">We only use it to manage your account and bookings.</string>
+    <string name="terms_footer">By continuing, you agree to our Terms and Privacy Policy.</string>
+
+    <!-- Role Selection -->
+    <string name="role_title">How will you use BizBridge?</string>
+    <string name="role_subtitle">Choose the account that fits you.</string>
+    <string name="role_customer_title">Customer</string>
+    <string name="role_customer_desc">Discover nearby businesses, book services and share your experience.</string>
+    <string name="btn_continue_customer">Continue as Customer</string>
+    <string name="role_owner_title">Business Owner</string>
+    <string name="role_owner_desc">Grow your local business. Manage your profile, services and appointments.</string>
+    <string name="btn_continue_owner">Continue as Business Owner</string>
+    <string name="role_review_info">Business listings are reviewed before approval. You can prepare your profile while you wait.</string>
+
+    <!-- Register Customer -->
+    <string name="register_customer_title">Create your account</string>
+    <string name="add_profile_image">Add profile image</string>
+    <string name="label_full_name">Full name</string>
+    <string name="label_phone">Phone number</string>
+    <string name="label_confirm_password">Confirm password</string>
+    <string name="terms_checkbox_label">I agree to the Terms of Service and Privacy Policy.</string>
+    <string name="password_helper_text">Use at least 8 characters, including a number.</string>
+    <string name="btn_create_customer_account">Create Customer Account</string>
+
+    <!-- Register Owner -->
+    <string name="register_owner_title">Bring your business closer</string>
+    <string name="register_owner_subtitle">Start with the basics. Set up your listing next.</string>
+    <string name="label_owner_name">Owner name</string>
+    <string name="label_business_name">Business name</string>
+    <string name="label_business_category">Business category</string>
+    <string name="label_business_email">Business email</string>
+    <string name="owner_verification_info">Creating an account does not verify your business. Documents and listing approval are reviewed separately.</string>
+    <string name="btn_create_owner_account">Create Owner Account</string>
+
+    <!-- Forgot Password -->
+    <string name="forgot_password_title">Forget Password</string>
+    <string name="forgot_card_title">Let\'s get you back in.</string>
+    <string name="forgot_card_subtitle">Enter the email associated with your account. We\'ll send instructions to reset your password.</string>
+    <string name="btn_send_reset_link">Send Reset Link</string>
+    <string name="back_to_login">Back to Log In</string>
+    <string name="forgot_footer">For security, we won\'t confirm whether an email is registered. Check your inbox and spam folder.</string>
+    <string name="reset_requested_title">Reset instructions requested</string>
+    <string name="reset_requested_desc">If an account exists for %1$s, you\'ll receive a reset link shortly.</string>
+    <string name="btn_resend_link">Resend Link</string>
+    <string name="demo_success_note">Demonstration success state · No email has been sent.</string>
+</resources>
