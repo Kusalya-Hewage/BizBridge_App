@@ -132,7 +132,7 @@ class CustomerHomeFragment : Fragment() {
         // ─── Map button click ──────────────────────────────────────────
         val btnMap = view.findViewById<LinearLayout>(R.id.btn_map)
         btnMap?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(ExploreNearbyFragment(), addToBackStack = true)
+                    (activity as? MainActivity)?.navigateTo(NearbyMapFragment(), addToBackStack = true)
         }
 
         // Default instant clicks for nearby & popular cards (never dead)
