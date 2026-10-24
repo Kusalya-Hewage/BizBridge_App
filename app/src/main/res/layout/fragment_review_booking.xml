@@ -155,6 +155,7 @@
                 android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/tv_business_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
@@ -164,6 +165,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_service_header"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
@@ -201,6 +203,7 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/tv_appointment_date"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
@@ -210,6 +213,7 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_appointment_time_duration"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
@@ -391,6 +395,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
+                        android:id="@+id/tv_service_breakdown_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
@@ -398,6 +403,7 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/tv_service_breakdown_price"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
@@ -421,6 +427,7 @@
                         android:textSize="15sp"
                         android:textStyle="bold" />
                     <TextView
+                        android:id="@+id/tv_service_total_price"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"

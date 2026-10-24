@@ -58,7 +58,8 @@
                         android:src="@drawable/ic_arrow_back"
                         app:tint="@color/text_primary" />
 
-                    <TextView
+                                        <TextView
+                        android:id="@+id/txt_business_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
@@ -77,6 +78,7 @@
                 android:layout_height="200dp">
 
                 <ImageView
+                    android:id="@+id/img_business"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
@@ -159,7 +161,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Hair salon"
+                        android:id="@+id/txt_category" android:text="Hair salon"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -181,7 +183,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="4.9 (128 reviews)"
+                        android:id="@+id/txt_rating" android:text="4.9 (128 reviews)"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -210,9 +212,18 @@
                     android:layout_marginTop="12dp"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="4dp"
-                    android:text="Thoughtful cuts, natural color and a warm calmness. Rosa and her team make good hair feel effortless."
+                    android:id="@+id/txt_description" android:text="Thoughtful cuts, natural color and a warm calmness. Rosa and her team make good hair feel effortless."
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/txt_address"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Address placeholder"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
 
             </LinearLayout>
 

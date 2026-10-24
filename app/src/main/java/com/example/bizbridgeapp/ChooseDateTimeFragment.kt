@@ -12,11 +12,48 @@ import androidx.fragment.app.Fragment
 
 class ChooseDateTimeFragment : Fragment() {
 
+    private var businessId: String = ""
+    private var businessName: String = ""
+    private var serviceId: String = ""
+    private var serviceName: String = ""
+    private var servicePrice: Double = 45.0
+    private var serviceDuration: Int = 45
+    private var selectedDate: String = "Saturday, October 24, 2026"
+    private var selectedTime: String = "10:00–10:45 AM"
+
+    companion object {
+        fun newInstance(
+            businessId: String,
+            businessName: String,
+            serviceId: String,
+            serviceName: String,
+            servicePrice: Double,
+            serviceDuration: Int
+        ): ChooseDateTimeFragment {
+            val frag = ChooseDateTimeFragment()
+            val args = Bundle()
+            args.putString("businessId", businessId)
+            args.putString("businessName", businessName)
+            args.putString("serviceId", serviceId)
+            args.putString("serviceName", serviceName)
+            args.putDouble("servicePrice", servicePrice)
+            args.putInt("serviceDuration", serviceDuration)
+            frag.arguments = args
+            return frag
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        businessId = arguments?.getString("businessId").orEmpty()
+        businessName = arguments?.getString("businessName").orEmpty()
+        serviceId = arguments?.getString("serviceId").orEmpty()
+        serviceName = arguments?.getString("serviceName").orEmpty()
+        servicePrice = arguments?.getDouble("servicePrice") ?: 45.0
+        serviceDuration = arguments?.getInt("serviceDuration") ?: 45
         return inflater.inflate(R.layout.fragment_choose_date_time, container, false)
     }
 
@@ -46,6 +83,7 @@ class ChooseDateTimeFragment : Fragment() {
         val slotTexts = listOf("9:00–9:45 AM", "10:00–10:45 AM", "11:00–11:45 AM", "1:30–2:15 PM", "2:30–3:15 PM", "3:30–4:15 PM")
 
         fun selectSlot(index: Int) {
+            selectedTime = slotTexts[index]
             slots.forEachIndexed { i, slot ->
                 if (i == index) {
                     slot?.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_selected)
@@ -62,9 +100,22 @@ class ChooseDateTimeFragment : Fragment() {
             slot?.setOnClickListener { selectSlot(index) }
         }
 
-        // Continue button navigates to C07 ReviewBookingFragment
+        // Default select 10am
+        selectSlot(1)
+
+        // Continue button navigates to ReviewBookingFragment with complete booking draft
         view.findViewById<Button>(R.id.btn_continue)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(ReviewBookingFragment(), addToBackStack = true)
+            val frag = ReviewBookingFragment.newInstance(
+                businessId = businessId,
+                businessName = businessName,
+                serviceId = serviceId,
+                serviceName = serviceName,
+                servicePrice = servicePrice,
+                serviceDuration = serviceDuration,
+                appointmentDate = selectedDate,
+                appointmentTime = selectedTime
+            )
+            (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
     }
 }

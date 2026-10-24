@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.example.bizbridgeapp.UserSessionManager
 import androidx.fragment.app.Fragment
 
 class LoginFragment : Fragment() {
@@ -38,6 +39,13 @@ class LoginFragment : Fragment() {
         val tvForgotPassword = view.findViewById<TextView>(R.id.tv_forgot_password)
         val tvSignUp = view.findViewById<TextView>(R.id.tv_sign_up)
         val btnLogin = view.findViewById<Button>(R.id.btn_login)
+
+        UserSessionManager.init(requireContext())
+        val savedEmail = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email
+            ?: (UserSessionManager.getProfile()?.get("email") as? String)
+        if (!savedEmail.isNullOrBlank() && etEmail?.text.isNullOrBlank()) {
+            etEmail?.setText(savedEmail)
+        }
 
         // Password visibility toggle
         btnTogglePassword?.setOnClickListener {
@@ -91,9 +99,56 @@ class LoginFragment : Fragment() {
                     ContextCompat.getDrawable(requireContext(), R.drawable.bg_input_field)
             }
 
-            // Successful demonstration login
-            Toast.makeText(requireContext(), "Logged in as $email", Toast.LENGTH_SHORT).show()
-            (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
+            // Attempt Firebase sign‑in
+            btnLogin.isEnabled = false
+            com.example.bizbridgeapp.FirebaseAuthManager.signIn(
+                email = email,
+                password = password,
+                onSuccess = { firebaseUser ->
+                    // Fetch Firestore profile to verify role
+                    com.example.bizbridgeapp.FirebaseAuthManager.fetchUserProfile(
+                        uid = firebaseUser.uid,
+                        onSuccess = { profile ->
+                            val role = profile["role"] as? String ?: ""
+                            val status = profile["accountStatus"] as? String ?: "ACTIVE"
+                            // Save the whole profile locally for quick access later
+                            com.example.bizbridgeapp.UserSessionManager.init(requireContext())
+                            com.example.bizbridgeapp.UserSessionManager.saveProfile(profile)
+                            activity?.runOnUiThread {
+                                btnLogin.isEnabled = true
+                                if (status.equals("SUSPENDED", ignoreCase = true) || status.equals("INACTIVE", ignoreCase = true)) {
+                                    Toast.makeText(requireContext(), "Account is inactive or suspended.", Toast.LENGTH_LONG).show()
+                                    com.example.bizbridgeapp.FirebaseAuthManager.signOut()
+                                    com.example.bizbridgeapp.UserSessionManager.clear()
+                                } else if (role == "CUSTOMER") {
+                                    (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
+                                } else {
+                                    Toast.makeText(requireContext(), "Access denied: not a customer account.", Toast.LENGTH_LONG).show()
+                                    com.example.bizbridgeapp.FirebaseAuthManager.signOut()
+                                    com.example.bizbridgeapp.UserSessionManager.clear()
+                                }
+                            }
+                        },
+                        onFailure = { e ->
+                            activity?.runOnUiThread {
+                                btnLogin.isEnabled = true
+                                Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to retrieve profile.", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    )
+                },
+                onFailure = { e ->
+                    activity?.runOnUiThread {
+                        btnLogin.isEnabled = true
+                        val msg = when (e) {
+                            is com.google.firebase.auth.FirebaseAuthInvalidUserException -> "No account found for this email."
+                            is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Incorrect password."
+                            else -> e.localizedMessage ?: "Login failed."
+                        }
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
         }
     }
 

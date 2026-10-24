@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "599382934687",
+    "project_id": "bizbridge-connect-app",
+    "storage_bucket": "bizbridge-connect-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599382934687:android:d55040c4ea76a37d3aceaa",
+        "android_client_info": {
+          "package_name": "com.example.bizbridgeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFL8w7PZ5whXWMxoDdPZ32fS2SHqa0b6g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

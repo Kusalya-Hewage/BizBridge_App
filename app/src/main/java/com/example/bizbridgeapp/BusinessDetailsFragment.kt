@@ -8,8 +8,23 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.repository.BusinessRepository
+import android.widget.TextView
 
 class BusinessDetailsFragment : Fragment() {
+
+    private var currentBusinessId: String? = null
+    private var currentBusinessName: String? = null
+
+    companion object {
+        fun newInstance(businessId: String): BusinessDetailsFragment {
+            val fragment = BusinessDetailsFragment()
+            val args = Bundle()
+            args.putString("businessId", businessId)
+            fragment.arguments = args
+            return fragment
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -27,17 +42,71 @@ class BusinessDetailsFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // Book Appointment button -> navigates to SelectServiceFragment (C05)
+        // Book Appointment button -> navigates to SelectServiceFragment
         view.findViewById<Button>(R.id.btn_book_appointment)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(SelectServiceFragment(), addToBackStack = true)
+            val frag = SelectServiceFragment.newInstance(
+                businessId = currentBusinessId.orEmpty(),
+                businessName = currentBusinessName.orEmpty()
+            )
+            (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
 
         // Service items click -> also opens SelectServiceFragment
         view.findViewById<LinearLayout>(R.id.item_service_1)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(SelectServiceFragment(), addToBackStack = true)
+            val frag = SelectServiceFragment.newInstance(
+                businessId = currentBusinessId.orEmpty(),
+                businessName = currentBusinessName.orEmpty()
+            )
+            (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
         view.findViewById<LinearLayout>(R.id.item_service_2)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(SelectServiceFragment(), addToBackStack = true)
+            val frag = SelectServiceFragment.newInstance(
+                businessId = currentBusinessId.orEmpty(),
+                businessName = currentBusinessName.orEmpty()
+            )
+            (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
+
+        // Load business details
+        val bId = arguments?.getString("businessId")
+        if (!bId.isNullOrBlank()) {
+            loadBusiness(bId)
+        } else {
+            // Load first available approved active business as fallback
+            BusinessRepository.getApprovedActiveBusinesses(
+                onSuccess = { list ->
+                    list.firstOrNull()?.let { b ->
+                        loadBusiness(b.id)
+                    }
+                },
+                onFailure = {}
+            )
+        }
+    }
+
+    private fun loadBusiness(businessId: String) {
+        currentBusinessId = businessId
+        BusinessRepository.getBusinessById(businessId,
+            onSuccess = { business ->
+                business?.let {
+                    if (!isAdded) return@let
+                    currentBusinessName = it.name
+                    view?.findViewById<TextView>(R.id.txt_business_name)?.text = it.name
+                    view?.findViewById<TextView>(R.id.txt_category)?.text = it.category
+                    view?.findViewById<TextView>(R.id.txt_rating)?.text = "${it.rating} (${it.reviewCount} reviews)"
+                    view?.findViewById<TextView>(R.id.txt_description)?.text = it.description
+                    view?.findViewById<TextView>(R.id.txt_address)?.text = it.address
+                } ?: run {
+                    if (isAdded) {
+                        android.widget.Toast.makeText(requireContext(), "Business not found or not accessible", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            onFailure = { e ->
+                if (isAdded) {
+                    android.widget.Toast.makeText(requireContext(), "Error loading business: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
     }
 }

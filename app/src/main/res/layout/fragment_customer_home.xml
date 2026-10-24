@@ -237,7 +237,7 @@
                                 android:layout_width="16dp"
                                 android:layout_height="16dp"
                                 android:src="@drawable/ic_scissors"
-                                app:tint="@color/primary" />
+                                app:tint="@color/surface_white" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -245,7 +245,7 @@
                                 android:layout_marginStart="6dp"
                                 android:fontFamily="@font/inter_variable"
                                 android:text="Salon"
-                                android:textColor="@color/primary"
+                                android:textColor="@color/surface_white"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
 
@@ -436,7 +436,7 @@
                                     android:fontFamily="@font/inter_variable"
                                     android:gravity="center"
                                     android:text="J"
-                                    android:textColor="@color/primary"
+                                    android:textColor="@color/surface_white"
                                     android:textSize="16sp"
                                     android:textStyle="bold" />
                             </FrameLayout>

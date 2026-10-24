@@ -88,6 +88,7 @@
                     android:layout_height="wrap_content">
 
                     <TextView
+                        android:id="@+id/tv_booking_ref"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
@@ -112,6 +113,7 @@
                         android:paddingBottom="3dp">
 
                         <TextView
+                            android:id="@+id/tv_booking_status"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
@@ -124,18 +126,20 @@
 
                 <!-- Vector QR code -->
                 <ImageView
+                    android:id="@+id/iv_qr_code"
                     android:layout_width="140dp"
                     android:layout_height="140dp"
                     android:layout_marginTop="16dp"
                     android:src="@drawable/ic_qr_code_demo" />
 
                 <TextView
+                    android:id="@+id/tv_qr_caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="DEMONSTRATION QR · NOT FUNCTIONAL"
+                    android:text="SCAN AT APPOINTMENT CHECK-IN"
                     android:textColor="@color/text_muted"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -149,6 +153,7 @@
 
                 <!-- Business Details -->
                 <TextView
+                    android:id="@+id/tv_business_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
@@ -158,6 +163,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_service_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
@@ -167,6 +173,7 @@
                     android:textSize="13sp" />
 
                 <TextView
+                    android:id="@+id/tv_date_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
@@ -177,6 +184,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_address"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"

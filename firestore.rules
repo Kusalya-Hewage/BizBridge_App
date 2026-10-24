@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isCustomer() {
+      return isAuthenticated() && getUserData().role == 'CUSTOMER';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'ADMIN';
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      // Only user can create their own profile during registration; role must be CUSTOMER or OWNER
+      allow create: if isOwner(userId) && request.resource.data.role in ['CUSTOMER', 'BUSINESS_OWNER'];
+      // User can update their own profile, but cannot elevate role or change account status unless Admin
+      allow update: if isOwner(userId) && 
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.accountStatus == resource.data.accountStatus;
+      allow delete: if isAdmin();
+    }
+
+    // 2. Businesses collection
+    match /businesses/{businessId} {
+      // Anyone can read businesses (customers, guests, owners)
+      allow read: if true;
+      allow create: if isAuthenticated();
+      // Owner or authenticated user can update business info
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+
+      // Services subcollection
+      match /services/{serviceId} {
+        allow read: if true;
+        allow write: if isAuthenticated();
+      }
+    }
+
+    // 3. Bookings collection
+    match /bookings/{bookingId} {
+      // Customer can read their own bookings; business owner can read bookings for their business
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid ||
+        isAdmin()
+      );
+      // Customer can create booking for themselves
+      allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid;
+      // Customer can only cancel their own booking (set status to CANCELLED)
+      allow update: if isAuthenticated() && (
+        (resource.data.customerId == request.auth.uid && request.resource.data.status == 'CANCELLED') ||
+        (get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 4. Slot Reservations (Double-booking lock)
+    match /reservations/{slotKey} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // 5. Reviews collection
+    match /reviews/{reviewId} {
+      allow read: if true;
+      // Customer can create a review if they are the author
+      allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.customerId == request.auth.uid || isAdmin());
+    }
+
+    // 6. Notifications collection
+    match /notifications/{notificationId} {
+      // User can only read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Authenticated users/events can create notifications
+      allow create: if isAuthenticated();
+      // User can mark their own notification as read
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 7. Promotions collection
+    match /promotions/{promotionId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if isAuthenticated();
+    }
+  }
+}
