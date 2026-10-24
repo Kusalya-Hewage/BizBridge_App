@@ -72,6 +72,92 @@ object FirebaseAuthManager {
             .addOnFailureListener { e -> onFailure(e) }
     }
 
+    /** Register a new Business Owner, save business profile & submit business application */
+    fun registerOwner(
+        ownerName: String,
+        businessName: String,
+        category: String,
+        email: String,
+        password: String,
+        onSuccess: (firebaseUser: com.google.firebase.auth.FirebaseUser, businessId: String) -> Unit,
+        onFailure: (exception: Exception) -> Unit
+    ) {
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnSuccessListener { result ->
+                val user = result.user ?: run {
+                    onFailure(Exception("Firebase returned null user after owner registration"))
+                    return@addOnSuccessListener
+                }
+
+                val batch = firestore.batch()
+
+                // 1. User profile
+                val userDoc = firestore.collection("users").document(user.uid)
+                val userProfile = hashMapOf(
+                    "uid" to user.uid,
+                    "fullName" to ownerName,
+                    "email" to email,
+                    "phone" to "",
+                    "role" to "BUSINESS_OWNER",
+                    "profileImageUrl" to "",
+                    "accountStatus" to "ACTIVE",
+                    "createdAt" to FieldValue.serverTimestamp(),
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+                batch.set(userDoc, userProfile)
+
+                // 2. Business document
+                val bizDoc = firestore.collection("businesses").document()
+                val businessId = bizDoc.id
+                val businessData = hashMapOf(
+                    "id" to businessId,
+                    "ownerId" to user.uid,
+                    "name" to businessName,
+                    "category" to category,
+                    "description" to "Welcome to $businessName! Professional services tailored for you.",
+                    "address" to "Colombo, Sri Lanka",
+                    "contactNumber" to "",
+                    "openingHours" to "9:00 AM - 7:00 PM",
+                    "approved" to false,
+                    "active" to false,
+                    "approvalStatus" to "PENDING",
+                    "verificationStatus" to "PENDING",
+                    "trustScore" to 80,
+                    "rating" to 5.0,
+                    "reviewCount" to 0,
+                    "latitude" to 6.9271,
+                    "longitude" to 79.8612,
+                    "createdAt" to FieldValue.serverTimestamp(),
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+                batch.set(bizDoc, businessData)
+
+                // 3. Business application
+                val appDoc = firestore.collection("businessApplications").document()
+                val appData = hashMapOf(
+                    "id" to appDoc.id,
+                    "ownerId" to user.uid,
+                    "businessId" to businessId,
+                    "businessName" to businessName,
+                    "ownerName" to ownerName,
+                    "email" to email,
+                    "category" to category,
+                    "address" to "Colombo, Sri Lanka",
+                    "status" to "PENDING",
+                    "submittedAt" to FieldValue.serverTimestamp(),
+                    "rejectionReason" to ""
+                )
+                batch.set(appDoc, appData)
+
+                batch.commit().addOnSuccessListener {
+                    onSuccess(user, businessId)
+                }.addOnFailureListener { e ->
+                    onFailure(e)
+                }
+            }
+            .addOnFailureListener { e -> onFailure(e) }
+    }
+
     /** Upload profile image to Firebase Storage and retrieve download URL */
     fun uploadProfileImage(
         uid: String,
