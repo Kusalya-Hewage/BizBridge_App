@@ -101,6 +101,7 @@ class RegisterCustomerFragment : Fragment() {
             val email = etEmail?.text?.toString()?.trim().orEmpty()
             val password = etPassword?.text?.toString().orEmpty()
             val confirm = etConfirmPassword?.text?.toString().orEmpty()
+            val phone = etPhone?.text?.toString()?.trim().orEmpty()
 
             if (name.isEmpty()) {
                 Toast.makeText(requireContext(), "Please enter your full name", Toast.LENGTH_SHORT).show()
@@ -127,14 +128,39 @@ class RegisterCustomerFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // Success dialog matching design specimen
-            AlertDialog.Builder(requireContext())
-                .setTitle("Account Created")
-                .setMessage("Welcome to BizBridge, $name! Your customer account is ready.")
-                .setPositiveButton("Get Started") { _, _ ->
-                    (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
+            // Disable button to prevent double clicks
+            btnCreateAccount.isEnabled = false
+
+            // Call Firebase to register and store profile
+            com.example.bizbridgeapp.FirebaseAuthManager.registerCustomer(
+                fullName = name,
+                email = email,
+                phone = phone,
+                password = password,
+                onSuccess = { firebaseUser ->
+                    activity?.runOnUiThread {
+                        btnCreateAccount.isEnabled = true
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("Account Created")
+                            .setMessage("Welcome to BizBridge, $name! Your customer account is ready.")
+                            .setPositiveButton("Get Started") { _, _ ->
+                                (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
+                            }
+                            .show()
+                    }
+                },
+                onFailure = { e ->
+                    activity?.runOnUiThread {
+                        btnCreateAccount.isEnabled = true
+                        val msg = when (e) {
+                            is com.google.firebase.auth.FirebaseAuthUserCollisionException -> "An account with this email already exists."
+                            is com.google.firebase.auth.FirebaseAuthWeakPasswordException -> "Password is too weak."
+                            else -> e.localizedMessage ?: "Registration failed."
+                        }
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
+                    }
                 }
-                .show()
+            )
         }
     }
 }

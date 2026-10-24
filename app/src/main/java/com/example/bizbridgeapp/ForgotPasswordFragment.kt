@@ -52,12 +52,25 @@ class ForgotPasswordFragment : Fragment() {
                 Toast.makeText(requireContext(), "Please enter a valid email address", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
-            // Transition to Supporting State: "Reset instructions requested"
-            svRequestForm?.visibility = View.GONE
-            llSuccessState?.visibility = View.VISIBLE
-            tvSuccessDesc?.text = getString(R.string.reset_requested_desc, email)
+            // Call Firebase to send password reset email
+            com.example.bizbridgeapp.FirebaseAuthManager.sendPasswordReset(
+                email = email,
+                onSuccess = {
+                    // Transition to Supporting State: "Reset instructions requested"
+                    activity?.runOnUiThread {
+                        svRequestForm?.visibility = View.GONE
+                        llSuccessState?.visibility = View.VISIBLE
+                        tvSuccessDesc?.text = getString(R.string.reset_requested_desc, email)
+                    }
+                },
+                onFailure = { e ->
+                    activity?.runOnUiThread {
+                        Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to send reset email.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
         }
+        
 
         // Success state: Back to Log In button
         btnSuccessLogin?.setOnClickListener {
