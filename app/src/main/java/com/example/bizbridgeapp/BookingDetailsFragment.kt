@@ -9,13 +9,31 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 
+import android.widget.TextView
+import com.example.bizbridgeapp.model.Booking
+import com.example.bizbridgeapp.repository.BookingRepository
+
 class BookingDetailsFragment : Fragment() {
+
+    private var currentBookingId: String? = null
+    private var currentBooking: Booking? = null
+
+    companion object {
+        fun newInstance(bookingId: String): BookingDetailsFragment {
+            val frag = BookingDetailsFragment()
+            val args = Bundle()
+            args.putString("bookingId", bookingId)
+            frag.arguments = args
+            return frag
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        currentBookingId = arguments?.getString("bookingId")
         return inflater.inflate(R.layout.fragment_booking_details, container, false)
     }
 
@@ -27,15 +45,66 @@ class BookingDetailsFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // View Demonstration QR -> navigates to C08 BookingConfirmationFragment
+        // View Demonstration QR -> navigates to BookingConfirmationFragment
         view.findViewById<Button>(R.id.btn_view_demo_qr)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(BookingConfirmationFragment(), addToBackStack = true)
+            val bId = currentBookingId
+            if (!bId.isNullOrBlank()) {
+                val frag = BookingConfirmationFragment.newInstance(bId)
+                (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
+            } else {
+                (activity as? MainActivity)?.navigateTo(BookingConfirmationFragment(), addToBackStack = true)
+            }
         }
 
         // Cancel Booking
         view.findViewById<Button>(R.id.btn_cancel_booking)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Booking BB-24102 cancelled", Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
+            val bId = currentBookingId
+            if (!bId.isNullOrBlank()) {
+                BookingRepository.cancelBooking(bId, "Customer cancellation",
+                    onSuccess = {
+                        if (isAdded) {
+                            Toast.makeText(requireContext(), "Booking cancelled", Toast.LENGTH_SHORT).show()
+                            parentFragmentManager.popBackStack()
+                        }
+                    },
+                    onFailure = { e ->
+                        if (isAdded) {
+                            Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to cancel booking", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
+            } else {
+                Toast.makeText(requireContext(), "Booking cancelled", Toast.LENGTH_SHORT).show()
+                parentFragmentManager.popBackStack()
+            }
+        }
+
+        // Load real booking data
+        val id = currentBookingId
+        if (!id.isNullOrBlank()) {
+            BookingRepository.getBookingById(id,
+                onSuccess = { booking ->
+                    booking?.let { b ->
+                        currentBooking = b
+                        if (!isAdded) return@let
+                        view.findViewById<TextView>(R.id.tv_booking_id)?.text = b.qrReference.ifEmpty { b.id }
+                        view.findViewById<TextView>(R.id.tv_booking_status)?.text = b.status
+                        view.findViewById<TextView>(R.id.tv_business_name)?.text = b.businessNameSnapshot
+                        view.findViewById<TextView>(R.id.tv_service_info)?.text = "${b.serviceNameSnapshot} • $${b.priceAtBooking.toInt()}"
+                        view.findViewById<TextView>(R.id.tv_appointment_date)?.text = b.appointmentDate
+                        view.findViewById<TextView>(R.id.tv_appointment_time)?.text = "${b.appointmentTime} • ${b.durationMinutes} min"
+                        if (b.businessAddressSnapshot.isNotEmpty()) {
+                            view.findViewById<TextView>(R.id.tv_address)?.text = b.businessAddressSnapshot
+                        }
+
+                        // Disable cancel if already completed or cancelled
+                        if (b.status == "COMPLETED" || b.status == "CANCELLED") {
+                            view.findViewById<Button>(R.id.btn_cancel_booking)?.isEnabled = false
+                        }
+                    }
+                },
+                onFailure = {}
+            )
         }
     }
 }
