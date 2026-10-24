@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/admin_bottom_nav"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:layout_gravity="bottom"
+    android:background="@drawable/bg_bottom_nav"
+    android:elevation="8dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="6dp"
+    android:paddingEnd="6dp">
+
+    <!-- Overview Tab -->
+    <LinearLayout
+        android:id="@+id/nav_tab_overview"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_nav_overview"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_admin_nav_overview"
+            app:tint="@color/admin_nav_inactive" />
+
+        <TextView
+            android:id="@+id/tv_nav_overview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="@font/inter_variable"
+            android:text="Overview"
+            android:textColor="@color/admin_nav_inactive"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Applications Tab -->
+    <LinearLayout
+        android:id="@+id/nav_tab_applications"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_nav_applications"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_admin_nav_applications"
+            app:tint="@color/admin_nav_inactive" />
+
+        <TextView
+            android:id="@+id/tv_nav_applications"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="@font/inter_variable"
+            android:text="Applications"
+            android:textColor="@color/admin_nav_inactive"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Users Tab -->
+    <LinearLayout
+        android:id="@+id/nav_tab_users"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_nav_users"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_admin_nav_users"
+            app:tint="@color/admin_nav_inactive" />
+
+        <TextView
+            android:id="@+id/tv_nav_users"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="@font/inter_variable"
+            android:text="Users"
+            android:textColor="@color/admin_nav_inactive"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Reports Tab -->
+    <LinearLayout
+        android:id="@+id/nav_tab_reports"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_nav_reports"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_admin_nav_reports"
+            app:tint="@color/admin_nav_inactive" />
+
+        <TextView
+            android:id="@+id/tv_nav_reports"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="@font/inter_variable"
+            android:text="Reports"
+            android:textColor="@color/admin_nav_inactive"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Profile Tab -->
+    <LinearLayout
+        android:id="@+id/nav_tab_profile"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_nav_profile"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_nav_profile"
+            app:tint="@color/admin_nav_inactive" />
+
+        <TextView
+            android:id="@+id/tv_nav_profile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="@font/inter_variable"
+            android:text="Profile"
+            android:textColor="@color/admin_nav_inactive"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+</LinearLayout>

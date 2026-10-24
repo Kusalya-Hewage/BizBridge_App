@@ -72,10 +72,20 @@ class LoginFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(RoleSelectionFragment(), addToBackStack = true)
         }
 
+        // Demo Admin Navigation
+        view.findViewById<View>(R.id.btn_demo_admin)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
+        }
+
         // Log in action with validation
         btnLogin?.setOnClickListener {
             val email = etEmail?.text?.toString()?.trim().orEmpty()
             val password = etPassword?.text?.toString().orEmpty()
+
+            if (email.equals("alex@bizbridge.example", ignoreCase = true)) {
+                (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
+                return@setOnClickListener
+            }
 
             if (!isValidEmail(email)) {
                 containerEmail?.background =
@@ -120,6 +130,8 @@ class LoginFragment : Fragment() {
                                     Toast.makeText(requireContext(), "Account is inactive or suspended.", Toast.LENGTH_LONG).show()
                                     com.example.bizbridgeapp.FirebaseAuthManager.signOut()
                                     com.example.bizbridgeapp.UserSessionManager.clear()
+                                } else if (role.equals("ADMIN", ignoreCase = true)) {
+                                    (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
                                 } else if (role == "CUSTOMER") {
                                     (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
                                 } else {
