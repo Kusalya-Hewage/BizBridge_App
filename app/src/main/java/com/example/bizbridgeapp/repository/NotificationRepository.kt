@@ -88,4 +88,22 @@ object NotificationRepository {
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it) }
     }
+
+    /**
+     * Real-time listener for user notifications.
+     */
+    fun listenToNotificationsForUser(
+        userId: String,
+        onUpdate: (List<NotificationItem>) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration {
+        return db.collection(NOTIFICATIONS)
+            .whereEqualTo("userId", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+                val list = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(NotificationItem::class.java)?.copy(id = doc.id)
+                }.sortedByDescending { it.createdAt }
+                onUpdate(list)
+            }
+    }
 }
