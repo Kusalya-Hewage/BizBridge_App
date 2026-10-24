@@ -132,12 +132,12 @@ class LoginFragment : Fragment() {
                                     com.example.bizbridgeapp.UserSessionManager.clear()
                                 } else if (role.equals("ADMIN", ignoreCase = true)) {
                                     (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
-                                } else if (role == "CUSTOMER") {
+                                } else if (role.equals("BUSINESS_OWNER", ignoreCase = true) || role.equals("OWNER", ignoreCase = true)) {
+                                    (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
+                                } else if (role == "CUSTOMER" || role.isEmpty()) {
                                     (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
                                 } else {
-                                    Toast.makeText(requireContext(), "Access denied: not a customer account.", Toast.LENGTH_LONG).show()
-                                    com.example.bizbridgeapp.FirebaseAuthManager.signOut()
-                                    com.example.bizbridgeapp.UserSessionManager.clear()
+                                    (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
                                 }
                             }
                         },
