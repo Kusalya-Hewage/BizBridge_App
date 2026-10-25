@@ -282,8 +282,17 @@ object BusinessRepository {
         if (targetId.startsWith("biz_")) {
             return db.collection(COLLECTION).document(targetId)
                 .addSnapshotListener { snapshot, error ->
-                    if (error != null || snapshot == null) {
+                    if (error != null || snapshot == null || !snapshot.exists()) {
+                        val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
+                        if (localBiz != null) {
+                            onUpdate(localBiz)
+                            return@addSnapshotListener
+                        }
                         if (!savedName.isNullOrBlank()) {
+                            val isApproved = (sessionProfile?.get("approved") as? Boolean) ?: false
+                            val isAct = (sessionProfile?.get("active") as? Boolean) ?: false
+                            val appStat = (sessionProfile?.get("approvalStatus") as? String) ?: "PENDING"
+                            val verStat = (sessionProfile?.get("verificationStatus") as? String) ?: "PENDING"
                             onUpdate(
                                 Business(
                                     id = targetId,
@@ -291,10 +300,10 @@ object BusinessRepository {
                                     category = savedCategory,
                                     contactNumber = savedPhone,
                                     description = "Welcome to $savedName!",
-                                    approvalStatus = "PENDING",
-                                    verificationStatus = "PENDING",
-                                    approved = false,
-                                    active = false,
+                                    approvalStatus = appStat,
+                                    verificationStatus = verStat,
+                                    approved = isApproved,
+                                    active = isAct,
                                     trustScore = 80
                                 )
                             )
@@ -304,29 +313,8 @@ object BusinessRepository {
                         return@addSnapshotListener
                     }
                     if (snapshot.exists()) {
-                        onUpdate(snapshot.toObject(Business::class.java)?.copy(id = snapshot.id))
-                    } else {
-                        if (!savedName.isNullOrBlank()) {
-                            onUpdate(
-                                Business(
-                                    id = targetId,
-                                    name = savedName,
-                                    category = savedCategory,
-                                    contactNumber = savedPhone,
-                                    description = "Welcome to $savedName!",
-                                    approvalStatus = "PENDING",
-                                    verificationStatus = "PENDING",
-                                    approved = false,
-                                    active = false,
-                                    trustScore = 80
-                                )
-                            )
-                        } else {
-                            // Seed default businesses so Juniper Studio exists
-                            seedDefaultBusinessesIfEmpty { seeded ->
-                                onUpdate(seeded.firstOrNull { it.id == targetId } ?: seeded.firstOrNull())
-                            }
-                        }
+                        val bizObj = snapshot.toObject(Business::class.java)?.copy(id = snapshot.id)
+                        onUpdate(bizObj)
                     }
                 }
         }
