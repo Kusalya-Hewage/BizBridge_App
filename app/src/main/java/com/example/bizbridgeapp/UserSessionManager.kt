@@ -54,69 +54,41 @@ object UserSessionManager {
             )
         }
 
-        // Seed default qualification documents for demonstration & testing
-        if (getAllQualificationDocuments().isEmpty()) {
-            saveQualificationDocument(
-                QualificationDocument(
-                    id = "doc_hair_design",
-                    businessId = "biz_juniper_studio",
-                    ownerId = "owner_elena",
-                    businessName = "Juniper Studio",
-                    title = "Hair Design Certificate",
-                    issuingOrg = "California Beauty Academy",
-                    experience = "8 years · Stylist since 2018",
-                    documentType = "CERTIFICATE",
-                    storagePath = "qualification_docs/biz_juniper_studio/cert_hair_design.pdf",
-                    fileUrl = "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
-                    verificationStatus = "VERIFIED"
-                )
-            )
-            saveQualificationDocument(
-                QualificationDocument(
-                    id = "doc_color_systems",
-                    businessId = "biz_juniper_studio",
-                    ownerId = "owner_elena",
-                    businessName = "Juniper Studio",
-                    title = "Advanced Color Systems",
-                    issuingOrg = "L'Oréal Professionnel Academy",
-                    experience = "Colorist Masterclass 2022",
-                    documentType = "CERTIFICATE",
-                    storagePath = "qualification_docs/biz_juniper_studio/cert_color_systems.pdf",
-                    fileUrl = "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
-                    verificationStatus = "PENDING"
-                )
-            )
-            saveQualificationDocument(
-                QualificationDocument(
-                    id = "doc_experience_letter",
-                    businessId = "biz_juniper_studio",
-                    ownerId = "owner_elena",
-                    businessName = "Juniper Studio",
-                    title = "Experience letter",
-                    issuingOrg = "Salon Colombo",
-                    experience = "Senior Stylist (2018-2022)",
-                    documentType = "EXPERIENCE_LETTER",
-                    storagePath = "qualification_docs/biz_juniper_studio/exp_letter.pdf",
-                    fileUrl = "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=600&q=80",
-                    verificationStatus = "REJECTED",
-                    rejectionReason = "Dates are not legible. Upload a clearer copy."
-                )
-            )
-            saveQualificationDocument(
-                QualificationDocument(
-                    id = "doc_massage_cert",
-                    businessId = "biz_hairloft",
-                    ownerId = "owner_hairloft",
-                    businessName = "Hair Loft",
-                    title = "Therapeutic & Spa Treatment License",
-                    issuingOrg = "International Wellness Institute",
-                    experience = "6 years · Certified Practitioner",
-                    documentType = "CERTIFICATE",
-                    storagePath = "qualification_docs/biz_hairloft/cert_spa.pdf",
-                    fileUrl = "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=600&q=80",
-                    verificationStatus = "PENDING"
-                )
-            )
+        }
+
+        // Clean out legacy demo qualification documents if any exist
+        val demoDocIds = setOf("doc_hair_design", "doc_color_systems", "doc_experience_letter", "doc_massage_cert")
+        val currentDocs = getAllQualificationDocuments()
+        if (currentDocs.any { it.id in demoDocIds }) {
+            val cleanedDocs = currentDocs.filterNot { it.id in demoDocIds }
+            saveAllQualificationDocuments(cleanedDocs)
+        }
+
+        // Clean out legacy demo businesses from local storage if any exist
+        val demoBizIds = setOf("biz_juniper_studio", "biz_oliver_beauty", "biz_daily_cut", "biz_lotus_wellness")
+        val currentBiz = getAllBusinesses()
+        if (currentBiz.any { it.id in demoBizIds }) {
+            val cleanedBiz = currentBiz.filterNot { it.id in demoBizIds }
+            val array = JSONArray()
+            for (b in cleanedBiz) {
+                val o = JSONObject()
+                o.put("id", b.id)
+                o.put("ownerId", b.ownerId)
+                o.put("name", b.name)
+                o.put("category", b.category)
+                o.put("description", b.description)
+                o.put("address", b.address)
+                o.put("contactNumber", b.contactNumber)
+                o.put("approved", b.approved)
+                o.put("active", b.active)
+                o.put("approvalStatus", b.approvalStatus)
+                o.put("verificationStatus", b.verificationStatus)
+                o.put("trustScore", b.trustScore)
+                o.put("rating", b.rating ?: 0.0)
+                o.put("reviewCount", b.reviewCount)
+                array.put(o)
+            }
+            prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
         }
     }
 
