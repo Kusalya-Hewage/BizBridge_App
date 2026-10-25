@@ -70,12 +70,20 @@ object ServiceRepository {
 
         return colRef.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) {
-                onUpdate(defaultDemoServices.map { it.copy(businessId = targetBizId) })
+                if (targetBizId == "biz_juniper_studio") {
+                    onUpdate(defaultDemoServices.map { it.copy(businessId = targetBizId) })
+                } else {
+                    onUpdate(emptyList())
+                }
                 return@addSnapshotListener
             }
             if (snapshot.isEmpty) {
-                seedDefaultServicesIfEmpty(targetBizId) { seeded ->
-                    onUpdate(seeded)
+                if (targetBizId == "biz_juniper_studio") {
+                    seedDefaultServicesIfEmpty(targetBizId) { seeded ->
+                        onUpdate(seeded)
+                    }
+                } else {
+                    onUpdate(emptyList())
                 }
             } else {
                 val list = snapshot.documents.mapNotNull { doc ->
@@ -97,8 +105,12 @@ object ServiceRepository {
             .get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.isEmpty) {
-                    seedDefaultServicesIfEmpty(targetBizId) { seeded ->
-                        onSuccess(seeded.filter { it.isActive })
+                    if (targetBizId == "biz_juniper_studio") {
+                        seedDefaultServicesIfEmpty(targetBizId) { seeded ->
+                            onSuccess(seeded.filter { it.isActive })
+                        }
+                    } else {
+                        onSuccess(emptyList())
                     }
                 } else {
                     val list = snapshot.documents.mapNotNull { doc ->
@@ -108,7 +120,13 @@ object ServiceRepository {
                     onSuccess(list)
                 }
             }
-            .addOnFailureListener { e -> onFailure(e) }
+            .addOnFailureListener { e ->
+                if (targetBizId == "biz_juniper_studio") {
+                    onSuccess(defaultDemoServices.map { it.copy(businessId = targetBizId) })
+                } else {
+                    onSuccess(emptyList())
+                }
+            }
     }
 
     fun getServiceById(
