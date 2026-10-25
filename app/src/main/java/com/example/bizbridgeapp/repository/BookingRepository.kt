@@ -340,8 +340,12 @@ object BookingRepository {
                     return@addSnapshotListener
                 }
                 if (snapshot.isEmpty) {
-                    seedDefaultBookingsIfEmpty(targetBizId) { seeded ->
-                        onUpdate(seeded)
+                    if (targetBizId == "biz_juniper_studio") {
+                        seedDefaultBookingsIfEmpty(targetBizId) { seeded ->
+                            onUpdate(seeded)
+                        }
+                    } else {
+                        onUpdate(localBookingsCache.filter { it.businessId == targetBizId })
                     }
                 } else {
                     val cloudList = snapshot.documents.mapNotNull { doc ->
