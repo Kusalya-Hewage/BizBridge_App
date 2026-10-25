@@ -97,20 +97,25 @@ class ReviewBookingFragment : Fragment() {
         // Confirm Booking button -> calls BookingRepository.createBooking
         btnConfirm?.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
-            val currentUid = user?.uid ?: "demo_customer"
+            val profile = UserSessionManager.getProfile()
+            val currentUid = user?.uid ?: (profile?.get("uid") as? String).orEmpty()
+            if (currentUid.isEmpty()) {
+                Toast.makeText(requireContext(), "Please sign in to confirm booking.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             btnConfirm.isEnabled = false
             val note = etNote?.text?.toString()?.trim().orEmpty()
 
             val booking = Booking(
                 customerId = currentUid,
-                businessId = if (businessId.isNotEmpty()) businessId else "biz_juniper_studio",
-                businessNameSnapshot = if (businessName.isNotEmpty()) businessName else "Juniper Studio",
-                businessAddressSnapshot = "42 Flower Road, Colombo 07",
-                serviceId = if (serviceId.isNotEmpty()) serviceId else "srv_haircut",
-                serviceNameSnapshot = if (serviceName.isNotEmpty()) serviceName else "Signature haircut",
-                appointmentDate = if (appointmentDate.isNotEmpty()) appointmentDate else "Saturday, October 24, 2026",
-                appointmentTime = if (appointmentTime.isNotEmpty()) appointmentTime else "10:00 AM",
+                businessId = businessId,
+                businessNameSnapshot = businessName,
+                businessAddressSnapshot = "",
+                serviceId = serviceId,
+                serviceNameSnapshot = serviceName,
+                appointmentDate = appointmentDate,
+                appointmentTime = appointmentTime,
                 priceAtBooking = servicePrice,
                 durationMinutes = serviceDuration,
                 status = "PENDING",

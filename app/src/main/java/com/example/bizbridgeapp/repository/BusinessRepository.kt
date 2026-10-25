@@ -258,9 +258,10 @@ object BusinessRepository {
         val effectiveBizId = if (ownerOrBizId.isNotBlank() && ownerOrBizId != "biz_juniper_studio" && ownerOrBizId != "demo_owner") {
             ownerOrBizId
         } else if (!currentUid.isNullOrBlank()) {
-            "biz_${currentUid.take(12)}"
+            val sessionBiz = sessionProfile?.get("businessId") as? String
+            if (!sessionBiz.isNullOrBlank() && sessionBiz != "biz_juniper_studio") sessionBiz else "biz_${currentUid.take(12)}"
         } else {
-            (sessionProfile?.get("businessId") as? String) ?: "biz_juniper_studio"
+            (sessionProfile?.get("businessId") as? String).orEmpty()
         }
 
         // If a real Firebase user is logged in
@@ -372,7 +373,7 @@ object BusinessRepository {
             } else if (!currentUid.isNullOrBlank()) {
                 "biz_${currentUid.take(12)}"
             } else {
-                "biz_juniper_studio"
+                "biz_${System.currentTimeMillis()}"
             }
         }
 

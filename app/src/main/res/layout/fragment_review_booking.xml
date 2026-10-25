@@ -39,7 +39,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · DEMONSTRATION DATA"
+                    android:text="CUSTOMER · REVIEW BOOKING"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 

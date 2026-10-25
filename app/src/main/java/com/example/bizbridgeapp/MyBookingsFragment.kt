@@ -143,7 +143,15 @@ class MyBookingsFragment : Fragment() {
 
     private fun loadCustomerBookings() {
         val user = FirebaseAuth.getInstance().currentUser
-        val uid = user?.uid.orEmpty().ifEmpty { "demo_customer" }
+        val profile = UserSessionManager.getProfile()
+        val uid = user?.uid ?: (profile?.get("uid") as? String).orEmpty()
+        if (uid.isEmpty()) {
+            pbLoading?.visibility = View.GONE
+            allBookings = emptyList()
+            updateTabStyles()
+            filterAndRenderBookings()
+            return
+        }
 
         pbLoading?.visibility = View.VISIBLE
         llEmptyState?.visibility = View.GONE

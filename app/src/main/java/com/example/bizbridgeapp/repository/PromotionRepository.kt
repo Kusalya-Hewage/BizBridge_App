@@ -8,44 +8,10 @@ object PromotionRepository {
     private val db = FirebaseFirestore.getInstance()
     private const val PROMOTIONS = "promotions"
 
-    val defaultDemoPromotions = listOf(
-        Promotion(
-            id = "promo_season_finish",
-            businessId = "biz_juniper_studio",
-            businessName = "Juniper Studio",
-            title = "A fresh season finish",
-            description = "Complimentary gloss treatment with every full color service this month.",
-            discountText = "Complimentary treatment",
-            status = "ACTIVE"
-        )
-    )
+    val defaultDemoPromotions = emptyList<Promotion>()
 
     fun seedDefaultPromotionsIfEmpty(businessId: String, onComplete: (List<Promotion>) -> Unit = {}) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
-        if (targetBizId != "biz_juniper_studio") {
-            onComplete(emptyList())
-            return
-        }
-        val colRef = db.collection(PROMOTIONS)
-        colRef.whereEqualTo("businessId", targetBizId).get().addOnSuccessListener { snap ->
-            if (snap.isEmpty) {
-                val batch = db.batch()
-                val seeded = defaultDemoPromotions.map { p ->
-                    val docRef = colRef.document(p.id)
-                    val toSave = p.copy(businessId = targetBizId)
-                    batch.set(docRef, toSave.toMap())
-                    toSave
-                }
-                batch.commit()
-                    .addOnSuccessListener { onComplete(seeded) }
-                    .addOnFailureListener { onComplete(seeded) }
-            } else {
-                val list = snap.documents.mapNotNull { it.toObject(Promotion::class.java)?.copy(id = it.id) }
-                onComplete(list)
-            }
-        }.addOnFailureListener {
-            onComplete(defaultDemoPromotions.map { it.copy(businessId = targetBizId) })
-        }
+        onComplete(emptyList())
     }
 
     /** Get active promotions for customer home */
@@ -62,22 +28,16 @@ object PromotionRepository {
 
     /** Real-time listener for promotions belonging to a business */
     fun listenToPromotionsForBusiness(businessId: String, onUpdate: (List<Promotion>) -> Unit): ListenerRegistration {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         return db.collection(PROMOTIONS)
             .whereEqualTo("businessId", targetBizId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) {
-                    onUpdate(defaultDemoPromotions.filter { it.businessId == targetBizId })
+                    onUpdate(emptyList())
                     return@addSnapshotListener
                 }
                 if (snapshot.isEmpty) {
-                    if (targetBizId == "biz_juniper_studio") {
-                        seedDefaultPromotionsIfEmpty(targetBizId) { seeded ->
-                            onUpdate(seeded)
-                        }
-                    } else {
-                        onUpdate(emptyList())
-                    }
+                    onUpdate(emptyList())
                 } else {
                     val list = snapshot.documents.mapNotNull { it.toObject(Promotion::class.java)?.copy(id = it.id) }
                     onUpdate(list)

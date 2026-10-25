@@ -27,11 +27,11 @@ object QualificationRepository {
         val finalOwnerId = if (doc.ownerId.isNotBlank() && doc.ownerId != "owner_elena" && doc.ownerId != "owner_bizbridge") {
             doc.ownerId
         } else {
-            currentUid ?: "owner_elena"
+            currentUid.orEmpty()
         }
         val finalBizId = if (doc.businessId.isNotBlank() && doc.businessId != "biz_juniper_studio") {
             doc.businessId
-        } else if (!sessionBizId.isNullOrBlank()) {
+        } else if (!sessionBizId.isNullOrBlank() && sessionBizId != "biz_juniper_studio") {
             sessionBizId
         } else {
             BusinessRepository.getOwnerBusinessId()
@@ -84,13 +84,11 @@ object QualificationRepository {
                     val doc = snap.toObject(QualificationDocument::class.java)?.copy(id = snap.id)
                     onSuccess(doc)
                 } else {
-                    val fallback = localDocs.firstOrNull()
-                    onSuccess(fallback)
+                    onSuccess(null)
                 }
             }
             .addOnFailureListener {
-                val fallback = localDocs.firstOrNull()
-                onSuccess(fallback)
+                onSuccess(null)
             }
     }
 

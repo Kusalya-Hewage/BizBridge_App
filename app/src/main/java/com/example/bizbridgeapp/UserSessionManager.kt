@@ -54,8 +54,6 @@ object UserSessionManager {
             )
         }
 
-        }
-
         // Clean out legacy demo qualification documents if any exist
         val demoDocIds = setOf("doc_hair_design", "doc_color_systems", "doc_experience_letter", "doc_massage_cert")
         val currentDocs = getAllQualificationDocuments()
@@ -579,14 +577,9 @@ object UserSessionManager {
         return list
     }
 
-    /** Update status of a qualification document locally */
-    fun updateQualificationStatus(docId: String, status: String, reason: String = "") {
+    /** Save all qualification documents to SharedPreferences */
+    fun saveAllQualificationDocuments(docs: List<QualificationDocument>) {
         if (!::prefs.isInitialized) return
-        val docs = getAllQualificationDocuments().map {
-            if (it.id == docId) {
-                it.copy(verificationStatus = status, rejectionReason = reason)
-            } else it
-        }
         val array = JSONArray()
         for (d in docs) {
             val o = JSONObject()
@@ -605,6 +598,17 @@ object UserSessionManager {
             array.put(o)
         }
         prefs.edit().putString(KEY_QUALIFICATIONS, array.toString()).apply()
+    }
+
+    /** Update status of a qualification document locally */
+    fun updateQualificationStatus(docId: String, status: String, reason: String = "") {
+        if (!::prefs.isInitialized) return
+        val docs = getAllQualificationDocuments().map {
+            if (it.id == docId) {
+                it.copy(verificationStatus = status, rejectionReason = reason)
+            } else it
+        }
+        saveAllQualificationDocuments(docs)
     }
 
     /** Retrieve qualification documents for a specific business or owner */

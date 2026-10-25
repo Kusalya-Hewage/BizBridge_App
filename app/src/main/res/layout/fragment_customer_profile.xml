@@ -370,7 +370,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Admin Workspace (Demo)"
+                            android:text="Admin Workspace"
                             android:textColor="@color/admin_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -380,7 +380,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Switch to Alex Morgan administration portal"
+                            android:text="Switch to platform administration portal"
                             android:textColor="@color/text_muted"
                             android:textSize="12sp" />
                     </LinearLayout>

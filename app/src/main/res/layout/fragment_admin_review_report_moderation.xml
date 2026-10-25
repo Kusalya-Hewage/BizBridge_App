@@ -214,7 +214,7 @@
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="2dp"
-                    android:text="No personal information is visible in this sample review. Assess against community guidelines."
+                    android:text="No personal information is visible in this review. Assess against community guidelines."
                     android:textColor="@color/admin_text_body"
                     android:textSize="13sp" />
             </LinearLayout>

@@ -39,7 +39,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · DEMONSTRATION DATA"
+                    android:text="CUSTOMER · BUSINESS DETAILS"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
@@ -253,7 +253,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
                             android:letterSpacing="0.06"
-                            android:text="TRUST SCORE · DEMONSTRATION"
+                            android:text="TRUST SCORE &amp; CREDENTIALS"
                             android:textColor="@color/primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />

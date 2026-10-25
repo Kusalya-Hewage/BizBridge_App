@@ -127,7 +127,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Export sample"
+                        android:text="Export report"
                         android:textColor="@color/admin_primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />

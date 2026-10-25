@@ -39,7 +39,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · DEMONSTRATION DATA"
+                    android:text="CUSTOMER · APPOINTMENT DETAILS"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
@@ -513,7 +513,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Show demonstration QR on arrival"
+                            android:text="Show QR code on arrival"
                             android:textColor="@color/text_muted"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -564,7 +564,7 @@
             android:layout_marginTop="4dp"
             android:background="@drawable/bg_button_primary"
             android:fontFamily="@font/inter_variable"
-            android:text="View Demonstration QR"
+            android:text="View QR Code"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="15sp"

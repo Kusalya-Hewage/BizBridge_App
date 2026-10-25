@@ -14,57 +14,9 @@ object BookingRepository {
         return time.replace(Regex("[^a-zA-Z0-9]"), "_")
     }
 
-    val defaultDemoBookings = listOf(
-        Booking(
-            id = "bk_demo_1",
-            customerId = "demo_customer",
-            businessId = "biz_juniper_studio",
-            businessNameSnapshot = "Juniper Studio",
-            businessAddressSnapshot = "42 Flower Road, Colombo 07",
-            serviceId = "srv_haircut",
-            serviceNameSnapshot = "Signature haircut",
-            appointmentDate = "Sat, Oct 24, 2026",
-            appointmentTime = "10:00 AM",
-            priceAtBooking = 45.0,
-            durationMinutes = 45,
-            status = "CONFIRMED",
-            qrReference = "BB-24108"
-        ),
-        Booking(
-            id = "bk_demo_2",
-            customerId = "demo_customer",
-            businessId = "biz_oliver_beauty",
-            businessNameSnapshot = "Oliver Beauty Bar",
-            businessAddressSnapshot = "18 Havelock Road, Colombo 05",
-            serviceId = "srv_facial",
-            serviceNameSnapshot = "Luxury Facial Treatment",
-            appointmentDate = "Tue, Oct 27, 2026",
-            appointmentTime = "2:00 PM",
-            priceAtBooking = 65.0,
-            durationMinutes = 60,
-            status = "PENDING",
-            qrReference = "BB-24110"
-        ),
-        Booking(
-            id = "bk_demo_3",
-            customerId = "demo_customer",
-            businessId = "biz_daily_cut",
-            businessNameSnapshot = "The Daily Cut Barber",
-            businessAddressSnapshot = "75 Galle Road, Colombo 03",
-            serviceId = "srv_beard",
-            serviceNameSnapshot = "Gentleman's Shave & Styling",
-            appointmentDate = "Wed, Oct 14, 2026",
-            appointmentTime = "11:30 AM",
-            priceAtBooking = 35.0,
-            durationMinutes = 30,
-            status = "COMPLETED",
-            qrReference = "BB-23914"
-        )
-    )
+    val defaultDemoBookings = emptyList<Booking>()
 
-    private val localBookingsCache = mutableListOf<Booking>().apply {
-        addAll(defaultDemoBookings)
-    }
+    private val localBookingsCache = mutableListOf<Booking>()
 
     /**
      * Atomically reserve a slot and create a booking record to prevent double bookings.
@@ -153,12 +105,11 @@ object BookingRepository {
                 val cloudList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Booking::class.java)?.copy(id = doc.id)
                 }
-                val merged = (cloudList + localBookingsCache).distinctBy { it.id }
+                val merged = (cloudList + localBookingsCache.filter { it.customerId == customerId }).distinctBy { it.id }
                 onSuccess(merged)
             }
             .addOnFailureListener { e ->
-                // Return local cache so user's bookings are always available
-                onSuccess(localBookingsCache)
+                onSuccess(localBookingsCache.filter { it.customerId == customerId })
             }
     }
 
@@ -177,11 +128,11 @@ object BookingRepository {
             .addOnSuccessListener { snapshot ->
                 val upcoming = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Booking::class.java)?.copy(id = doc.id)
-                }.firstOrNull() ?: localBookingsCache.firstOrNull { it.status == "CONFIRMED" || it.status == "PENDING" }
+                }.firstOrNull() ?: localBookingsCache.firstOrNull { it.customerId == customerId && (it.status == "CONFIRMED" || it.status == "PENDING") }
                 onSuccess(upcoming)
             }
             .addOnFailureListener { e ->
-                val upcoming = localBookingsCache.firstOrNull { it.status == "CONFIRMED" || it.status == "PENDING" }
+                val upcoming = localBookingsCache.firstOrNull { it.customerId == customerId && (it.status == "CONFIRMED" || it.status == "PENDING") }
                 onSuccess(upcoming)
             }
     }
@@ -195,7 +146,7 @@ object BookingRepository {
         onFailure: (Exception) -> Unit
     ) {
         if (bookingId.isBlank()) {
-            onSuccess(localBookingsCache.firstOrNull())
+            onSuccess(null)
             return
         }
         db.collection(BOOKINGS).document(bookingId).get()
@@ -203,12 +154,12 @@ object BookingRepository {
                 if (doc.exists()) {
                     onSuccess(doc.toObject(Booking::class.java)?.copy(id = doc.id))
                 } else {
-                    val local = localBookingsCache.firstOrNull { it.id == bookingId } ?: localBookingsCache.firstOrNull()
+                    val local = localBookingsCache.firstOrNull { it.id == bookingId }
                     onSuccess(local)
                 }
             }
             .addOnFailureListener { e ->
-                val local = localBookingsCache.firstOrNull { it.id == bookingId } ?: localBookingsCache.firstOrNull()
+                val local = localBookingsCache.firstOrNull { it.id == bookingId }
                 onSuccess(local)
             }
     }
@@ -298,30 +249,20 @@ object BookingRepository {
             .whereEqualTo("customerId", customerId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) {
-                    onUpdate(localBookingsCache.filter { it.customerId == customerId || it.customerId == "demo_customer" })
+                    onUpdate(localBookingsCache.filter { it.customerId == customerId })
                     return@addSnapshotListener
                 }
                 val cloudList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Booking::class.java)?.copy(id = doc.id)
                 }
-                val merged = (cloudList + localBookingsCache).distinctBy { it.id }
+                val merged = (cloudList + localBookingsCache.filter { it.customerId == customerId }).distinctBy { it.id }
                 onUpdate(merged)
             }
     }
 
     /** Seed default bookings if business has none */
     fun seedDefaultBookingsIfEmpty(businessId: String, onComplete: (List<Booking>) -> Unit = {}) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
-        val batch = db.batch()
-        val toSeed = defaultDemoBookings.map { b ->
-            val docRef = db.collection(BOOKINGS).document(b.id)
-            val toSave = b.copy(businessId = targetBizId)
-            batch.set(docRef, toSave.toMap())
-            toSave
-        }
-        batch.commit()
-            .addOnSuccessListener { onComplete(toSeed) }
-            .addOnFailureListener { onComplete(toSeed) }
+        onComplete(emptyList())
     }
 
     /**
@@ -331,7 +272,7 @@ object BookingRepository {
         businessId: String,
         onUpdate: (List<Booking>) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         return db.collection(BOOKINGS)
             .whereEqualTo("businessId", targetBizId)
             .addSnapshotListener { snapshot, error ->
@@ -340,13 +281,7 @@ object BookingRepository {
                     return@addSnapshotListener
                 }
                 if (snapshot.isEmpty) {
-                    if (targetBizId == "biz_juniper_studio") {
-                        seedDefaultBookingsIfEmpty(targetBizId) { seeded ->
-                            onUpdate(seeded)
-                        }
-                    } else {
-                        onUpdate(localBookingsCache.filter { it.businessId == targetBizId })
-                    }
+                    onUpdate(localBookingsCache.filter { it.businessId == targetBizId })
                 } else {
                     val cloudList = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(Booking::class.java)?.copy(id = doc.id)
@@ -430,7 +365,7 @@ object BookingRepository {
         onFailure: (Exception) -> Unit
     ) {
         val normalizedCode = qrRef.trim().uppercase()
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
 
         // Query by qrReference
         db.collection(BOOKINGS)

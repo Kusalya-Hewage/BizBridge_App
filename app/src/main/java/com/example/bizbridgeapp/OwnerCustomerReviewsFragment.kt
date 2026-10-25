@@ -42,11 +42,8 @@ class OwnerCustomerReviewsFragment : Fragment() {
 
         val cardMaya = view.findViewById<View>(R.id.card_review_maya)
         val cardJordan = view.findViewById<View>(R.id.card_review_jordan)
-
-        if (currentBusinessId != "biz_juniper_studio") {
-            cardMaya?.visibility = View.GONE
-            cardJordan?.visibility = View.GONE
-        }
+        cardMaya?.visibility = View.GONE
+        cardJordan?.visibility = View.GONE
 
         // Reply actions
         view.findViewById<View>(R.id.btn_reply_maya)?.setOnClickListener {

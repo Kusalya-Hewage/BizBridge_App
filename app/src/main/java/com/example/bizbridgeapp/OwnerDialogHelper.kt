@@ -75,7 +75,7 @@ object OwnerDialogHelper {
         message: String,
         primaryButtonText: String,
         secondaryButtonText: String = "Back to Scanner",
-        badgeText: String = "Demonstration result only · No code was scanned or verified.",
+        badgeText: String = "Verified Appointment Reference",
         onPrimaryAction: () -> Unit
     ) {
         val dialog = Dialog(context)
