@@ -52,14 +52,14 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Demonstration Banner -->
+            <!-- Qualifications Info Banner -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card_lavender"
                 android:fontFamily="@font/inter_variable"
                 android:padding="14dp"
-                android:text="Demonstration documents only. Upload and verification do not connect to a service."
+                android:text="Official credentials and certifications. Uploaded documentation will be examined during platform review."
                 android:textColor="@color/primary"
                 android:textSize="12sp" />
 
@@ -170,6 +170,12 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/ll_submitted_documents_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
             <!-- Doc 1: Hair Design Certificate -->
             <LinearLayout
@@ -328,6 +334,7 @@
                     android:textColor="@color/primary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
+            </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>
