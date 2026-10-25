@@ -101,6 +101,10 @@ object ReviewRepository {
 
     fun seedDefaultReviewsIfEmpty(businessId: String, onComplete: (List<Review>) -> Unit = {}) {
         val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        if (targetBizId != "biz_juniper_studio") {
+            onComplete(emptyList())
+            return
+        }
         db.collection(REVIEWS).whereEqualTo("businessId", targetBizId).get().addOnSuccessListener { snap ->
             if (snap.isEmpty) {
                 val batch = db.batch()
@@ -138,8 +142,12 @@ object ReviewRepository {
                     return@addSnapshotListener
                 }
                 if (snapshot.isEmpty) {
-                    seedDefaultReviewsIfEmpty(targetBizId) { seeded ->
-                        onUpdate(seeded)
+                    if (targetBizId == "biz_juniper_studio") {
+                        seedDefaultReviewsIfEmpty(targetBizId) { seeded ->
+                            onUpdate(seeded)
+                        }
+                    } else {
+                        onUpdate(emptyList())
                     }
                 } else {
                     val list = snapshot.documents.mapNotNull { doc ->
