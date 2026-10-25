@@ -12,10 +12,25 @@ import com.example.bizbridgeapp.repository.BusinessRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ListenerRegistration
 
+import android.widget.ImageView
+
 class OwnerProfileFragment : Fragment() {
 
     private var businessListener: ListenerRegistration? = null
     private var currentBusinessId: String = "biz_juniper_studio"
+    private lateinit var imagePickerHelper: ImagePickerHelper
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        imagePickerHelper = ImagePickerHelper(this) { uri ->
+            val ivPhoto = view?.findViewById<ImageView>(R.id.iv_owner_profile_photo)
+            val tvAvatar = view?.findViewById<TextView>(R.id.tv_owner_profile_avatar)
+            ivPhoto?.setImageURI(uri)
+            ivPhoto?.visibility = View.VISIBLE
+            tvAvatar?.visibility = View.GONE
+            Toast.makeText(requireContext(), "Owner profile photo updated!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -33,6 +48,11 @@ class OwnerProfileFragment : Fragment() {
 
         val mainActivity = activity as? MainActivity
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
+
+        // Avatar click -> Camera or Gallery
+        view.findViewById<View>(R.id.btn_edit_owner_avatar)?.setOnClickListener {
+            imagePickerHelper.showImageSourceDialog("Update Owner Profile Photo")
+        }
 
         // Bind owner profile data
         val currentUser = FirebaseAuth.getInstance().currentUser

@@ -46,7 +46,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · DEMONSTRATION DATA"
+                    android:text="BIZBRIDGE · EXPLORE &amp; BOOK"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
@@ -70,7 +70,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Good morning, Maya ☀️"
+                            android:text="Welcome to BiZBridge ☀️"
                             android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold" />

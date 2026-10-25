@@ -19,12 +19,14 @@ class OwnerBusinessProfileFragment : Fragment() {
     private var currentBusinessId: String = "biz_juniper_studio"
     private var selectedImageUri: Uri? = null
     private var currentImageUrl: String? = null
+    private lateinit var imagePickerHelper: ImagePickerHelper
 
-    private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        imagePickerHelper = ImagePickerHelper(this) { uri ->
             selectedImageUri = uri
             view?.findViewById<ImageView>(R.id.iv_cover_photo)?.setImageURI(uri)
-            Toast.makeText(requireContext(), "Cover photo selected. Tap 'Save Changes' to upload.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Photo selected! Tap 'Save Changes' to update.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -54,9 +56,9 @@ class OwnerBusinessProfileFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // Edit Cover / Logo
+        // Edit Cover / Logo -> Camera or Gallery
         view.findViewById<View>(R.id.btn_edit_cover)?.setOnClickListener {
-            selectImageLauncher.launch("image/*")
+            imagePickerHelper.showImageSourceDialog("Update Cover Photo")
         }
 
         // Load current business from Firestore

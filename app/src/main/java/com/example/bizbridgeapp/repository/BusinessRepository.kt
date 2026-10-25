@@ -70,16 +70,9 @@ object BusinessRepository {
         )
     )
 
-    /** Seed initial demo businesses to Firestore if collection is empty */
+    /** Seed initial demo businesses - disabled so real data is used */
     fun seedDefaultBusinessesIfEmpty(onComplete: (List<Business>) -> Unit = {}) {
-        val batch = db.batch()
-        for (biz in defaultDemoBusinesses) {
-            val docRef = db.collection(COLLECTION).document(biz.id)
-            batch.set(docRef, biz.toMap())
-        }
-        batch.commit()
-            .addOnSuccessListener { onComplete(defaultDemoBusinesses) }
-            .addOnFailureListener { onComplete(defaultDemoBusinesses) }
+        onComplete(emptyList())
     }
 
     /** Fetch all approved and active businesses from Firestore */
@@ -87,27 +80,18 @@ object BusinessRepository {
         onSuccess: (List<Business>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection(COLLECTION).get()
+        db.collection(COLLECTION)
+            .whereEqualTo("approved", true)
+            .whereEqualTo("active", true)
+            .get()
             .addOnSuccessListener { snapshot ->
-                if (snapshot.isEmpty) {
-                    seedDefaultBusinessesIfEmpty { seeded ->
-                        onSuccess(seeded)
-                    }
-                } else {
-                    val list = snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(Business::class.java)?.copy(id = doc.id)
-                    }
-                    val visible = if (list.any { it.approved && it.active }) {
-                        list.filter { it.approved && it.active }
-                    } else {
-                        list
-                    }
-                    onSuccess(visible)
+                val list = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Business::class.java)?.copy(id = doc.id)
                 }
+                onSuccess(list)
             }
             .addOnFailureListener { e ->
-                // Provide fallback demonstration businesses so UI remains interactive
-                onSuccess(defaultDemoBusinesses)
+                onSuccess(emptyList())
             }
     }
 
@@ -130,7 +114,7 @@ object BusinessRepository {
                 }
             },
             onFailure = {
-                onSuccess(defaultDemoBusinesses)
+                onSuccess(emptyList())
             }
         )
     }
@@ -157,7 +141,7 @@ object BusinessRepository {
                 }
             },
             onFailure = {
-                onSuccess(defaultDemoBusinesses)
+                onSuccess(emptyList())
             }
         )
     }
@@ -274,9 +258,10 @@ object BusinessRepository {
 
     /** Determine the business ID for the current owner session */
     fun getOwnerBusinessId(): String {
-        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
         val saved = com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessId") as? String
         if (!saved.isNullOrBlank()) return saved
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        if (!currentUid.isNullOrBlank()) return "biz_${currentUid.take(12)}"
         return "biz_juniper_studio"
     }
 
@@ -285,21 +270,51 @@ object BusinessRepository {
         ownerOrBizId: String,
         onUpdate: (Business?) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
-        val targetId = if (ownerOrBizId.isBlank() || ownerOrBizId == "demo_owner") "biz_juniper_studio" else ownerOrBizId
+        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
+        val savedName = sessionProfile?.get("businessName") as? String
+        val savedCategory = sessionProfile?.get("category") as? String ?: "Hair salon"
+        val savedPhone = sessionProfile?.get("phone") as? String ?: ""
+
+        val targetId = if (ownerOrBizId.isBlank() || ownerOrBizId == "demo_owner") {
+            (sessionProfile?.get("businessId") as? String) ?: "biz_juniper_studio"
+        } else ownerOrBizId
+
         if (targetId.startsWith("biz_")) {
             return db.collection(COLLECTION).document(targetId)
                 .addSnapshotListener { snapshot, error ->
-                    if (error != null || snapshot == null) {
+                    if (error != null || snapshot == null || !snapshot.exists()) {
+                        val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
+                        if (localBiz != null) {
+                            onUpdate(localBiz)
+                            return@addSnapshotListener
+                        }
+                        if (!savedName.isNullOrBlank()) {
+                            val isApproved = (sessionProfile?.get("approved") as? Boolean) ?: false
+                            val isAct = (sessionProfile?.get("active") as? Boolean) ?: false
+                            val appStat = (sessionProfile?.get("approvalStatus") as? String) ?: "PENDING"
+                            val verStat = (sessionProfile?.get("verificationStatus") as? String) ?: "PENDING"
+                            onUpdate(
+                                Business(
+                                    id = targetId,
+                                    name = savedName,
+                                    category = savedCategory,
+                                    contactNumber = savedPhone,
+                                    description = "Welcome to $savedName!",
+                                    approvalStatus = appStat,
+                                    verificationStatus = verStat,
+                                    approved = isApproved,
+                                    active = isAct,
+                                    trustScore = 80
+                                )
+                            )
+                            return@addSnapshotListener
+                        }
                         onUpdate(defaultDemoBusinesses.firstOrNull { it.id == targetId } ?: defaultDemoBusinesses.first())
                         return@addSnapshotListener
                     }
                     if (snapshot.exists()) {
-                        onUpdate(snapshot.toObject(Business::class.java)?.copy(id = snapshot.id))
-                    } else {
-                        // Seed default businesses so Juniper Studio exists
-                        seedDefaultBusinessesIfEmpty { seeded ->
-                            onUpdate(seeded.firstOrNull { it.id == targetId } ?: seeded.firstOrNull())
-                        }
+                        val bizObj = snapshot.toObject(Business::class.java)?.copy(id = snapshot.id)
+                        onUpdate(bizObj)
                     }
                 }
         }
@@ -386,11 +401,11 @@ object BusinessRepository {
             .whereEqualTo("active", true)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) {
-                    onUpdate(defaultDemoBusinesses)
+                    onUpdate(emptyList())
                     return@addSnapshotListener
                 }
                 val list = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
-                onUpdate(if (list.isNotEmpty()) list else defaultDemoBusinesses)
+                onUpdate(list)
             }
     }
 }

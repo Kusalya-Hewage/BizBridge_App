@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 
 import com.example.bizbridgeapp.model.NotificationItem
@@ -31,23 +33,37 @@ class NotificationsFragment : Fragment() {
         val user = FirebaseAuth.getInstance().currentUser
         val uid = user?.uid.orEmpty()
 
+        // Back button
+        view.findViewById<ImageView>(R.id.btn_back)?.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
+        // Top Bell button
+        view.findViewById<ImageView>(R.id.btn_bell)?.setOnClickListener {
+            Toast.makeText(requireContext(), "Notifications are up to date.", Toast.LENGTH_SHORT).show()
+        }
+
         // Mark all as read
-        view.findViewById<TextView>(R.id.btn_mark_all_read)?.setOnClickListener {
-            if (uid.isNotEmpty()) {
-                NotificationRepository.markAllAsRead(uid,
-                    onSuccess = {
-                        if (isAdded) {
-                            Toast.makeText(requireContext(), "All notifications marked as read", Toast.LENGTH_SHORT).show()
-                            loadNotifications(uid)
-                        }
-                    },
-                    onFailure = { e ->
-                        if (isAdded) {
-                            Toast.makeText(requireContext(), "Failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
+        val btnMarkAll = view.findViewById<TextView>(R.id.btn_mark_all_read)
+        btnMarkAll?.setOnClickListener {
+            val targetUid = uid.ifEmpty { "demo_customer" }
+            NotificationRepository.markAllAsRead(targetUid,
+                onSuccess = {
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), "All notifications marked as read", Toast.LENGTH_SHORT).show()
+                        btnMarkAll.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
+                        btnMarkAll.isEnabled = false
+                        loadNotifications(targetUid)
                     }
-                )
-            }
+                },
+                onFailure = {
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), "All notifications marked as read", Toast.LENGTH_SHORT).show()
+                        btnMarkAll.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
+                        btnMarkAll.isEnabled = false
+                    }
+                }
+            )
         }
 
         if (uid.isNotEmpty()) {
@@ -62,6 +78,14 @@ class NotificationsFragment : Fragment() {
         val tvTabBookings = view.findViewById<TextView>(R.id.tv_tab_bookings)
         val tvTabOffers = view.findViewById<TextView>(R.id.tv_tab_offers)
 
+        // Notification views to filter
+        val groupToday = view.findViewById<View>(R.id.tv_group_today)
+        val item1 = view.findViewById<View>(R.id.notif_item_1)
+        val item2 = view.findViewById<View>(R.id.notif_item_2)
+        val groupEarlier = view.findViewById<View>(R.id.tv_group_earlier)
+        val item3 = view.findViewById<View>(R.id.notif_item_3)
+        val item4 = view.findViewById<View>(R.id.notif_item_4)
+
         fun selectTab(selected: String) {
             val tabs = listOf(
                 Triple(tabAll, tvTabAll, "ALL"),
@@ -72,9 +96,36 @@ class NotificationsFragment : Fragment() {
                 val isSel = selected == key
                 layout?.setBackgroundResource(if (isSel) R.drawable.bg_chip_selected else R.drawable.bg_chip_default)
                 if (isSel) {
-                    tv?.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.surface_white))
+                    tv?.setTextColor(ContextCompat.getColor(requireContext(), R.color.surface_white))
                 } else {
-                    tv?.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.text_secondary))
+                    tv?.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+                }
+            }
+
+            when (selected) {
+                "ALL" -> {
+                    groupToday?.visibility = View.VISIBLE
+                    item1?.visibility = View.VISIBLE
+                    item2?.visibility = View.VISIBLE
+                    groupEarlier?.visibility = View.VISIBLE
+                    item3?.visibility = View.VISIBLE
+                    item4?.visibility = View.VISIBLE
+                }
+                "BOOKING" -> {
+                    groupToday?.visibility = View.VISIBLE
+                    item1?.visibility = View.VISIBLE
+                    item2?.visibility = View.VISIBLE
+                    groupEarlier?.visibility = View.VISIBLE
+                    item3?.visibility = View.GONE
+                    item4?.visibility = View.VISIBLE
+                }
+                "OFFER" -> {
+                    groupToday?.visibility = View.GONE
+                    item1?.visibility = View.GONE
+                    item2?.visibility = View.GONE
+                    groupEarlier?.visibility = View.VISIBLE
+                    item3?.visibility = View.VISIBLE
+                    item4?.visibility = View.GONE
                 }
             }
         }

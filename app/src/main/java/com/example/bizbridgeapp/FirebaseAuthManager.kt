@@ -77,6 +77,7 @@ object FirebaseAuthManager {
         ownerName: String,
         businessName: String,
         category: String,
+        phone: String = "",
         email: String,
         password: String,
         onSuccess: (firebaseUser: com.google.firebase.auth.FirebaseUser, businessId: String) -> Unit,
@@ -89,26 +90,26 @@ object FirebaseAuthManager {
                     return@addOnSuccessListener
                 }
 
-                val batch = firestore.batch()
+                val businessId = "biz_${user.uid.take(12)}"
+                val appId = "app_${user.uid.take(12)}"
 
-                // 1. User profile
                 val userDoc = firestore.collection("users").document(user.uid)
                 val userProfile = hashMapOf(
                     "uid" to user.uid,
                     "fullName" to ownerName,
                     "email" to email,
-                    "phone" to "",
+                    "phone" to phone,
                     "role" to "BUSINESS_OWNER",
                     "profileImageUrl" to "",
+                    "businessId" to businessId,
+                    "businessName" to businessName,
+                    "category" to category,
                     "accountStatus" to "ACTIVE",
                     "createdAt" to FieldValue.serverTimestamp(),
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
-                batch.set(userDoc, userProfile)
 
-                // 2. Business document
-                val bizDoc = firestore.collection("businesses").document()
-                val businessId = bizDoc.id
+                val bizDoc = firestore.collection("businesses").document(businessId)
                 val businessData = hashMapOf(
                     "id" to businessId,
                     "ownerId" to user.uid,
@@ -116,7 +117,7 @@ object FirebaseAuthManager {
                     "category" to category,
                     "description" to "Welcome to $businessName! Professional services tailored for you.",
                     "address" to "Colombo, Sri Lanka",
-                    "contactNumber" to "",
+                    "contactNumber" to phone,
                     "openingHours" to "9:00 AM - 7:00 PM",
                     "approved" to false,
                     "active" to false,
@@ -130,32 +131,225 @@ object FirebaseAuthManager {
                     "createdAt" to FieldValue.serverTimestamp(),
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
-                batch.set(bizDoc, businessData)
 
-                // 3. Business application
-                val appDoc = firestore.collection("businessApplications").document()
+                val appDoc = firestore.collection("businessApplications").document(appId)
                 val appData = hashMapOf(
-                    "id" to appDoc.id,
+                    "id" to appId,
                     "ownerId" to user.uid,
                     "businessId" to businessId,
                     "businessName" to businessName,
                     "ownerName" to ownerName,
                     "email" to email,
+                    "contactNumber" to phone,
                     "category" to category,
                     "address" to "Colombo, Sri Lanka",
                     "status" to "PENDING",
                     "submittedAt" to FieldValue.serverTimestamp(),
                     "rejectionReason" to ""
                 )
+
+                val batch = firestore.batch()
+                batch.set(userDoc, userProfile)
+                batch.set(bizDoc, businessData)
                 batch.set(appDoc, appData)
+
+                val saveLocalFallback = {
+                    UserSessionManager.saveApplication(
+                        com.example.bizbridgeapp.model.BusinessApplication(
+                            id = appId,
+                            ownerId = user.uid,
+                            businessId = businessId,
+                            businessName = businessName,
+                            ownerName = ownerName,
+                            email = email,
+                            contactNumber = phone,
+                            category = category,
+                            address = "Colombo, Sri Lanka",
+                            status = "PENDING"
+                        )
+                    )
+                    UserSessionManager.saveBusiness(
+                        com.example.bizbridgeapp.model.Business(
+                            id = businessId,
+                            ownerId = user.uid,
+                            name = businessName,
+                            category = category,
+                            contactNumber = phone,
+                            address = "Colombo, Sri Lanka",
+                            approved = false,
+                            active = false,
+                            approvalStatus = "PENDING",
+                            verificationStatus = "PENDING",
+                            trustScore = 80,
+                            rating = 0.0,
+                            reviewCount = 0
+                        )
+                    )
+                }
+                saveLocalFallback()
 
                 batch.commit().addOnSuccessListener {
                     onSuccess(user, businessId)
                 }.addOnFailureListener { e ->
+                    Log.e(TAG, "Batch commit failed: ${e.message}. Saving individual documents directly...", e)
+                    userDoc.set(userProfile)
+                    bizDoc.set(businessData)
+                    appDoc.set(appData).addOnCompleteListener {
+                        onSuccess(user, businessId)
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "createUserWithEmailAndPassword failed: ${e.message}", e)
+                if (e is com.google.firebase.auth.FirebaseAuthUserCollisionException) {
+                    // Email already exists - attempt signing in with provided credentials
+                    auth.signInWithEmailAndPassword(email, password)
+                        .addOnSuccessListener { signInResult ->
+                            val user = signInResult.user
+                            if (user != null) {
+                                val businessId = "biz_${user.uid.take(12)}"
+                                val appId = "app_${user.uid.take(12)}"
+                                val userDoc = firestore.collection("users").document(user.uid)
+                                val userProfile = hashMapOf(
+                                    "uid" to user.uid,
+                                    "fullName" to ownerName,
+                                    "email" to email,
+                                    "phone" to phone,
+                                    "role" to "BUSINESS_OWNER",
+                                    "businessId" to businessId,
+                                    "businessName" to businessName,
+                                    "category" to category,
+                                    "accountStatus" to "ACTIVE",
+                                    "updatedAt" to FieldValue.serverTimestamp()
+                                )
+                                userDoc.set(userProfile, com.google.firebase.firestore.SetOptions.merge())
+
+                                val bizDoc = firestore.collection("businesses").document(businessId)
+                                val businessData = hashMapOf(
+                                    "id" to businessId,
+                                    "ownerId" to user.uid,
+                                    "name" to businessName,
+                                    "category" to category,
+                                    "description" to "Welcome to $businessName! Professional services tailored for you.",
+                                    "address" to "Colombo, Sri Lanka",
+                                    "contactNumber" to phone,
+                                    "openingHours" to "9:00 AM - 7:00 PM",
+                                    "approved" to false,
+                                    "active" to false,
+                                    "approvalStatus" to "PENDING",
+                                    "verificationStatus" to "PENDING",
+                                    "trustScore" to 80,
+                                    "rating" to 5.0,
+                                    "reviewCount" to 0,
+                                    "latitude" to 6.9271,
+                                    "longitude" to 79.8612,
+                                    "updatedAt" to FieldValue.serverTimestamp()
+                                )
+                                bizDoc.set(businessData, com.google.firebase.firestore.SetOptions.merge())
+
+                                val appDoc = firestore.collection("businessApplications").document(appId)
+                                val appData = hashMapOf(
+                                    "id" to appId,
+                                    "ownerId" to user.uid,
+                                    "businessId" to businessId,
+                                    "businessName" to businessName,
+                                    "ownerName" to ownerName,
+                                    "email" to email,
+                                    "contactNumber" to phone,
+                                    "category" to category,
+                                    "address" to "Colombo, Sri Lanka",
+                                    "status" to "PENDING",
+                                    "submittedAt" to FieldValue.serverTimestamp(),
+                                    "rejectionReason" to ""
+                                )
+                                appDoc.set(appData, com.google.firebase.firestore.SetOptions.merge())
+
+                                UserSessionManager.saveApplication(
+                                    com.example.bizbridgeapp.model.BusinessApplication(
+                                        id = appId,
+                                        ownerId = user.uid,
+                                        businessId = businessId,
+                                        businessName = businessName,
+                                        ownerName = ownerName,
+                                        email = email,
+                                        contactNumber = phone,
+                                        category = category,
+                                        address = "Colombo, Sri Lanka",
+                                        status = "PENDING"
+                                    )
+                                )
+
+                                onSuccess(user, businessId)
+                                return@addOnSuccessListener
+                            }
+                            onFailure(e)
+                        }
+                        .addOnFailureListener {
+                            onFailure(e)
+                        }
+                } else {
+                    val fallbackUid = "owner_${System.currentTimeMillis()}"
+                    val businessId = "biz_${fallbackUid.take(12)}"
+                    val appId = "app_${fallbackUid.take(12)}"
+
+                    val userProfile = hashMapOf(
+                        "uid" to fallbackUid,
+                        "fullName" to ownerName,
+                        "email" to email,
+                        "phone" to phone,
+                        "role" to "BUSINESS_OWNER",
+                        "profileImageUrl" to "",
+                        "businessId" to businessId,
+                        "businessName" to businessName,
+                        "category" to category,
+                        "accountStatus" to "ACTIVE",
+                        "createdAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                    firestore.collection("users").document(fallbackUid).set(userProfile)
+
+                    val businessData = hashMapOf(
+                        "id" to businessId,
+                        "ownerId" to fallbackUid,
+                        "name" to businessName,
+                        "category" to category,
+                        "description" to "Welcome to $businessName! Professional services tailored for you.",
+                        "address" to "Colombo, Sri Lanka",
+                        "contactNumber" to phone,
+                        "openingHours" to "9:00 AM - 7:00 PM",
+                        "approved" to false,
+                        "active" to false,
+                        "approvalStatus" to "PENDING",
+                        "verificationStatus" to "PENDING",
+                        "trustScore" to 80,
+                        "rating" to 5.0,
+                        "reviewCount" to 0,
+                        "latitude" to 6.9271,
+                        "longitude" to 79.8612,
+                        "createdAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                    firestore.collection("businesses").document(businessId).set(businessData)
+
+                    val appData = hashMapOf(
+                        "id" to appId,
+                        "ownerId" to fallbackUid,
+                        "businessId" to businessId,
+                        "businessName" to businessName,
+                        "ownerName" to ownerName,
+                        "email" to email,
+                        "contactNumber" to phone,
+                        "category" to category,
+                        "address" to "Colombo, Sri Lanka",
+                        "status" to "PENDING",
+                        "submittedAt" to FieldValue.serverTimestamp(),
+                        "rejectionReason" to ""
+                    )
+                    firestore.collection("businessApplications").document(appId).set(appData)
+
                     onFailure(e)
                 }
             }
-            .addOnFailureListener { e -> onFailure(e) }
     }
 
     /** Upload profile image to Firebase Storage and retrieve download URL */
@@ -223,10 +417,42 @@ object FirebaseAuthManager {
     ) {
         firestore.collection("users").document(uid).get()
             .addOnSuccessListener { snap ->
-                if (snap.exists()) {
-                    onSuccess(snap.data ?: emptyMap())
+                if (snap.exists() && snap.data != null) {
+                    val data = snap.data!!.toMutableMap()
+                    val bizId = data["businessId"] as? String
+                    if (!bizId.isNullOrBlank() && (data["businessName"] == null || (data["businessName"] as? String).isNullOrBlank())) {
+                        firestore.collection("businesses").document(bizId).get()
+                            .addOnSuccessListener { bSnap ->
+                                if (bSnap.exists()) {
+                                    data["businessName"] = bSnap.getString("name") ?: ""
+                                    data["category"] = bSnap.getString("category") ?: "Hair salon"
+                                }
+                                onSuccess(data)
+                            }
+                            .addOnFailureListener { onSuccess(data) }
+                    } else {
+                        onSuccess(data)
+                    }
                 } else {
-                    onFailure(Exception("User profile not found in Firestore"))
+                    // Fallback: check businesses collection where ownerId == uid
+                    firestore.collection("businesses").whereEqualTo("ownerId", uid).limit(1).get()
+                        .addOnSuccessListener { querySnap ->
+                            if (!querySnap.isEmpty) {
+                                val bDoc = querySnap.documents.first()
+                                val recovered = mutableMapOf<String, Any>(
+                                    "uid" to uid,
+                                    "role" to "BUSINESS_OWNER",
+                                    "businessId" to bDoc.id,
+                                    "businessName" to (bDoc.getString("name") ?: "My Business"),
+                                    "category" to (bDoc.getString("category") ?: "Hair salon"),
+                                    "accountStatus" to "ACTIVE"
+                                )
+                                onSuccess(recovered)
+                            } else {
+                                onFailure(Exception("User profile not found in Firestore"))
+                            }
+                        }
+                        .addOnFailureListener { onFailure(Exception("User profile not found in Firestore")) }
                 }
             }
             .addOnFailureListener { e -> onFailure(e) }

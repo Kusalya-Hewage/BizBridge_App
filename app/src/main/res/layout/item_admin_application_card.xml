@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/card_app_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_admin_card"
+    android:clickable="true"
+    android:elevation="1dp"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/tv_app_business_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:fontFamily="@font/inter_variable"
+            android:text="Business Name"
+            android:textColor="@color/admin_text_title"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/badge_app_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/bg_admin_badge_pending"
+            android:fontFamily="@font/inter_variable"
+            android:paddingStart="8dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="3dp"
+            android:text="Pending"
+            android:textColor="@color/admin_badge_pending_text"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tv_app_owner_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/inter_variable"
+        android:text="Owner Name"
+        android:textColor="@color/admin_text_body"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/tv_app_category_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:fontFamily="@font/inter_variable"
+        android:text="Category · Location"
+        android:textColor="@color/admin_text_muted"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/btn_open_application"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/inter_variable"
+        android:text="Open Application →"
+        android:textColor="@color/admin_primary"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+</LinearLayout>

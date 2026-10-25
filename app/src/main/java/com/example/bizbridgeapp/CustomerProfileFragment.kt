@@ -22,6 +22,20 @@ import androidx.fragment.app.Fragment
 
 class CustomerProfileFragment : Fragment() {
 
+    private lateinit var imagePickerHelper: ImagePickerHelper
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        imagePickerHelper = ImagePickerHelper(this) { uri ->
+            val ivPhoto = view?.findViewById<ImageView>(R.id.iv_profile_photo)
+            val tvInitials = view?.findViewById<TextView>(R.id.tv_avatar_initials)
+            ivPhoto?.setImageURI(uri)
+            ivPhoto?.visibility = View.VISIBLE
+            tvInitials?.visibility = View.GONE
+            Toast.makeText(requireContext(), "Profile photo updated successfully!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -32,6 +46,11 @@ class CustomerProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Profile Avatar Click -> Choose Camera or Gallery
+        view.findViewById<View>(R.id.btn_edit_avatar)?.setOnClickListener {
+            imagePickerHelper.showImageSourceDialog("Update Profile Photo")
+        }
 
         // Bell
         view.findViewById<ImageView>(R.id.btn_bell)?.setOnClickListener {
@@ -128,7 +147,11 @@ class CustomerProfileFragment : Fragment() {
                     .show()
             }
         }
-        view.findViewById<LinearLayout>(R.id.row_admin_workspace)?.setOnClickListener {
+        val sessionRole = UserSessionManager.getProfile()?.get("role") as? String
+        val isAdminUser = sessionRole.equals("ADMIN", ignoreCase = true)
+        val adminRow = view.findViewById<LinearLayout>(R.id.row_admin_workspace)
+        adminRow?.visibility = if (isAdminUser) View.VISIBLE else View.GONE
+        adminRow?.setOnClickListener {
             (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
         }
         view.findViewById<LinearLayout>(R.id.row_privacy_policy)?.setOnClickListener {
