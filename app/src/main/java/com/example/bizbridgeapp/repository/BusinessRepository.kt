@@ -258,9 +258,10 @@ object BusinessRepository {
 
     /** Determine the business ID for the current owner session */
     fun getOwnerBusinessId(): String {
-        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
         val saved = com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessId") as? String
         if (!saved.isNullOrBlank()) return saved
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        if (!currentUid.isNullOrBlank()) return "biz_${currentUid.take(12)}"
         return "biz_juniper_studio"
     }
 
@@ -269,20 +270,26 @@ object BusinessRepository {
         ownerOrBizId: String,
         onUpdate: (Business?) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
-        val targetId = if (ownerOrBizId.isBlank() || ownerOrBizId == "demo_owner") "biz_juniper_studio" else ownerOrBizId
+        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
+        val savedName = sessionProfile?.get("businessName") as? String
+        val savedCategory = sessionProfile?.get("category") as? String ?: "Hair salon"
+        val savedPhone = sessionProfile?.get("phone") as? String ?: ""
+
+        val targetId = if (ownerOrBizId.isBlank() || ownerOrBizId == "demo_owner") {
+            (sessionProfile?.get("businessId") as? String) ?: "biz_juniper_studio"
+        } else ownerOrBizId
+
         if (targetId.startsWith("biz_")) {
             return db.collection(COLLECTION).document(targetId)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null || snapshot == null) {
-                        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
-                        val savedName = sessionProfile?.get("businessName") as? String
                         if (!savedName.isNullOrBlank()) {
                             onUpdate(
                                 Business(
                                     id = targetId,
                                     name = savedName,
-                                    category = sessionProfile["category"] as? String ?: "Hair salon",
-                                    contactNumber = sessionProfile["phone"] as? String ?: "",
+                                    category = savedCategory,
+                                    contactNumber = savedPhone,
                                     description = "Welcome to $savedName!",
                                     approvalStatus = "PENDING",
                                     verificationStatus = "PENDING",
@@ -299,15 +306,13 @@ object BusinessRepository {
                     if (snapshot.exists()) {
                         onUpdate(snapshot.toObject(Business::class.java)?.copy(id = snapshot.id))
                     } else {
-                        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
-                        val savedName = sessionProfile?.get("businessName") as? String
                         if (!savedName.isNullOrBlank()) {
                             onUpdate(
                                 Business(
                                     id = targetId,
                                     name = savedName,
-                                    category = sessionProfile["category"] as? String ?: "Hair salon",
-                                    contactNumber = sessionProfile["phone"] as? String ?: "",
+                                    category = savedCategory,
+                                    contactNumber = savedPhone,
                                     description = "Welcome to $savedName!",
                                     approvalStatus = "PENDING",
                                     verificationStatus = "PENDING",
