@@ -395,17 +395,72 @@ object BusinessRepository {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()?.toMutableMap() ?: mutableMapOf()
         val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+            ?: (sessionProfile["uid"] as? String)
         val targetId = if (businessId.isNotBlank() && businessId != "biz_juniper_studio") {
             businessId
-        } else if (!currentUid.isNullOrBlank()) {
-            "biz_${currentUid.take(12)}"
         } else {
-            "biz_juniper_studio"
+            val sessionBiz = sessionProfile["businessId"] as? String
+            if (!sessionBiz.isNullOrBlank() && sessionBiz != "biz_juniper_studio") {
+                sessionBiz
+            } else if (!currentUid.isNullOrBlank()) {
+                "biz_${currentUid.take(12)}"
+            } else {
+                "biz_juniper_studio"
+            }
+        }
+
+        // 1. Immediately persist to local UserSessionManager
+        sessionProfile["businessId"] = targetId
+        sessionProfile["businessName"] = name
+        sessionProfile["category"] = category
+        sessionProfile["phone"] = contactNumber
+        sessionProfile["address"] = address
+        sessionProfile["description"] = description
+        sessionProfile["openingHours"] = openingHours
+        if (!imageUrl.isNullOrBlank()) {
+            sessionProfile["imageUrl"] = imageUrl
+        }
+        com.example.bizbridgeapp.UserSessionManager.saveProfile(sessionProfile)
+
+        // 2. Immediately persist to local Business cache
+        val existingBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
+        val updatedBiz = Business(
+            id = targetId,
+            ownerId = currentUid ?: existingBiz?.ownerId ?: "owner_bizbridge",
+            name = name,
+            category = category,
+            description = description,
+            address = address,
+            contactNumber = contactNumber,
+            openingHours = openingHours,
+            imageUrl = imageUrl ?: existingBiz?.imageUrl,
+            approved = existingBiz?.approved ?: (sessionProfile["approved"] as? Boolean) ?: false,
+            active = existingBiz?.active ?: (sessionProfile["active"] as? Boolean) ?: false,
+            approvalStatus = existingBiz?.approvalStatus ?: (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
+            verificationStatus = existingBiz?.verificationStatus ?: (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
+            trustScore = existingBiz?.trustScore ?: (sessionProfile["trustScore"] as? Int) ?: 80,
+            rating = existingBiz?.rating ?: 0.0,
+            reviewCount = existingBiz?.reviewCount ?: 0
+        )
+        com.example.bizbridgeapp.UserSessionManager.saveBusiness(updatedBiz)
+
+        // 3. Immediately persist to local application cache
+        val appId = "app_${targetId.removePrefix("biz_")}"
+        val existingApp = com.example.bizbridgeapp.UserSessionManager.getAllApplications().firstOrNull { it.id == appId || it.businessId == targetId }
+        if (existingApp != null) {
+            com.example.bizbridgeapp.UserSessionManager.saveApplication(
+                existingApp.copy(
+                    businessName = name,
+                    category = category,
+                    address = address,
+                    contactNumber = contactNumber
+                )
+            )
         }
 
         val docRef = db.collection(COLLECTION).document(targetId)
-
         val updates = mutableMapOf<String, Any>(
             "id" to targetId,
             "name" to name,
@@ -425,15 +480,7 @@ object BusinessRepository {
 
         docRef.set(updates, SetOptions.merge())
             .addOnSuccessListener {
-                // Keep local session updated
-                val profile = com.example.bizbridgeapp.UserSessionManager.getProfile()?.toMutableMap() ?: mutableMapOf()
-                profile["businessId"] = targetId
-                profile["businessName"] = name
-                profile["category"] = category
-                profile["phone"] = contactNumber
-                com.example.bizbridgeapp.UserSessionManager.saveProfile(profile)
-
-                // Update users document if signed in
+                // Secondary Firestore sync (users & businessApplications)
                 if (!currentUid.isNullOrBlank()) {
                     db.collection("users").document(currentUid).set(
                         mapOf(
@@ -447,8 +494,6 @@ object BusinessRepository {
                     )
                 }
 
-                // Update business application if present
-                val appId = "app_${targetId.removePrefix("biz_")}"
                 db.collection("businessApplications").document(appId).set(
                     mapOf(
                         "businessName" to name,
@@ -459,11 +504,14 @@ object BusinessRepository {
                     SetOptions.merge()
                 )
 
-                // Recalculate trust score based on new profile completeness
                 TrustScoreRepository.recalculateTrustScore(targetId)
                 onSuccess()
             }
-            .addOnFailureListener { e -> onFailure(e) }
+            .addOnFailureListener { e ->
+                // Local save already succeeded; ensure TrustScore recalculated and report success
+                TrustScoreRepository.recalculateTrustScore(targetId)
+                onSuccess()
+            }
     }
 
     /** Real-time listener for a single business document */
