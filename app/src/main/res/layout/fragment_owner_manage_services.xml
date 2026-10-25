@@ -411,7 +411,7 @@
                 </LinearLayout>
 
                 <!-- + Add Service Primary Button -->
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btn_add_new_service"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
