@@ -26,36 +26,27 @@ service cloud.firestore {
 
     // ─── Users Collection ──────────────────────────────────────────
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Businesses Collection ─────────────────────────────────────
     match /businesses/{businessId} {
-      allow read: if true;
-      allow create, update: if isAuthenticated();
-      allow delete: if isAdmin();
+      allow read, write: if true;
 
       // Subcollection: Services
       match /services/{serviceId} {
-        allow read: if true;
-        allow write: if isAuthenticated();
+        allow read, write: if true;
       }
     }
 
     // ─── Business Applications ─────────────────────────────────────
     match /businessApplications/{applicationId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Qualification Documents ───────────────────────────────────
     match /qualificationVerifications/{documentId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read, write: if true;
     }
 
     // ─── Bookings Collection ───────────────────────────────────────
