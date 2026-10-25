@@ -46,7 +46,8 @@ class NotificationsFragment : Fragment() {
         // Mark all as read
         val btnMarkAll = view.findViewById<TextView>(R.id.btn_mark_all_read)
         btnMarkAll?.setOnClickListener {
-            val targetUid = uid.ifEmpty { "demo_customer" }
+            val targetUid = uid.ifEmpty { (UserSessionManager.getProfile()?.get("uid") as? String).orEmpty() }
+            if (targetUid.isEmpty()) return@setOnClickListener
             NotificationRepository.markAllAsRead(targetUid,
                 onSuccess = {
                     if (isAdded) {

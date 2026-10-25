@@ -21,7 +21,7 @@ class OwnerManageBookingsFragment : Fragment() {
     private var bookingsListener: ListenerRegistration? = null
     private var allBookings: List<Booking> = emptyList()
     private var activeFilter: String = "PENDING"
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,6 +60,9 @@ class OwnerManageBookingsFragment : Fragment() {
         tabConfirmed?.setOnClickListener { selectTab(tabConfirmed, listOfNotNull(tabPending, tabCompleted, tabCancelled), "CONFIRMED") }
         tabCompleted?.setOnClickListener { selectTab(tabCompleted, listOfNotNull(tabPending, tabConfirmed, tabCancelled), "COMPLETED") }
         tabCancelled?.setOnClickListener { selectTab(tabCancelled, listOfNotNull(tabPending, tabConfirmed, tabCompleted), "CANCELLED") }
+
+        // Render initially so demo cards remain hidden
+        renderBookings(view)
 
         // Real-time listener for business bookings
         bookingsListener = BookingRepository.listenToBookingsForBusiness(currentBusinessId) { list ->

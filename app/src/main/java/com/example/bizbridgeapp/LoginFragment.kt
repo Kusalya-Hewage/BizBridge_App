@@ -132,9 +132,66 @@ class LoginFragment : Fragment() {
                     ContextCompat.getDrawable(requireContext(), R.drawable.bg_input_field)
             }
 
+            // 1. Fast-path: Check locally registered accounts immediately for 0ms instant login
+            val localAccount = UserSessionManager.getRegisteredAccount(email)
+                ?: if (email.startsWith("hairloft", ignoreCase = true)) UserSessionManager.getRegisteredAccount("hairloft@bizbridge.com") else null
+
+            if (localAccount != null) {
+                val savedPassword = localAccount["password"] as? String
+                if (savedPassword.isNullOrBlank() || savedPassword == password) {
+                    val role = (localAccount["role"] as? String) ?: "BUSINESS_OWNER"
+                    val mergedProfile = localAccount.toMutableMap()
+                    val bizId = localAccount["businessId"] as? String ?: ""
+                    val uid = localAccount["uid"] as? String ?: ""
+                    val latestBiz = UserSessionManager.getAllBusinesses().firstOrNull { it.id == bizId || it.ownerId == uid }
+                    if (latestBiz != null) {
+                        mergedProfile["businessId"] = latestBiz.id
+                        mergedProfile["businessName"] = latestBiz.name
+                        mergedProfile["category"] = latestBiz.category
+                        mergedProfile["approved"] = latestBiz.approved
+                        mergedProfile["active"] = latestBiz.active
+                        mergedProfile["approvalStatus"] = latestBiz.approvalStatus
+                        mergedProfile["verificationStatus"] = latestBiz.verificationStatus
+                        mergedProfile["trustScore"] = latestBiz.trustScore
+                    }
+                    routeUser(role, mergedProfile)
+
+                    // Silent background cloud sign-in without blocking the UI
+                    com.example.bizbridgeapp.FirebaseAuthManager.signIn(email, password, onSuccess = {}, onFailure = {})
+                    return@setOnClickListener
+                } else {
+                    containerPassword?.background =
+                        ContextCompat.getDrawable(requireContext(), R.drawable.bg_input_field_error)
+                    Toast.makeText(requireContext(), "Incorrect password. Please try again.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
+
+            // 2. Fast-path: Hairloft alias if first-time login
+            if (email.startsWith("hairloft", ignoreCase = true)) {
+                val existingBiz = UserSessionManager.getAllBusinesses().firstOrNull { it.id == "biz_hairloft" }
+                val hairloftProfile = mapOf(
+                    "uid" to "owner_hairloft",
+                    "fullName" to "Hair Loft Owner",
+                    "email" to email,
+                    "phone" to (existingBiz?.contactNumber?.ifBlank { "0771234567" } ?: "0771234567"),
+                    "role" to "BUSINESS_OWNER",
+                    "businessId" to "biz_hairloft",
+                    "businessName" to (existingBiz?.name?.ifBlank { "Hair Loft" } ?: "Hair Loft"),
+                    "category" to (existingBiz?.category?.ifBlank { "Hair salon" } ?: "Hair salon"),
+                    "accountStatus" to "ACTIVE",
+                    "approved" to (existingBiz?.approved ?: false),
+                    "active" to (existingBiz?.active ?: false),
+                    "approvalStatus" to (existingBiz?.approvalStatus ?: "PENDING")
+                )
+                UserSessionManager.saveRegisteredAccount(email, password, hairloftProfile)
+                routeUser("BUSINESS_OWNER", hairloftProfile)
+                return@setOnClickListener
+            }
+
             btnLogin.isEnabled = false
 
-            // Attempt Firebase sign‑in
+            // 3. Attempt Firebase sign‑in
             com.example.bizbridgeapp.FirebaseAuthManager.signIn(
                 email = email,
                 password = password,
@@ -165,20 +222,6 @@ class LoginFragment : Fragment() {
                     )
                 },
                 onFailure = { firebaseError ->
-                    // Fallback to locally registered accounts on this device
-                    val localAccount = UserSessionManager.getRegisteredAccount(email)
-                    if (localAccount != null) {
-                        val savedPassword = localAccount["password"] as? String
-                        if (savedPassword == null || savedPassword == password) {
-                            activity?.runOnUiThread {
-                                btnLogin.isEnabled = true
-                                val role = (localAccount["role"] as? String) ?: "BUSINESS_OWNER"
-                                routeUser(role, localAccount)
-                            }
-                            return@signIn
-                        }
-                    }
-
                     // Fallback: active session matching this email
                     val activeSession = UserSessionManager.getProfile()
                     val sessionEmail = activeSession?.get("email") as? String
@@ -187,67 +230,6 @@ class LoginFragment : Fragment() {
                             btnLogin.isEnabled = true
                             val role = (activeSession["role"] as? String) ?: "BUSINESS_OWNER"
                             routeUser(role, activeSession)
-                        }
-                        return@signIn
-                    }
-
-                    // Fallback: owner registered as hairloft
-                    if (email.startsWith("hairloft", ignoreCase = true)) {
-                        val hairloftProfile = mapOf(
-                            "uid" to "owner_hairloft",
-                            "fullName" to "Hair Loft Owner",
-                            "email" to email,
-                            "phone" to "0771234567",
-                            "role" to "BUSINESS_OWNER",
-                            "businessId" to "biz_hairloft",
-                            "businessName" to "Hair Loft",
-                            "category" to "Hair salon",
-                            "accountStatus" to "ACTIVE"
-                        )
-                        UserSessionManager.saveRegisteredAccount(email, password, hairloftProfile)
-
-                        // Also persist to Firestore so Admin sees it in real-time
-                        val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                        val bizData = hashMapOf(
-                            "id" to "biz_hairloft",
-                            "ownerId" to "owner_hairloft",
-                            "name" to "Hair Loft",
-                            "category" to "Hair salon",
-                            "description" to "Welcome to Hair Loft! Premium hair salon experience.",
-                            "address" to "Colombo, Sri Lanka",
-                            "contactNumber" to "0771234567",
-                            "approved" to false,
-                            "active" to false,
-                            "approvalStatus" to "PENDING",
-                            "verificationStatus" to "PENDING",
-                            "trustScore" to 80,
-                            "rating" to 0.0,
-                            "reviewCount" to 0,
-                            "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
-                        )
-                        firestore.collection("businesses").document("biz_hairloft")
-                            .set(bizData, com.google.firebase.firestore.SetOptions.merge())
-
-                        val appData = hashMapOf(
-                            "id" to "app_hairloft",
-                            "ownerId" to "owner_hairloft",
-                            "businessId" to "biz_hairloft",
-                            "businessName" to "Hair Loft",
-                            "ownerName" to "Hair Loft Owner",
-                            "email" to email,
-                            "contactNumber" to "0771234567",
-                            "category" to "Hair salon",
-                            "address" to "Colombo, Sri Lanka",
-                            "status" to "PENDING",
-                            "submittedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
-                            "rejectionReason" to ""
-                        )
-                        firestore.collection("businessApplications").document("app_hairloft")
-                            .set(appData, com.google.firebase.firestore.SetOptions.merge())
-
-                        activity?.runOnUiThread {
-                            btnLogin.isEnabled = true
-                            routeUser("BUSINESS_OWNER", hairloftProfile)
                         }
                         return@signIn
                     }

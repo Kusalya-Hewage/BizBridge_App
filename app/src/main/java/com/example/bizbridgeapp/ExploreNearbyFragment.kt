@@ -99,8 +99,10 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
 
         // View Details button & card click
         val openDetails = View.OnClickListener {
-            val bizId = selectedBusiness?.id ?: "biz_juniper_studio"
-            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(bizId), addToBackStack = true)
+            val bizId = selectedBusiness?.id
+            if (!bizId.isNullOrBlank()) {
+                (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(bizId), addToBackStack = true)
+            }
         }
         view.findViewById<Button>(R.id.btn_view_details)?.setOnClickListener(openDetails)
         view.findViewById<LinearLayout>(R.id.card_selected_business)?.setOnClickListener(openDetails)
@@ -221,8 +223,7 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
             },
             onFailure = {
                 if (!isAdded) return@getApprovedActiveBusinesses
-                // Fallback to default demo list located in Colombo
-                allBusinesses = BusinessRepository.defaultDemoBusinesses
+                allBusinesses = emptyList()
                 updateMarkers(allBusinesses)
             }
         )

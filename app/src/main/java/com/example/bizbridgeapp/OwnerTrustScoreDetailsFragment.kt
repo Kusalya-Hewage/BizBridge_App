@@ -13,7 +13,7 @@ import com.google.firebase.firestore.ListenerRegistration
 class OwnerTrustScoreDetailsFragment : Fragment() {
 
     private var businessListener: ListenerRegistration? = null
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,6 +28,12 @@ class OwnerTrustScoreDetailsFragment : Fragment() {
 
         val mainActivity = activity as? MainActivity
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
+
+        val profile = UserSessionManager.getProfile()
+        val score = (profile?.get("trustScore") as? Int)
+            ?: UserSessionManager.getAllBusinesses().firstOrNull { it.id == currentBusinessId }?.trustScore
+            ?: 80
+        view.findViewById<TextView>(R.id.tv_big_trust_score)?.text = "$score / 100"
 
         // Back button
         view.findViewById<ImageView>(R.id.btn_back_trust_score)?.setOnClickListener {

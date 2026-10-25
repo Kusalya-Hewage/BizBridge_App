@@ -19,9 +19,9 @@ class OwnerDashboardFragment : Fragment() {
  
     private var businessListener: ListenerRegistration? = null
     private var bookingsListener: ListenerRegistration? = null
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
     private var mostRecentPendingBooking: Booking? = null
- 
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -29,13 +29,13 @@ class OwnerDashboardFragment : Fragment() {
     ): View? {
         return inflater.inflate(R.layout.fragment_owner_dashboard, container, false)
     }
- 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
- 
+
         // Setup Bottom Navigation
         OwnerNavigationHelper.setupBottomNav(this, view, OwnerTab.HOME)
- 
+
         val mainActivity = activity as? MainActivity
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
 
@@ -47,6 +47,13 @@ class OwnerDashboardFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_owner_business_name)?.text = sessionBizName
             view.findViewById<TextView>(R.id.tv_owner_subtitle)?.text = "$sessionBizName · $sessionCategory"
         }
+
+        // Initialize zero metric counts and hide recent request card until real data loads
+        view.findViewById<TextView>(R.id.tv_count_pending)?.text = "0"
+        view.findViewById<TextView>(R.id.tv_count_today)?.text = "0"
+        view.findViewById<TextView>(R.id.tv_count_confirmed_month)?.text = "0"
+        view.findViewById<TextView>(R.id.tv_count_completed_total)?.text = "0"
+        view.findViewById<View>(R.id.card_recent_request_1)?.visibility = View.GONE
  
         // Notifications
         view.findViewById<View>(R.id.iv_owner_notifications)?.setOnClickListener {

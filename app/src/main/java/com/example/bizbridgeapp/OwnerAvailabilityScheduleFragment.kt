@@ -13,7 +13,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class OwnerAvailabilityScheduleFragment : Fragment() {
 
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,

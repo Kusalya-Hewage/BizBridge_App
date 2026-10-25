@@ -60,6 +60,7 @@ object ReportRepository {
             newStatus = "RESOLVED",
             reason = resolutionNotes
         )
+        com.example.bizbridgeapp.UserSessionManager.saveAuditLog(log)
         batch.set(logRef, log.toMap())
 
         batch.commit()

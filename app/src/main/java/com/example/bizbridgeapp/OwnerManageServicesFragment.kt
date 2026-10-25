@@ -22,7 +22,7 @@ class OwnerManageServicesFragment : Fragment() {
     private var servicesListener: ListenerRegistration? = null
     private var allServices: List<Service> = emptyList()
     private var activeFilter: String = "ALL" // ALL, ACTIVE, INACTIVE
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -70,6 +70,12 @@ class OwnerManageServicesFragment : Fragment() {
         view.findViewById<Button>(R.id.btn_add_new_service)?.setOnClickListener {
             mainActivity?.navigateTo(OwnerEditServiceFragment.newInstance(isEditMode = false), addToBackStack = true)
         }
+
+        // Initial state before listener fires
+        chipAll?.text = "All · 0"
+        chipActive?.text = "Active · 0"
+        chipInactive?.text = "Inactive · 0"
+        renderServices(view)
 
         // Real-time listener for Services
         servicesListener = ServiceRepository.listenToServicesForBusiness(currentBusinessId) { list ->

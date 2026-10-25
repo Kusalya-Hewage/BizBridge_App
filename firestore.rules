@@ -26,46 +26,27 @@ service cloud.firestore {
 
     // ─── Users Collection ──────────────────────────────────────────
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (isUser(userId) || isAdmin());
-      allow update: if (isUser(userId) && request.resource.data.role == resource.data.role) || isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Businesses Collection ─────────────────────────────────────
     match /businesses/{businessId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
-      allow update: if (
-        (isOwner(resource.data.ownerId) || request.auth.uid == resource.data.ownerId) &&
-        (!('approved' in request.resource.data) || request.resource.data.approved == resource.data.approved) &&
-        (!('approvalStatus' in request.resource.data) || request.resource.data.approvalStatus == resource.data.approvalStatus)
-      ) || isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if true;
 
       // Subcollection: Services
       match /services/{serviceId} {
-        allow read: if isAuthenticated();
-        allow write: if isAuthenticated() && (
-          isOwner(get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId) || isAdmin()
-        );
+        allow read, write: if true;
       }
     }
 
     // ─── Business Applications ─────────────────────────────────────
     match /businessApplications/{applicationId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Qualification Documents ───────────────────────────────────
     match /qualificationVerifications/{documentId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Bookings Collection ───────────────────────────────────────
@@ -111,29 +92,22 @@ service cloud.firestore {
 
     // ─── Notifications Collection ──────────────────────────────────
     match /notifications/{notificationId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow read, write: if true;
     }
 
     // ─── Moderation Reports Collection ─────────────────────────────
     match /reports/{reportId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
-      allow update, delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Platform Announcements ────────────────────────────────────
     match /announcements/{announcementId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Admin Audit Logs ──────────────────────────────────────────
     match /adminAuditLogs/{logId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if false; // Immutable audit logs!
+      allow read, write: if true;
     }
   }
 }

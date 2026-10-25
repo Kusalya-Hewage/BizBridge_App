@@ -2,8 +2,10 @@ package com.example.bizbridgeapp
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.bizbridgeapp.model.AdminAuditLog
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
+import com.example.bizbridgeapp.model.QualificationDocument
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -17,6 +19,8 @@ object UserSessionManager {
     private const val KEY_REGISTERED_ACCOUNTS = "registered_accounts"
     private const val KEY_APPLICATIONS = "local_business_applications"
     private const val KEY_BUSINESSES = "local_businesses"
+    private const val KEY_QUALIFICATIONS = "local_qualifications"
+    private const val KEY_AUDIT_LOGS = "local_admin_audit_logs"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -50,6 +54,42 @@ object UserSessionManager {
                     "accountStatus" to "ACTIVE"
                 )
             )
+        }
+
+        if (getAllAuditLogs().isEmpty()) {
+            saveAuditLog(
+                AdminAuditLog(
+                    id = "log_init_console",
+                    adminUid = "admin_bizbridge",
+                    adminEmail = "admin@bizbridge.com",
+                    actionType = "SYSTEM_INITIALIZED",
+                    targetType = "CONSOLE",
+                    targetId = "BizBridge Operations",
+                    newStatus = "ACTIVE",
+                    reason = "Platform Administration Console initialized",
+                    createdAt = com.google.firebase.Timestamp.now()
+                )
+            )
+        }
+
+        // Clean out legacy demo qualification documents if any exist
+        val demoDocIds = setOf("doc_hair_design", "doc_color_systems", "doc_experience_letter", "doc_massage_cert")
+        val currentDocs = getAllQualificationDocuments()
+        if (currentDocs.any { it.id in demoDocIds }) {
+            val cleanedDocs = currentDocs.filterNot { it.id in demoDocIds }
+            saveAllQualificationDocuments(cleanedDocs)
+        }
+
+        // Clean out legacy demo businesses from local storage if any exist
+        val demoBizIds = setOf("biz_juniper_studio", "biz_oliver_beauty", "biz_daily_cut", "biz_lotus_wellness")
+        val currentBiz = getAllBusinesses()
+        if (currentBiz.any { it.id in demoBizIds }) {
+            val cleanedBiz = currentBiz.filterNot { it.id in demoBizIds }
+            val array = JSONArray()
+            for (b in cleanedBiz) {
+                array.put(businessToJson(b))
+            }
+            prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
         }
     }
 
@@ -86,16 +126,25 @@ object UserSessionManager {
         accountsObj.put(normalizedEmail, accountData)
         prefs.edit().putString(KEY_REGISTERED_ACCOUNTS, accountsObj.toString()).apply()
 
-        // If this is a business owner, automatically ensure application & business exist
+        // If this is a business owner, automatically ensure application & business exist without overriding customized data
         val role = data["role"] as? String ?: ""
         if (role.equals("BUSINESS_OWNER", ignoreCase = true)) {
             val uid = (data["uid"] as? String)?.ifBlank { null } ?: "owner_${normalizedEmail.hashCode()}"
             val bizId = (data["businessId"] as? String)?.ifBlank { null } ?: "biz_${uid.take(12)}"
             val appId = "app_${bizId.removePrefix("biz_")}"
-            val bizName = (data["businessName"] as? String)?.ifBlank { null } ?: "My Business"
-            val ownerName = (data["fullName"] as? String)?.ifBlank { null } ?: "Business Owner"
-            val category = (data["category"] as? String)?.ifBlank { null } ?: "Hair salon"
-            val phone = (data["phone"] as? String) ?: ""
+            val existingBiz = getAllBusinesses().firstOrNull { it.id == bizId }
+            val existingApp = getAllApplications().firstOrNull { it.id == appId || it.businessId == bizId }
+
+            val bizName = (data["businessName"] as? String)?.ifBlank { null } ?: existingBiz?.name ?: "Business"
+            val ownerName = (data["fullName"] as? String)?.ifBlank { null } ?: existingApp?.ownerName ?: "Business Owner"
+            val category = (data["category"] as? String)?.ifBlank { null } ?: existingBiz?.category ?: "Hair salon"
+            val phone = (data["phone"] as? String) ?: existingBiz?.contactNumber ?: ""
+            val isApproved = (data["approved"] as? Boolean) ?: existingBiz?.approved ?: false
+            val isActive = (data["active"] as? Boolean) ?: existingBiz?.active ?: false
+            val approvalStatus = (data["approvalStatus"] as? String) ?: existingBiz?.approvalStatus ?: "PENDING"
+            val verificationStatus = (data["verificationStatus"] as? String) ?: existingBiz?.verificationStatus ?: "PENDING"
+            val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 80
+            val imageUrl = (data["imageUrl"] as? String)?.ifBlank { null } ?: existingBiz?.imageUrl
 
             saveApplication(
                 BusinessApplication(
@@ -107,8 +156,8 @@ object UserSessionManager {
                     email = normalizedEmail,
                     contactNumber = phone,
                     category = category,
-                    address = "Colombo, Sri Lanka",
-                    status = (data["approvalStatus"] as? String) ?: "PENDING"
+                    address = existingBiz?.address?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka",
+                    status = approvalStatus
                 )
             )
 
@@ -119,14 +168,15 @@ object UserSessionManager {
                     name = bizName,
                     category = category,
                     contactNumber = phone,
-                    address = "Colombo, Sri Lanka",
-                    approved = (data["approved"] as? Boolean) ?: false,
-                    active = (data["active"] as? Boolean) ?: false,
-                    approvalStatus = (data["approvalStatus"] as? String) ?: "PENDING",
-                    verificationStatus = (data["verificationStatus"] as? String) ?: "PENDING",
-                    trustScore = 80,
-                    rating = 0.0,
-                    reviewCount = 0
+                    address = existingBiz?.address?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka",
+                    imageUrl = imageUrl,
+                    approved = isApproved,
+                    active = isActive,
+                    approvalStatus = approvalStatus,
+                    verificationStatus = verificationStatus,
+                    trustScore = trustScore,
+                    rating = existingBiz?.rating ?: 0.0,
+                    reviewCount = existingBiz?.reviewCount ?: 0
                 )
             )
         }
@@ -253,6 +303,57 @@ object UserSessionManager {
         prefs.edit().putString(KEY_APPLICATIONS, array.toString()).apply()
     }
 
+    fun businessToJson(b: Business): JSONObject {
+        val o = JSONObject()
+        o.put("id", b.id)
+        o.put("ownerId", b.ownerId)
+        o.put("name", b.name)
+        o.put("category", b.category)
+        o.put("description", b.description)
+        o.put("address", b.address)
+        o.put("contactNumber", b.contactNumber)
+        o.put("openingHours", b.openingHours)
+        if (!b.imageUrl.isNullOrBlank()) {
+            o.put("imageUrl", b.imageUrl)
+        }
+        o.put("approved", b.approved)
+        o.put("active", b.active)
+        o.put("approvalStatus", b.approvalStatus)
+        o.put("verificationStatus", b.verificationStatus)
+        o.put("trustScore", b.trustScore)
+        o.put("rating", b.rating ?: 0.0)
+        o.put("reviewCount", b.reviewCount)
+        if (!b.price.isNullOrBlank()) o.put("price", b.price)
+        if (b.latitude != null) o.put("latitude", b.latitude)
+        if (b.longitude != null) o.put("longitude", b.longitude)
+        return o
+    }
+
+    fun jsonToBusiness(o: JSONObject): Business {
+        val img = if (o.has("imageUrl") && !o.isNull("imageUrl")) o.optString("imageUrl").ifBlank { null } else null
+        return Business(
+            id = o.optString("id"),
+            ownerId = o.optString("ownerId"),
+            name = o.optString("name"),
+            category = o.optString("category"),
+            description = o.optString("description"),
+            address = o.optString("address"),
+            contactNumber = o.optString("contactNumber"),
+            openingHours = o.optString("openingHours", "9:00 AM - 7:00 PM"),
+            imageUrl = img,
+            approved = o.optBoolean("approved", false),
+            active = o.optBoolean("active", false),
+            approvalStatus = o.optString("approvalStatus", "PENDING"),
+            verificationStatus = o.optString("verificationStatus", "PENDING"),
+            trustScore = o.optInt("trustScore", 80),
+            rating = o.optDouble("rating", 0.0),
+            reviewCount = o.optInt("reviewCount", 0),
+            price = if (o.has("price") && !o.isNull("price")) o.optString("price").ifBlank { null } else null,
+            latitude = if (o.has("latitude") && !o.isNull("latitude")) o.optDouble("latitude") else null,
+            longitude = if (o.has("longitude") && !o.isNull("longitude")) o.optDouble("longitude") else null
+        )
+    }
+
     /** Save or update business */
     fun saveBusiness(biz: Business) {
         if (!::prefs.isInitialized) return
@@ -265,22 +366,7 @@ object UserSessionManager {
         }
         val array = JSONArray()
         for (b in current) {
-            val o = JSONObject()
-            o.put("id", b.id)
-            o.put("ownerId", b.ownerId)
-            o.put("name", b.name)
-            o.put("category", b.category)
-            o.put("description", b.description)
-            o.put("address", b.address)
-            o.put("contactNumber", b.contactNumber)
-            o.put("approved", b.approved)
-            o.put("active", b.active)
-            o.put("approvalStatus", b.approvalStatus)
-            o.put("verificationStatus", b.verificationStatus)
-            o.put("trustScore", b.trustScore)
-            o.put("rating", b.rating ?: 0.0)
-            o.put("reviewCount", b.reviewCount)
-            array.put(o)
+            array.put(businessToJson(b))
         }
         prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
     }
@@ -293,24 +379,7 @@ object UserSessionManager {
         val list = mutableListOf<Business>()
         for (i in 0 until array.length()) {
             val o = array.getJSONObject(i)
-            list.add(
-                Business(
-                    id = o.optString("id"),
-                    ownerId = o.optString("ownerId"),
-                    name = o.optString("name"),
-                    category = o.optString("category"),
-                    description = o.optString("description"),
-                    address = o.optString("address"),
-                    contactNumber = o.optString("contactNumber"),
-                    approved = o.optBoolean("approved", false),
-                    active = o.optBoolean("active", false),
-                    approvalStatus = o.optString("approvalStatus", "PENDING"),
-                    verificationStatus = o.optString("verificationStatus", "PENDING"),
-                    trustScore = o.optInt("trustScore", 80),
-                    rating = o.optDouble("rating", 0.0),
-                    reviewCount = o.optInt("reviewCount", 0)
-                )
-            )
+            list.add(jsonToBusiness(o))
         }
         return list
     }
@@ -321,37 +390,51 @@ object UserSessionManager {
         approved: Boolean,
         active: Boolean,
         approvalStatus: String,
-        verificationStatus: String
+        verificationStatus: String,
+        name: String = "",
+        category: String = "",
+        address: String = "",
+        ownerId: String = "",
+        contactNumber: String = ""
     ) {
         if (!::prefs.isInitialized) return
-        val businesses = getAllBusinesses().map {
-            if (it.id == businessId) {
-                it.copy(
+        val currentList = getAllBusinesses().toMutableList()
+        val index = currentList.indexOfFirst { it.id == businessId }
+        if (index >= 0) {
+            currentList[index] = currentList[index].copy(
+                approved = approved,
+                active = active,
+                approvalStatus = approvalStatus,
+                verificationStatus = verificationStatus,
+                name = if (name.isNotBlank()) name else currentList[index].name,
+                category = if (category.isNotBlank()) category else currentList[index].category,
+                address = if (address.isNotBlank()) address else currentList[index].address,
+                ownerId = if (ownerId.isNotBlank()) ownerId else currentList[index].ownerId,
+                contactNumber = if (contactNumber.isNotBlank()) contactNumber else currentList[index].contactNumber
+            )
+        } else {
+            currentList.add(
+                0,
+                Business(
+                    id = businessId,
+                    ownerId = ownerId,
+                    name = name.ifBlank { "Approved Business" },
+                    category = category.ifBlank { "Services" },
+                    address = address.ifBlank { "Colombo, Sri Lanka" },
+                    contactNumber = contactNumber,
                     approved = approved,
                     active = active,
                     approvalStatus = approvalStatus,
-                    verificationStatus = verificationStatus
+                    verificationStatus = verificationStatus,
+                    trustScore = 85,
+                    rating = 5.0,
+                    reviewCount = 0
                 )
-            } else it
+            )
         }
         val array = JSONArray()
-        for (b in businesses) {
-            val o = JSONObject()
-            o.put("id", b.id)
-            o.put("ownerId", b.ownerId)
-            o.put("name", b.name)
-            o.put("category", b.category)
-            o.put("description", b.description)
-            o.put("address", b.address)
-            o.put("contactNumber", b.contactNumber)
-            o.put("approved", b.approved)
-            o.put("active", b.active)
-            o.put("approvalStatus", b.approvalStatus)
-            o.put("verificationStatus", b.verificationStatus)
-            o.put("trustScore", b.trustScore)
-            o.put("rating", b.rating ?: 0.0)
-            o.put("reviewCount", b.reviewCount)
-            array.put(o)
+        for (b in currentList) {
+            array.put(businessToJson(b))
         }
         prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
 
@@ -368,6 +451,218 @@ object UserSessionManager {
                 saveProfile(updated)
             }
         }
+
+        // Also update registered account credentials
+        updateRegisteredAccountBusiness(
+            businessId,
+            mapOf(
+                "approved" to approved,
+                "active" to active,
+                "approvalStatus" to approvalStatus,
+                "verificationStatus" to verificationStatus
+            )
+        )
+    }
+
+    /** Update business trust score across session, stored businesses, and registered accounts */
+    fun updateBusinessTrustScore(businessId: String, trustScore: Int) {
+        if (!::prefs.isInitialized) return
+        val businesses = getAllBusinesses().map {
+            if (it.id == businessId) it.copy(trustScore = trustScore) else it
+        }
+        val array = JSONArray()
+        for (b in businesses) {
+            array.put(businessToJson(b))
+        }
+        prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
+
+        val activeProfile = getProfile()
+        if (activeProfile != null) {
+            val currentBizId = activeProfile["businessId"] as? String
+            if (currentBizId == businessId) {
+                val updated = activeProfile.toMutableMap()
+                updated["trustScore"] = trustScore
+                saveProfile(updated)
+            }
+        }
+
+        updateRegisteredAccountBusiness(businessId, mapOf("trustScore" to trustScore))
+    }
+
+    /** Update fields in registered accounts for a given businessId or matching email */
+    fun updateRegisteredAccountBusiness(businessId: String, updates: Map<String, Any>) {
+        if (!::prefs.isInitialized) return
+        val accountsJson = prefs.getString(KEY_REGISTERED_ACCOUNTS, "{}") ?: "{}"
+        val accountsObj = JSONObject(accountsJson)
+        val keys = accountsObj.keys()
+        var changed = false
+        while (keys.hasNext()) {
+            val emailKey = keys.next()
+            val acc = accountsObj.getJSONObject(emailKey)
+            val bizId = acc.optString("businessId")
+            if (bizId == businessId || (businessId == "biz_hairloft" && emailKey.startsWith("hairloft"))) {
+                for ((k, v) in updates) {
+                    acc.put(k, v)
+                }
+                accountsObj.put(emailKey, acc)
+                changed = true
+            }
+        }
+        if (changed) {
+            prefs.edit().putString(KEY_REGISTERED_ACCOUNTS, accountsObj.toString()).apply()
+        }
+    }
+
+    /** Save or update a qualification document locally */
+    fun saveQualificationDocument(doc: QualificationDocument) {
+        if (!::prefs.isInitialized) return
+        val current = getAllQualificationDocuments().toMutableList()
+        val index = current.indexOfFirst { it.id == doc.id }
+        if (index >= 0) {
+            current[index] = doc
+        } else {
+            current.add(0, doc)
+        }
+        val array = JSONArray()
+        for (d in current) {
+            val o = JSONObject()
+            o.put("id", d.id)
+            o.put("ownerId", d.ownerId)
+            o.put("businessId", d.businessId)
+            o.put("businessName", d.businessName)
+            o.put("title", d.title)
+            o.put("issuingOrg", d.issuingOrg)
+            o.put("experience", d.experience)
+            o.put("documentType", d.documentType)
+            o.put("storagePath", d.storagePath)
+            o.put("fileUrl", d.fileUrl)
+            o.put("verificationStatus", d.verificationStatus)
+            o.put("rejectionReason", d.rejectionReason)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_QUALIFICATIONS, array.toString()).apply()
+    }
+
+    /** Retrieve all locally stored qualification documents */
+    fun getAllQualificationDocuments(): List<QualificationDocument> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_QUALIFICATIONS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<QualificationDocument>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                QualificationDocument(
+                    id = o.optString("id"),
+                    ownerId = o.optString("ownerId"),
+                    businessId = o.optString("businessId"),
+                    businessName = o.optString("businessName"),
+                    title = o.optString("title"),
+                    issuingOrg = o.optString("issuingOrg"),
+                    experience = o.optString("experience"),
+                    documentType = o.optString("documentType", "CERTIFICATE"),
+                    storagePath = o.optString("storagePath"),
+                    fileUrl = o.optString("fileUrl"),
+                    verificationStatus = o.optString("verificationStatus", "PENDING"),
+                    rejectionReason = o.optString("rejectionReason")
+                )
+            )
+        }
+        return list
+    }
+
+    /** Save all qualification documents to SharedPreferences */
+    fun saveAllQualificationDocuments(docs: List<QualificationDocument>) {
+        if (!::prefs.isInitialized) return
+        val array = JSONArray()
+        for (d in docs) {
+            val o = JSONObject()
+            o.put("id", d.id)
+            o.put("ownerId", d.ownerId)
+            o.put("businessId", d.businessId)
+            o.put("businessName", d.businessName)
+            o.put("title", d.title)
+            o.put("issuingOrg", d.issuingOrg)
+            o.put("experience", d.experience)
+            o.put("documentType", d.documentType)
+            o.put("storagePath", d.storagePath)
+            o.put("fileUrl", d.fileUrl)
+            o.put("verificationStatus", d.verificationStatus)
+            o.put("rejectionReason", d.rejectionReason)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_QUALIFICATIONS, array.toString()).apply()
+    }
+
+    /** Update status of a qualification document locally */
+    fun updateQualificationStatus(docId: String, status: String, reason: String = "") {
+        if (!::prefs.isInitialized) return
+        val docs = getAllQualificationDocuments().map {
+            if (it.id == docId) {
+                it.copy(verificationStatus = status, rejectionReason = reason)
+            } else it
+        }
+        saveAllQualificationDocuments(docs)
+    }
+
+    /** Retrieve qualification documents for a specific business or owner */
+    fun getQualificationsForBusiness(businessId: String, ownerId: String = ""): List<QualificationDocument> {
+        val all = getAllQualificationDocuments()
+        return all.filter {
+            (businessId.isNotBlank() && it.businessId == businessId) ||
+            (ownerId.isNotBlank() && it.ownerId == ownerId)
+        }
+    }
+
+    /** Save an administrative audit log locally */
+    fun saveAuditLog(log: AdminAuditLog) {
+        if (!::prefs.isInitialized) return
+        val current = getAllAuditLogs().toMutableList()
+        current.removeAll { it.id == log.id }
+        current.add(0, log)
+        val array = JSONArray()
+        for (l in current.take(50)) {
+            val o = JSONObject()
+            o.put("id", l.id)
+            o.put("adminUid", l.adminUid)
+            o.put("adminEmail", l.adminEmail)
+            o.put("actionType", l.actionType)
+            o.put("targetType", l.targetType)
+            o.put("targetId", l.targetId)
+            o.put("previousStatus", l.previousStatus)
+            o.put("newStatus", l.newStatus)
+            o.put("reason", l.reason)
+            o.put("timestamp", l.createdAt?.toDate()?.time ?: System.currentTimeMillis())
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_AUDIT_LOGS, array.toString()).apply()
+    }
+
+    /** Retrieve all saved administrative audit logs */
+    fun getAllAuditLogs(): List<AdminAuditLog> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_AUDIT_LOGS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<AdminAuditLog>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            val timeMs = o.optLong("timestamp", System.currentTimeMillis())
+            list.add(
+                AdminAuditLog(
+                    id = o.optString("id"),
+                    adminUid = o.optString("adminUid"),
+                    adminEmail = o.optString("adminEmail"),
+                    actionType = o.optString("actionType"),
+                    targetType = o.optString("targetType"),
+                    targetId = o.optString("targetId"),
+                    previousStatus = o.optString("previousStatus"),
+                    newStatus = o.optString("newStatus"),
+                    reason = o.optString("reason"),
+                    createdAt = com.google.firebase.Timestamp(java.util.Date(timeMs))
+                )
+            )
+        }
+        return list
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */

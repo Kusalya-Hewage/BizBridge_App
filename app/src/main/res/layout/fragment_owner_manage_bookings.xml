@@ -169,7 +169,8 @@
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:visibility="gone">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -277,7 +278,8 @@
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:visibility="gone">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -385,7 +387,8 @@
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:visibility="gone">
 
                     <RelativeLayout
                         android:layout_width="match_parent"

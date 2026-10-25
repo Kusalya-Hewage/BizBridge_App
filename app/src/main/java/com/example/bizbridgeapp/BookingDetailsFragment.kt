@@ -80,29 +80,31 @@ class BookingDetailsFragment : Fragment() {
         }
 
         // Load real booking data
-        val id = currentBookingId.orEmpty().ifEmpty { "bk_demo_1" }
-        BookingRepository.getBookingById(id,
-            onSuccess = { booking ->
-                booking?.let { b ->
-                    currentBooking = b
-                    if (!isAdded) return@let
-                    view.findViewById<TextView>(R.id.tv_booking_id)?.text = b.qrReference.ifEmpty { b.id }
-                    view.findViewById<TextView>(R.id.tv_booking_status)?.text = b.status
-                    view.findViewById<TextView>(R.id.tv_business_name)?.text = b.businessNameSnapshot
-                    view.findViewById<TextView>(R.id.tv_service_info)?.text = "${b.serviceNameSnapshot} • $${b.priceAtBooking.toInt()}"
-                    view.findViewById<TextView>(R.id.tv_appointment_date)?.text = b.appointmentDate
-                    view.findViewById<TextView>(R.id.tv_appointment_time)?.text = "${b.appointmentTime} • ${b.durationMinutes} min"
-                    if (b.businessAddressSnapshot.isNotEmpty()) {
-                        view.findViewById<TextView>(R.id.tv_address)?.text = b.businessAddressSnapshot
-                    }
+        val id = currentBookingId.orEmpty()
+        if (id.isNotEmpty()) {
+            BookingRepository.getBookingById(id,
+                onSuccess = { booking ->
+                    booking?.let { b ->
+                        currentBooking = b
+                        if (!isAdded) return@let
+                        view.findViewById<TextView>(R.id.tv_booking_id)?.text = b.qrReference.ifEmpty { b.id }
+                        view.findViewById<TextView>(R.id.tv_booking_status)?.text = b.status
+                        view.findViewById<TextView>(R.id.tv_business_name)?.text = b.businessNameSnapshot
+                        view.findViewById<TextView>(R.id.tv_service_info)?.text = "${b.serviceNameSnapshot} • $${b.priceAtBooking.toInt()}"
+                        view.findViewById<TextView>(R.id.tv_appointment_date)?.text = b.appointmentDate
+                        view.findViewById<TextView>(R.id.tv_appointment_time)?.text = "${b.appointmentTime} • ${b.durationMinutes} min"
+                        if (b.businessAddressSnapshot.isNotEmpty()) {
+                            view.findViewById<TextView>(R.id.tv_address)?.text = b.businessAddressSnapshot
+                        }
 
-                    // Disable cancel if already completed or cancelled
-                    if (b.status == "COMPLETED" || b.status == "CANCELLED") {
-                        view.findViewById<Button>(R.id.btn_cancel_booking)?.isEnabled = false
+                        // Disable cancel if already completed or cancelled
+                        if (b.status == "COMPLETED" || b.status == "CANCELLED") {
+                            view.findViewById<Button>(R.id.btn_cancel_booking)?.isEnabled = false
+                        }
                     }
-                }
-            },
-            onFailure = {}
-        )
+                },
+                onFailure = {}
+            )
+        }
     }
 }

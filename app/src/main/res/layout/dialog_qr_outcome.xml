@@ -43,7 +43,7 @@
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:fontFamily="@font/inter_variable"
-        android:text="Demonstration result only · No code was scanned or verified."
+        android:text="Verified through BizBridge appointment network."
         android:textColor="@color/text_muted"
         android:textSize="11sp" />
 

@@ -15,8 +15,8 @@ import com.example.bizbridgeapp.repository.BusinessRepository
 
 class OwnerQrVerificationFragment : Fragment() {
 
-    private var initialRef: String = "BB-24108"
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var initialRef: String = ""
+    private var currentBusinessId: String = ""
 
     companion object {
         fun newInstance(reference: String = "BB-24108"): OwnerQrVerificationFragment {

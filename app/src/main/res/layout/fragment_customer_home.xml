@@ -393,6 +393,20 @@
 
                 </RelativeLayout>
 
+                <!-- No appointment state -->
+                <TextView
+                    android:id="@+id/tv_no_upcoming_appointment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_card_white"
+                    android:fontFamily="@font/inter_variable"
+                    android:padding="16dp"
+                    android:text="No upcoming appointments. Book your next service today!"
+                    android:textColor="@color/text_muted"
+                    android:textSize="13sp"
+                    android:visibility="visible" />
+
                 <!-- Appointment Card -->
                 <LinearLayout
                     android:id="@+id/card_appointment"
@@ -404,7 +418,8 @@
                     android:elevation="2dp"
                     android:focusable="true"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:visibility="gone">
 
                     <!-- Business name row with Confirmed badge -->
                     <RelativeLayout
@@ -602,7 +617,21 @@
 
                 </RelativeLayout>
 
-                <!-- Business Card: Juniper Studio (nearby) -->
+                <!-- No nearby businesses state -->
+                <TextView
+                    android:id="@+id/tv_no_nearby_businesses"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_card_white"
+                    android:fontFamily="@font/inter_variable"
+                    android:padding="20dp"
+                    android:text="No businesses available yet."
+                    android:textColor="@color/text_muted"
+                    android:textSize="13sp"
+                    android:visibility="visible" />
+
+                <!-- Business Card: (nearby) -->
                 <LinearLayout
                     android:id="@+id/card_nearby_business"
                     android:layout_width="match_parent"
@@ -612,7 +641,8 @@
                     android:clickable="true"
                     android:elevation="2dp"
                     android:focusable="true"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <!-- Business Image -->
                     <FrameLayout
@@ -834,8 +864,23 @@
 
                 </RelativeLayout>
 
+                <!-- No popular businesses state -->
+                <TextView
+                    android:id="@+id/tv_no_popular_businesses"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_card_white"
+                    android:fontFamily="@font/inter_variable"
+                    android:padding="20dp"
+                    android:text="No popular businesses available yet."
+                    android:textColor="@color/text_muted"
+                    android:textSize="13sp"
+                    android:visibility="visible" />
+
                 <!-- Popular cards: horizontal scroll row -->
                 <HorizontalScrollView
+                    android:id="@+id/scroll_popular_businesses"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -844,7 +889,8 @@
                     android:paddingStart="20dp"
                     android:paddingEnd="20dp"
                     android:clipToPadding="false"
-                    android:scrollbars="none">
+                    android:scrollbars="none"
+                    android:visibility="gone">
 
                     <LinearLayout
                         android:layout_width="wrap_content"

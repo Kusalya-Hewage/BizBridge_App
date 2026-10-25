@@ -17,7 +17,7 @@ import com.example.bizbridgeapp.repository.PromotionRepository
 class OwnerCreatePromotionFragment : Fragment() {
 
     private var isEditMode: Boolean = false
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
 
     companion object {
         fun newInstance(isEditMode: Boolean = false): OwnerCreatePromotionFragment {

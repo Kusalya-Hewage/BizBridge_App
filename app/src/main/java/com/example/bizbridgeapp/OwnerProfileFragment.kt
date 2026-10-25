@@ -17,7 +17,7 @@ import android.widget.ImageView
 class OwnerProfileFragment : Fragment() {
 
     private var businessListener: ListenerRegistration? = null
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
     private lateinit var imagePickerHelper: ImagePickerHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,17 +60,18 @@ class OwnerProfileFragment : Fragment() {
 
         val ownerName = (profile?.get("fullName") as? String)
             ?: currentUser?.displayName
-            ?: "Elena Rivera"
+            ?: "Business Owner"
         val ownerEmail = currentUser?.email
             ?: (profile?.get("email") as? String)
-            ?: "elena@juniper.example"
-        val ownerPhone = (profile?.get("phone") as? String) ?: "+1 (415) 555-2782"
+            ?: ""
+        val ownerPhone = (profile?.get("phone") as? String) ?: ""
 
         view.findViewById<TextView>(R.id.tv_owner_profile_name)?.text = ownerName
-        view.findViewById<TextView>(R.id.tv_owner_profile_contact)?.text = "$ownerEmail · $ownerPhone"
+        val contactText = if (ownerPhone.isNotEmpty()) "$ownerEmail · $ownerPhone" else ownerEmail
+        view.findViewById<TextView>(R.id.tv_owner_profile_contact)?.text = contactText
 
         val initials = ownerName.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase()
-        view.findViewById<TextView>(R.id.tv_owner_profile_avatar)?.text = if (initials.isNotEmpty()) initials else "ER"
+        view.findViewById<TextView>(R.id.tv_owner_profile_avatar)?.text = if (initials.isNotEmpty()) initials else "BO"
 
         // Real-time listener for owner's business
         businessListener = BusinessRepository.listenToOwnerBusiness(currentBusinessId) { biz ->

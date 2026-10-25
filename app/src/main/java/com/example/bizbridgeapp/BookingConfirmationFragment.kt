@@ -48,28 +48,30 @@ class BookingConfirmationFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(MyBookingsFragment(), addToBackStack = true)
         }
 
-        val id = bookingId.orEmpty().ifEmpty { "bk_demo_1" }
-        BookingRepository.getBookingById(id,
-            onSuccess = { booking ->
-                booking?.let { b ->
-                    if (!isAdded) return@let
-                    view.findViewById<TextView>(R.id.tv_booking_ref)?.text = "Booking: ${b.qrReference}"
-                    view.findViewById<TextView>(R.id.tv_booking_status)?.text = b.status
-                    view.findViewById<TextView>(R.id.tv_business_name)?.text = b.businessNameSnapshot
-                    view.findViewById<TextView>(R.id.tv_service_info)?.text = "${b.serviceNameSnapshot} • $${b.priceAtBooking.toInt()} • ${b.durationMinutes} min"
-                    view.findViewById<TextView>(R.id.tv_date_time)?.text = "${b.appointmentDate} • ${b.appointmentTime}"
-                    if (b.businessAddressSnapshot.isNotEmpty()) {
-                        view.findViewById<TextView>(R.id.tv_address)?.text = b.businessAddressSnapshot
-                    }
+        val id = bookingId.orEmpty()
+        if (id.isNotEmpty()) {
+            BookingRepository.getBookingById(id,
+                onSuccess = { booking ->
+                    booking?.let { b ->
+                        if (!isAdded) return@let
+                        view.findViewById<TextView>(R.id.tv_booking_ref)?.text = "Booking: ${b.qrReference}"
+                        view.findViewById<TextView>(R.id.tv_booking_status)?.text = b.status
+                        view.findViewById<TextView>(R.id.tv_business_name)?.text = b.businessNameSnapshot
+                        view.findViewById<TextView>(R.id.tv_service_info)?.text = "${b.serviceNameSnapshot} • $${b.priceAtBooking.toInt()} • ${b.durationMinutes} min"
+                        view.findViewById<TextView>(R.id.tv_date_time)?.text = "${b.appointmentDate} • ${b.appointmentTime}"
+                        if (b.businessAddressSnapshot.isNotEmpty()) {
+                            view.findViewById<TextView>(R.id.tv_address)?.text = b.businessAddressSnapshot
+                        }
 
-                    // Generate actual QR code from qrReference
-                    val qrBitmap = QRCodeUtil.generateQRCode(b.qrReference, 300, 300)
-                    if (qrBitmap != null) {
-                        view.findViewById<ImageView>(R.id.iv_qr_code)?.setImageBitmap(qrBitmap)
+                        // Generate actual QR code from qrReference
+                        val qrBitmap = QRCodeUtil.generateQRCode(b.qrReference, 300, 300)
+                        if (qrBitmap != null) {
+                            view.findViewById<ImageView>(R.id.iv_qr_code)?.setImageBitmap(qrBitmap)
+                        }
                     }
-                }
-            },
-            onFailure = {}
-        )
+                },
+                onFailure = {}
+            )
+        }
     }
 }

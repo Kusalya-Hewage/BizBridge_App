@@ -22,7 +22,7 @@ class OwnerEditServiceFragment : Fragment() {
     private var initialServiceDesc: String = ""
     private var initialServicePrice: Double = 0.0
     private var initialServiceDuration: Int = 30
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
     private lateinit var imagePickerHelper: ImagePickerHelper
 
     companion object {

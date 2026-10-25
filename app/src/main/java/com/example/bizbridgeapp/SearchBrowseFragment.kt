@@ -233,16 +233,27 @@ class SearchBrowseFragment : Fragment() {
             tvRating?.text = String.format("%.1f (%d)", ratingVal, biz.reviewCount)
             tvPrice?.text = biz.price ?: "From $25"
 
-            // Set appropriate image based on category
-            when {
-                biz.category.contains("salon", ignoreCase = true) || biz.category.contains("hair", ignoreCase = true) -> {
-                    ivImage?.setImageResource(R.drawable.img_salon_interior)
+            // Set business image (real imageUrl or category fallback)
+            if (!biz.imageUrl.isNullOrBlank()) {
+                if (ivImage != null) {
+                    val fallback = if (biz.category.contains("beauty", ignoreCase = true) || biz.category.contains("spa", ignoreCase = true)) {
+                        R.drawable.img_spa_treatment
+                    } else {
+                        R.drawable.img_salon_interior
+                    }
+                    com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivImage, biz.imageUrl, fallback)
                 }
-                biz.category.contains("beauty", ignoreCase = true) || biz.category.contains("spa", ignoreCase = true) -> {
-                    ivImage?.setImageResource(R.drawable.img_spa_treatment)
-                }
-                else -> {
-                    ivImage?.setImageResource(R.drawable.img_salon_interior)
+            } else {
+                when {
+                    biz.category.contains("salon", ignoreCase = true) || biz.category.contains("hair", ignoreCase = true) -> {
+                        ivImage?.setImageResource(R.drawable.img_salon_interior)
+                    }
+                    biz.category.contains("beauty", ignoreCase = true) || biz.category.contains("spa", ignoreCase = true) -> {
+                        ivImage?.setImageResource(R.drawable.img_spa_treatment)
+                    }
+                    else -> {
+                        ivImage?.setImageResource(R.drawable.img_salon_interior)
+                    }
                 }
             }
 

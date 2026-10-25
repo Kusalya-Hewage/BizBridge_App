@@ -7,57 +7,10 @@ import com.google.firebase.firestore.SetOptions
 object ServiceRepository {
     private val db = FirebaseFirestore.getInstance()
 
-    val defaultDemoServices = listOf(
-        Service(
-            id = "srv_haircut",
-            name = "Signature haircut",
-            description = "Consultation, cut and effortless finish.",
-            price = 45.0,
-            durationMinutes = 45,
-            isActive = true
-        ),
-        Service(
-            id = "srv_color",
-            name = "Color refresh",
-            description = "Gloss, tone and a head-turn adding finish.",
-            price = 65.0,
-            durationMinutes = 50,
-            isActive = true
-        ),
-        Service(
-            id = "srv_blowdry",
-            name = "Blow-dry & style",
-            description = "Smooth, bouncy styling with a relaxed finish.",
-            price = 35.0,
-            durationMinutes = 30,
-            isActive = true
-        )
-    )
+    val defaultDemoServices = emptyList<Service>()
 
     fun seedDefaultServicesIfEmpty(businessId: String, onComplete: (List<Service>) -> Unit = {}) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
-        val colRef = db.collection("businesses").document(targetBizId).collection("services")
-        colRef.get().addOnSuccessListener { snapshot ->
-            if (snapshot.isEmpty) {
-                val batch = db.batch()
-                val seededList = defaultDemoServices.map { srv ->
-                    val docRef = colRef.document(srv.id)
-                    val toSave = srv.copy(businessId = targetBizId)
-                    batch.set(docRef, toSave.toMap())
-                    toSave
-                }
-                batch.commit()
-                    .addOnSuccessListener { onComplete(seededList) }
-                    .addOnFailureListener { onComplete(seededList) }
-            } else {
-                val list = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Service::class.java)?.copy(id = doc.id, businessId = targetBizId)
-                }
-                onComplete(list)
-            }
-        }.addOnFailureListener {
-            onComplete(defaultDemoServices.map { it.copy(businessId = targetBizId) })
-        }
+        onComplete(emptyList())
     }
 
     /** Real-time listener for all services belonging to a business */
@@ -65,18 +18,16 @@ object ServiceRepository {
         businessId: String,
         onUpdate: (List<Service>) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         val colRef = db.collection("businesses").document(targetBizId).collection("services")
 
         return colRef.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) {
-                onUpdate(defaultDemoServices.map { it.copy(businessId = targetBizId) })
+                onUpdate(emptyList())
                 return@addSnapshotListener
             }
             if (snapshot.isEmpty) {
-                seedDefaultServicesIfEmpty(targetBizId) { seeded ->
-                    onUpdate(seeded)
-                }
+                onUpdate(emptyList())
             } else {
                 val list = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Service::class.java)?.copy(id = doc.id, businessId = targetBizId)
@@ -91,15 +42,13 @@ object ServiceRepository {
         onSuccess: (List<Service>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         db.collection("businesses").document(targetBizId).collection("services")
             .whereEqualTo("isActive", true)
             .get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.isEmpty) {
-                    seedDefaultServicesIfEmpty(targetBizId) { seeded ->
-                        onSuccess(seeded.filter { it.isActive })
-                    }
+                    onSuccess(emptyList())
                 } else {
                     val list = snapshot.documents.mapNotNull { doc ->
                         val service = doc.toObject(Service::class.java)
@@ -108,7 +57,9 @@ object ServiceRepository {
                     onSuccess(list)
                 }
             }
-            .addOnFailureListener { e -> onFailure(e) }
+            .addOnFailureListener { e ->
+                onSuccess(emptyList())
+            }
     }
 
     fun getServiceById(
@@ -117,7 +68,7 @@ object ServiceRepository {
         onSuccess: (Service?) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         db.collection("businesses").document(targetBizId).collection("services").document(serviceId)
             .get()
             .addOnSuccessListener { doc ->
@@ -125,8 +76,7 @@ object ServiceRepository {
                     val s = doc.toObject(Service::class.java)?.copy(id = doc.id, businessId = targetBizId)
                     onSuccess(s)
                 } else {
-                    val fallback = defaultDemoServices.firstOrNull { it.id == serviceId }?.copy(businessId = targetBizId)
-                    onSuccess(fallback)
+                    onSuccess(null)
                 }
             }
             .addOnFailureListener { e -> onFailure(e) }
@@ -138,7 +88,7 @@ object ServiceRepository {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         val docRef = if (service.id.isNotEmpty()) {
             db.collection("businesses").document(targetBizId).collection("services").document(service.id)
         } else {
@@ -157,7 +107,7 @@ object ServiceRepository {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         db.collection("businesses").document(targetBizId).collection("services").document(serviceId)
             .delete()
             .addOnSuccessListener { onSuccess() }
@@ -171,7 +121,7 @@ object ServiceRepository {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val targetBizId = businessId
         db.collection("businesses").document(targetBizId).collection("services").document(serviceId)
             .update(mapOf(
                 "isActive" to isActive,

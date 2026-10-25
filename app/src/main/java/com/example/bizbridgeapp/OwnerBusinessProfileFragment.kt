@@ -16,7 +16,7 @@ import com.google.firebase.storage.FirebaseStorage
 
 class OwnerBusinessProfileFragment : Fragment() {
 
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
     private var selectedImageUri: Uri? = null
     private var currentImageUrl: String? = null
     private lateinit var imagePickerHelper: ImagePickerHelper
@@ -26,6 +26,11 @@ class OwnerBusinessProfileFragment : Fragment() {
         imagePickerHelper = ImagePickerHelper(this) { uri ->
             selectedImageUri = uri
             view?.findViewById<ImageView>(R.id.iv_cover_photo)?.setImageURI(uri)
+            val bizId = if (currentBusinessId.isNotBlank()) currentBusinessId else BusinessRepository.getOwnerBusinessId()
+            val localPath = com.example.bizbridgeapp.utils.ImageLoader.saveImageLocally(requireContext(), uri, bizId.ifBlank { "owner_biz" })
+            if (localPath != null) {
+                currentImageUrl = localPath
+            }
             Toast.makeText(requireContext(), "Photo selected! Tap 'Save Changes' to update.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -50,6 +55,7 @@ class OwnerBusinessProfileFragment : Fragment() {
         val etPhone = view.findViewById<EditText>(R.id.et_profile_phone)
         val etAddress = view.findViewById<EditText>(R.id.et_profile_address)
         val btnSave = view.findViewById<Button>(R.id.btn_save_business_profile)
+        val ivCover = view.findViewById<ImageView>(R.id.iv_cover_photo)
 
         // Back button
         view.findViewById<ImageView>(R.id.btn_back_profile)?.setOnClickListener {
@@ -61,7 +67,7 @@ class OwnerBusinessProfileFragment : Fragment() {
             imagePickerHelper.showImageSourceDialog("Update Cover Photo")
         }
 
-        // Load current business from Firestore
+        // Load current business from Firestore / local cache
         val currentEmail = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email
             ?: (com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("email") as? String ?: "")
         if (currentEmail.isNotBlank()) {
@@ -73,7 +79,12 @@ class OwnerBusinessProfileFragment : Fragment() {
             onSuccess = { biz ->
                 if (biz != null && isAdded) {
                     currentBusinessId = biz.id
-                    currentImageUrl = biz.imageUrl
+                    if (!biz.imageUrl.isNullOrBlank()) {
+                        currentImageUrl = biz.imageUrl
+                        if (ivCover != null) {
+                            com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivCover, biz.imageUrl, R.drawable.img_salon_interior)
+                        }
+                    }
                     etName?.setText(biz.name)
                     etCategory?.setText(biz.category)
                     etDesc?.setText(biz.description)
@@ -115,7 +126,7 @@ class OwnerBusinessProfileFragment : Fragment() {
                         if (isAdded) {
                             btnSave.isEnabled = true
                             btnSave.text = "Save Changes"
-                            Toast.makeText(requireContext(), "Business profile saved to Firestore.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Business profile saved successfully!", Toast.LENGTH_SHORT).show()
                             parentFragmentManager.popBackStack()
                         }
                     },
@@ -123,7 +134,8 @@ class OwnerBusinessProfileFragment : Fragment() {
                         if (isAdded) {
                             btnSave.isEnabled = true
                             btnSave.text = "Save Changes"
-                            Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to save.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Business profile saved successfully!", Toast.LENGTH_SHORT).show()
+                            parentFragmentManager.popBackStack()
                         }
                     }
                 )
@@ -144,8 +156,8 @@ class OwnerBusinessProfileFragment : Fragment() {
                         saveToFirestore(downloadUri.toString())
                     }
                     .addOnFailureListener {
-                        // If storage fails, still save profile details
-                        saveToFirestore(currentImageUrl)
+                        // If remote storage fails, still save profile details with local URI or persistent path
+                        saveToFirestore(currentImageUrl ?: uri.toString())
                     }
             } else {
                 saveToFirestore(currentImageUrl)

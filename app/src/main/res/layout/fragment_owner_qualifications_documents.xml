@@ -81,9 +81,9 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
+                android:hint="e.g. Advanced Hair Design Certificate"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="Advanced Hair Design Certificate"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
@@ -105,9 +105,9 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
+                android:hint="e.g. California Beauty Academy"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="California Beauty Academy"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
@@ -129,36 +129,57 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
+                android:hint="e.g. 5 years · Industry Experience"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="8 years · Stylist since 2018"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
-            <!-- Upload Certificate / Document Button -->
+            <!-- Optional File Attachment Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btn_select_doc_file"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:fontFamily="@font/inter_variable"
+                    android:stateListAnimator="@null"
+                    android:text="📎 Attach Certificate Photo (Optional)"
+                    android:textAllCaps="false"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_attached_file_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="No file attached · PDF, JPG or PNG up to 10 MB"
+                    android:textColor="@color/text_muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- Submit Qualification / Document Button -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_upload_document"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_button_secondary"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_button_primary"
                 android:fontFamily="@font/inter_variable"
                 android:stateListAnimator="@null"
-                android:text="Upload Certificate / Document"
+                android:text="Submit Qualification for Review"
                 android:textAllCaps="false"
-                android:textColor="@color/primary"
+                android:textColor="@color/surface_white"
                 android:textSize="14sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="6dp"
-                android:fontFamily="@font/inter_variable"
-                android:text="PDF, JPG or PNG · Up to 10 MB"
-                android:textColor="@color/text_muted"
-                android:textSize="11sp" />
 
             <!-- Section: Your submitted documents -->
             <TextView
@@ -175,167 +196,9 @@
                 android:id="@+id/ll_submitted_documents_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-            <!-- Doc 1: Hair Design Certificate -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Hair Design Certificate"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_tag_verified"
-                        android:fontFamily="@font/inter_variable"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:text="Verified"
-                        android:textColor="@color/secondary_dark"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="California Beauty Academy · Verified Oct 20"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Doc 2: Advanced Color Systems -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Advanced Color Systems"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_badge_pending"
-                        android:fontFamily="@font/inter_variable"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:text="Pending"
-                        android:textColor="@color/badge_pending_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Submitted Oct 22 · Review pending"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Doc 3: Experience letter (Rejected) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:layout_marginBottom="24dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Experience letter"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_badge_rejected"
-                        android:fontFamily="@font/inter_variable"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:text="Rejected"
-                        android:textColor="@color/error_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Dates are not legible. Upload a clearer copy."
-                    android:textColor="@color/error_text"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_resubmit_document"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Resubmit document →"
-                    android:textColor="@color/primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-            </LinearLayout>
+                android:orientation="vertical" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

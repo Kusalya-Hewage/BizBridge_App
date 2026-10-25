@@ -19,7 +19,7 @@ class AdminVerifyQualificationFragment : Fragment() {
     companion object {
         private const val ARG_DOC_ID = "arg_document_id"
 
-        fun newInstance(documentId: String = "doc_massage_cert"): AdminVerifyQualificationFragment {
+        fun newInstance(documentId: String = ""): AdminVerifyQualificationFragment {
             val fragment = AdminVerifyQualificationFragment()
             val args = Bundle()
             args.putString(ARG_DOC_ID, documentId)
@@ -30,7 +30,7 @@ class AdminVerifyQualificationFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        documentId = arguments?.getString(ARG_DOC_ID).orEmpty().ifEmpty { "doc_massage_cert" }
+        documentId = arguments?.getString(ARG_DOC_ID).orEmpty()
     }
 
     override fun onCreateView(
@@ -56,26 +56,46 @@ class AdminVerifyQualificationFragment : Fragment() {
         val etNotes = view.findViewById<EditText>(R.id.et_verify_notes)
 
         // Load document from Firestore
-        QualificationRepository.getDocumentById(
-            docId = documentId,
-            onSuccess = { doc ->
-                if (doc != null && isAdded) {
-                    currentDocument = doc
-                    tvTitle?.text = doc.title
-                    if (doc.issuingOrg.isNotBlank()) tvIssuer?.text = doc.issuingOrg.uppercase()
-                    tvOwnerInfo?.text = "${doc.businessName.ifEmpty { "Business" }} · ${doc.experience.ifEmpty { "Credential" }}"
-                    tvCredentialId?.text = "STATUS: ${doc.verificationStatus.uppercase()} · ${doc.id.uppercase()}"
-                    tvMetadata?.text = "Business ID: ${doc.businessId} · Submitted: ${doc.documentType}"
+        if (documentId.isNotBlank()) {
+            QualificationRepository.getDocumentById(
+                docId = documentId,
+                onSuccess = { doc ->
+                    if (isAdded) {
+                        if (doc != null) {
+                            currentDocument = doc
+                            tvTitle?.text = doc.title
+                            if (doc.issuingOrg.isNotBlank()) tvIssuer?.text = doc.issuingOrg.uppercase()
+                            tvOwnerInfo?.text = "${doc.businessName.ifEmpty { "Business" }} · ${doc.experience.ifEmpty { "Credential" }}"
+                            tvCredentialId?.text = "STATUS: ${doc.verificationStatus.uppercase()} · ${doc.id.uppercase()}"
+                            tvMetadata?.text = "Business ID: ${doc.businessId} · Submitted: ${doc.documentType}"
+                        } else {
+                            tvTitle?.text = "Document not found"
+                            tvIssuer?.text = ""
+                            tvOwnerInfo?.text = "The requested document could not be located."
+                            tvCredentialId?.text = "STATUS: UNAVAILABLE"
+                            tvMetadata?.text = "Document ID: $documentId"
+                        }
+                    }
+                },
+                onFailure = {
+                    if (isAdded) {
+                        tvTitle?.text = "Error loading document"
+                    }
                 }
-            },
-            onFailure = {}
-        )
+            )
+        } else {
+            tvTitle?.text = "No document selected"
+        }
 
         val adminUser = FirebaseAuthManager.getCurrentUser()
-        val adminUid = adminUser?.uid ?: "admin_alex"
-        val adminEmail = adminUser?.email ?: "admin@bizbridge.com"
+        val adminUid = adminUser?.uid ?: ""
+        val adminEmail = adminUser?.email ?: ""
 
         view.findViewById<View>(R.id.btn_verify_document)?.setOnClickListener {
+            if (documentId.isBlank()) {
+                Toast.makeText(requireContext(), "No document ID specified.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val btnVerify = it
             btnVerify.isEnabled = false
             QualificationRepository.verifyDocument(
@@ -99,6 +119,10 @@ class AdminVerifyQualificationFragment : Fragment() {
         }
 
         view.findViewById<View>(R.id.btn_reject_document)?.setOnClickListener {
+            if (documentId.isBlank()) {
+                Toast.makeText(requireContext(), "No document ID specified.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val reason = etNotes?.text?.toString()?.trim().orEmpty().ifEmpty { "Document unreadable or invalid credentials" }
             val btnReject = it
             btnReject.isEnabled = false

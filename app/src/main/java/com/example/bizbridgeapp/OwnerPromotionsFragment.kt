@@ -19,7 +19,7 @@ class OwnerPromotionsFragment : Fragment() {
 
     private var promoListener: ListenerRegistration? = null
     private var allPromotions: List<Promotion> = emptyList()
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
     private var activeFilter: String = "ACTIVE"
 
     override fun onCreateView(
@@ -65,6 +65,9 @@ class OwnerPromotionsFragment : Fragment() {
         view.findViewById<Button>(R.id.btn_create_promotion)?.setOnClickListener {
             mainActivity?.navigateTo(OwnerCreatePromotionFragment.newInstance(isEditMode = false), addToBackStack = true)
         }
+
+        // Initial render so promo card is hidden if 0 promotions
+        renderPromotions(view)
 
         // Real-time listener for Promotions
         promoListener = PromotionRepository.listenToPromotionsForBusiness(currentBusinessId) { list ->

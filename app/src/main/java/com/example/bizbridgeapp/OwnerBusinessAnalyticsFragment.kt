@@ -15,7 +15,7 @@ import com.google.firebase.firestore.ListenerRegistration
 class OwnerBusinessAnalyticsFragment : Fragment() {
 
     private var bookingsListener: ListenerRegistration? = null
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,6 +32,12 @@ class OwnerBusinessAnalyticsFragment : Fragment() {
         OwnerNavigationHelper.setupBottomNav(this, view, OwnerTab.INSIGHTS)
 
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
+
+        // Initialize 0 counts initially so mock values don't show
+        view.findViewById<TextView>(R.id.tv_analytics_total_bookings)?.text = "0"
+        view.findViewById<TextView>(R.id.tv_analytics_completed_count)?.text = "0"
+        view.findViewById<TextView>(R.id.tv_analytics_completion_rate)?.text = "0% completion rate"
+        view.findViewById<TextView>(R.id.tv_analytics_status_breakdown)?.text = "0 Pending · 0 Confirmed · 0 Cancelled"
 
         // Timeframe selector
         view.findViewById<TextView>(R.id.tv_analytics_timeframe)?.setOnClickListener {
