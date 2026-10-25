@@ -54,7 +54,7 @@
         android:layout_marginTop="20dp"
         android:orientation="vertical">
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_outcome_primary"
             android:layout_width="match_parent"
             android:layout_height="48dp"
@@ -67,7 +67,7 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_outcome_secondary"
             android:layout_width="match_parent"
             android:layout_height="48dp"

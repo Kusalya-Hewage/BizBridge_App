@@ -330,7 +330,7 @@
         android:paddingStart="20dp"
         android:paddingEnd="20dp">
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_submit_review"
             android:layout_width="match_parent"
             android:layout_height="50dp"

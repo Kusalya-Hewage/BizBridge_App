@@ -436,7 +436,7 @@
                     android:layout_marginTop="14dp"
                     android:orientation="horizontal">
 
-                    <Button
+                    <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btn_confirm_request"
                         android:layout_width="0dp"
                         android:layout_height="40dp"
@@ -451,7 +451,7 @@
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
-                    <Button
+                    <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btn_reject_request"
                         android:layout_width="0dp"
                         android:layout_height="40dp"

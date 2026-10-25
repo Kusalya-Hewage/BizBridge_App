@@ -145,7 +145,7 @@
                     android:textSize="12sp" />
 
                 <!-- Edit Profile Button -->
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btn_edit_profile"
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"

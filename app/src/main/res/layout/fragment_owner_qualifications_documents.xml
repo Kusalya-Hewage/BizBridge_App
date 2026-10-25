@@ -136,7 +136,7 @@
                 android:textSize="14sp" />
 
             <!-- Upload Certificate / Document Button -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_upload_document"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
