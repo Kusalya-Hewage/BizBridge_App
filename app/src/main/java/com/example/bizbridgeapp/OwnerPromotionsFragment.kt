@@ -75,7 +75,7 @@ class OwnerPromotionsFragment : Fragment() {
     }
 
     private fun renderPromotions(rootView: View) {
-        val promoCard = rootView.findViewById<View>(R.id.card_promotion_item) ?: return
+        val promoCard = rootView.findViewById<View>(R.id.card_promotion_sample) ?: return
         val activePromo = allPromotions.firstOrNull {
             if (activeFilter == "ACTIVE") it.status == "ACTIVE"
             else if (activeFilter == "SCHEDULED") it.status == "SCHEDULED" || it.status == "DRAFT"
