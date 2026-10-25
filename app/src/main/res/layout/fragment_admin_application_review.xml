@@ -20,7 +20,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="32dp">
 
-            <!-- Top Demonstration Badge -->
+            <!-- Top Console Badge -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -33,7 +33,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN · DEMONSTRATION DATA"
+                    android:text="ADMIN CONSOLE · REVIEW"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -74,12 +74,13 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_review_submitted_info"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
                         android:letterSpacing="0.05"
-                        android:text="SUBMITTED OCT 22, 2026 · APP-4091"
+                        android:text="SUBMITTED RECENTLY"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -98,17 +99,22 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Willow Wellness"
+                    android:text="Business Name"
                     android:textColor="@color/admin_text_title"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/badge_review_status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:background="@drawable/bg_admin_badge_pending"
                     android:fontFamily="@font/inter_variable"
+                    android:paddingStart="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="3dp"
                     android:text="Pending"
                     android:textColor="@color/admin_badge_pending_text"
                     android:textSize="11sp"
@@ -133,11 +139,12 @@
                     android:background="@drawable/bg_admin_tab_active">
 
                     <TextView
+                        android:id="@+id/tv_review_owner_initials"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:fontFamily="@font/inter_variable"
-                        android:text="NA"
+                        android:text="BO"
                         android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -150,20 +157,22 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tv_review_owner_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Nora Ahmed · Owner"
+                        android:text="Owner Name"
                         android:textColor="@color/admin_text_title"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_review_owner_contact"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="nora@example.com · (415) 555-0114"
+                        android:text="owner@example.com · Phone"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -205,26 +214,29 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/tv_review_category"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Wellness &amp; massage"
+                            android:text="Category"
                             android:textColor="@color/admin_text_title"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_review_address"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="280 Church Street, San Francisco"
+                            android:text="Colombo, Sri Lanka"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="12sp" />
                     </LinearLayout>
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/tv_review_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -232,7 +244,7 @@
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="3dp"
                     android:padding="12dp"
-                    android:text="“An established wellness practice offering restorative massage and guided relaxation.”"
+                    android:text="“Business registration awaiting administrative review and approval.”"
                     android:textColor="@color/admin_text_body"
                     android:textSize="13sp" />
             </LinearLayout>
@@ -247,6 +259,12 @@
                 android:textColor="@color/admin_text_title"
                 android:textSize="15sp"
                 android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/ll_admin_submitted_docs_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
             <!-- Document Item 1: Massage Therapy Certificate -->
             <LinearLayout
@@ -361,6 +379,7 @@
                     android:textColor="@color/admin_text_title"
                     android:textSize="12sp"
                     android:textStyle="bold" />
+            </LinearLayout>
             </LinearLayout>
 
             <!-- Rejection reason input section -->
