@@ -364,6 +364,7 @@
                     android:layout_height="wrap_content">
 
                     <TextView
+                        android:id="@+id/tv_recent_booking_ref"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
@@ -372,6 +373,7 @@
                         android:textSize="11sp" />
 
                     <TextView
+                        android:id="@+id/tv_recent_booking_status"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
@@ -388,6 +390,7 @@
                 </RelativeLayout>
 
                 <TextView
+                    android:id="@+id/tv_recent_customer_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
@@ -398,6 +401,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_recent_service_details"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
@@ -420,6 +424,7 @@
                         app:tint="@color/text_muted" />
 
                     <TextView
+                        android:id="@+id/tv_recent_date_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"

@@ -5,12 +5,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.model.Booking
+import com.example.bizbridgeapp.repository.BookingRepository
+import com.example.bizbridgeapp.repository.BusinessRepository
+import com.google.firebase.firestore.ListenerRegistration
 
 class OwnerManageBookingsFragment : Fragment() {
+
+    private var bookingsListener: ListenerRegistration? = null
+    private var allBookings: List<Booking> = emptyList()
+    private var activeFilter: String = "PENDING"
+    private var currentBusinessId: String = "biz_juniper_studio"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,7 +37,7 @@ class OwnerManageBookingsFragment : Fragment() {
         // Bottom Navigation
         OwnerNavigationHelper.setupBottomNav(this, view, OwnerTab.BOOKINGS)
 
-        val mainActivity = activity as? MainActivity
+        currentBusinessId = BusinessRepository.getOwnerBusinessId()
 
         // Tabs
         val tabPending = view.findViewById<TextView>(R.id.tab_pending)
@@ -34,129 +45,192 @@ class OwnerManageBookingsFragment : Fragment() {
         val tabCompleted = view.findViewById<TextView>(R.id.tab_completed)
         val tabCancelled = view.findViewById<TextView>(R.id.tab_cancelled)
 
-        val selectTab = { active: TextView, others: List<TextView> ->
+        val selectTab = { active: TextView, others: List<TextView>, filter: String ->
+            activeFilter = filter
             active.setBackgroundResource(R.drawable.bg_chip_selected)
             active.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
             others.forEach {
                 it.setBackgroundResource(R.drawable.bg_chip_default)
                 it.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
             }
+            renderBookings(view)
         }
 
-        tabPending?.setOnClickListener { selectTab(tabPending, listOfNotNull(tabConfirmed, tabCompleted, tabCancelled)) }
-        tabConfirmed?.setOnClickListener {
-            selectTab(tabConfirmed, listOfNotNull(tabPending, tabCompleted, tabCancelled))
-            Toast.makeText(requireContext(), "Showing confirmed bookings.", Toast.LENGTH_SHORT).show()
-        }
-        tabCompleted?.setOnClickListener {
-            selectTab(tabCompleted, listOfNotNull(tabPending, tabConfirmed, tabCancelled))
-            Toast.makeText(requireContext(), "Showing completed bookings.", Toast.LENGTH_SHORT).show()
-        }
-        tabCancelled?.setOnClickListener {
-            selectTab(tabCancelled, listOfNotNull(tabPending, tabConfirmed, tabCompleted))
-            Toast.makeText(requireContext(), "Showing cancelled bookings.", Toast.LENGTH_SHORT).show()
-        }
+        tabPending?.setOnClickListener { selectTab(tabPending, listOfNotNull(tabConfirmed, tabCompleted, tabCancelled), "PENDING") }
+        tabConfirmed?.setOnClickListener { selectTab(tabConfirmed, listOfNotNull(tabPending, tabCompleted, tabCancelled), "CONFIRMED") }
+        tabCompleted?.setOnClickListener { selectTab(tabCompleted, listOfNotNull(tabPending, tabConfirmed, tabCancelled), "COMPLETED") }
+        tabCancelled?.setOnClickListener { selectTab(tabCancelled, listOfNotNull(tabPending, tabConfirmed, tabCompleted), "CANCELLED") }
 
-        // Open Booking Details B06 on card clicks
-        view.findViewById<View>(R.id.card_booking_liam)?.setOnClickListener {
-            mainActivity?.navigateTo(OwnerBookingDetailsFragment.newInstance(
-                bookingId = "BB-24109",
-                customerName = "Liam Brooks",
-                customerEmail = "liam.brooks@example.com",
-                customerPhone = "+1 (415) 555-0199",
-                serviceName = "Signature haircut · $45 · 45 min · Elena Rivera",
-                dateTime = "Sat, October 24, 2026, 11:00–11:45 AM · Pacific Time",
-                customerNote = "Looking forward to refreshing my hairstyle before the weekend."
-            ), addToBackStack = true)
-        }
+        // Real-time listener for business bookings
+        bookingsListener = BookingRepository.listenToBookingsForBusiness(currentBusinessId) { list ->
+            if (!isAdded) return@listenToBookingsForBusiness
+            allBookings = list
 
-        view.findViewById<View>(R.id.card_booking_maya)?.setOnClickListener {
-            mainActivity?.navigateTo(OwnerBookingDetailsFragment.newInstance(
-                bookingId = "BB-24108",
-                customerName = "Maya Chen",
-                customerEmail = "maya.chen@example.com",
-                customerPhone = "+1 (415) 555-0182",
-                serviceName = "Color refresh · $65 · 50 min · Elena Rivera",
-                dateTime = "Sat, October 24, 2026, 2:00–2:50 PM · Pacific Time",
-                customerNote = "A shoulder-length cut with soft layers, please."
-            ), addToBackStack = true)
-        }
+            // Update Tab Count Badges
+            val pCount = list.count { it.status == "PENDING" }
+            val cCount = list.count { it.status == "CONFIRMED" }
+            val compCount = list.count { it.status == "COMPLETED" }
+            val canCount = list.count { it.status == "CANCELLED" }
 
-        view.findViewById<View>(R.id.card_booking_ava)?.setOnClickListener {
-            mainActivity?.navigateTo(OwnerBookingDetailsFragment.newInstance(
-                bookingId = "BB-24110",
-                customerName = "Ava Patel",
-                customerEmail = "ava.patel@example.com",
-                customerPhone = "+1 (415) 555-0144",
-                serviceName = "Signature haircut · $45 · 45 min · Elena Rivera",
-                dateTime = "Mon, October 26, 2026, 10:00–10:45 AM · Pacific Time",
-                customerNote = "Standard trim and styling please."
-            ), addToBackStack = true)
-        }
+            tabPending?.text = "Pending · $pCount"
+            tabConfirmed?.text = "Confirmed · $cCount"
+            tabCompleted?.text = "Completed · $compCount"
+            tabCancelled?.text = "Cancelled · $canCount"
 
-        // Confirm buttons
-        view.findViewById<Button>(R.id.btn_confirm_liam)?.setOnClickListener {
-            Toast.makeText(requireContext(), "BB-24109 confirmed.", Toast.LENGTH_SHORT).show()
-            view.findViewById<Button>(R.id.btn_confirm_liam)?.isEnabled = false
-            view.findViewById<Button>(R.id.btn_confirm_liam)?.text = "Confirmed"
-            view.findViewById<Button>(R.id.btn_reject_liam)?.visibility = View.GONE
+            renderBookings(view)
         }
+    }
 
-        view.findViewById<Button>(R.id.btn_confirm_maya)?.setOnClickListener {
-            Toast.makeText(requireContext(), "BB-24108 confirmed.", Toast.LENGTH_SHORT).show()
-            view.findViewById<Button>(R.id.btn_confirm_maya)?.isEnabled = false
-            view.findViewById<Button>(R.id.btn_confirm_maya)?.text = "Confirmed"
-            view.findViewById<Button>(R.id.btn_reject_maya)?.visibility = View.GONE
-        }
+    private fun renderBookings(rootView: View) {
+        val filtered = allBookings.filter { it.status.equals(activeFilter, ignoreCase = true) }
 
-        view.findViewById<Button>(R.id.btn_confirm_ava)?.setOnClickListener {
-            Toast.makeText(requireContext(), "BB-24110 confirmed.", Toast.LENGTH_SHORT).show()
-            view.findViewById<Button>(R.id.btn_confirm_ava)?.isEnabled = false
-            view.findViewById<Button>(R.id.btn_confirm_ava)?.text = "Confirmed"
-            view.findViewById<Button>(R.id.btn_reject_ava)?.visibility = View.GONE
-        }
+        val cards = listOf(
+            rootView.findViewById<LinearLayout>(R.id.card_booking_liam),
+            rootView.findViewById<LinearLayout>(R.id.card_booking_maya),
+            rootView.findViewById<LinearLayout>(R.id.card_booking_ava)
+        )
 
-        // Reject buttons with Specimen 04 Confirmation Dialog
-        view.findViewById<Button>(R.id.btn_reject_liam)?.setOnClickListener {
-            OwnerDialogHelper.showConfirmationDialog(
-                context = requireContext(),
-                title = "Reject request BB-24109?",
-                message = "Reject this request? The sample reason is shown to the account owner.",
-                confirmButtonText = "Confirm Rejection",
-                isDestructive = true,
-                onConfirm = {
-                    view.findViewById<View>(R.id.card_booking_liam)?.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Request BB-24109 rejected.", Toast.LENGTH_SHORT).show()
+        val confirmButtons = listOf(
+            rootView.findViewById<Button>(R.id.btn_confirm_liam),
+            rootView.findViewById<Button>(R.id.btn_confirm_maya),
+            rootView.findViewById<Button>(R.id.btn_confirm_ava)
+        )
+
+        val rejectButtons = listOf(
+            rootView.findViewById<Button>(R.id.btn_reject_liam),
+            rootView.findViewById<Button>(R.id.btn_reject_maya),
+            rootView.findViewById<Button>(R.id.btn_reject_ava)
+        )
+
+        for (i in 0 until 3) {
+            val card = cards[i] ?: continue
+            val btnConfirm = confirmButtons[i]
+            val btnReject = rejectButtons[i]
+
+            if (i < filtered.size) {
+                val booking = filtered[i]
+                card.visibility = View.VISIBLE
+
+                // Find header relative layout
+                val topRelLayout = card.getChildAt(0) as? RelativeLayout
+                val tvRef = topRelLayout?.getChildAt(0) as? TextView
+                val tvStatus = topRelLayout?.getChildAt(1) as? TextView
+
+                val tvCustomer = card.getChildAt(1) as? TextView
+                val tvService = card.getChildAt(2) as? TextView
+                val tvDateTime = card.getChildAt(3) as? TextView
+
+                tvRef?.text = booking.qrReference.ifEmpty { booking.id }
+                tvStatus?.text = booking.status
+
+                when (booking.status) {
+                    "PENDING" -> {
+                        tvStatus?.setBackgroundResource(R.drawable.bg_badge_pending)
+                        tvStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.badge_pending_text))
+                        btnConfirm?.visibility = View.VISIBLE
+                        btnConfirm?.isEnabled = true
+                        btnConfirm?.text = "Confirm request"
+                        btnReject?.visibility = View.VISIBLE
+                    }
+                    "CONFIRMED" -> {
+                        tvStatus?.setBackgroundResource(R.drawable.bg_badge_confirmed)
+                        tvStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.badge_confirmed_text))
+                        btnConfirm?.visibility = View.GONE
+                        btnReject?.visibility = View.GONE
+                    }
+                    "COMPLETED" -> {
+                        tvStatus?.setBackgroundResource(R.drawable.bg_badge_completed)
+                        tvStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.badge_completed_text))
+                        btnConfirm?.visibility = View.GONE
+                        btnReject?.visibility = View.GONE
+                    }
+                    else -> {
+                        tvStatus?.setBackgroundResource(R.drawable.bg_badge_cancelled)
+                        tvStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.badge_cancelled_text))
+                        btnConfirm?.visibility = View.GONE
+                        btnReject?.visibility = View.GONE
+                    }
                 }
-            )
-        }
 
-        view.findViewById<Button>(R.id.btn_reject_maya)?.setOnClickListener {
-            OwnerDialogHelper.showConfirmationDialog(
-                context = requireContext(),
-                title = "Reject request BB-24108?",
-                message = "Reject this request? The sample reason is shown to the account owner.",
-                confirmButtonText = "Confirm Rejection",
-                isDestructive = true,
-                onConfirm = {
-                    view.findViewById<View>(R.id.card_booking_maya)?.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Request BB-24108 rejected.", Toast.LENGTH_SHORT).show()
-                }
-            )
-        }
+                val displayName = if (booking.customerId.isNotBlank()) "Customer (${booking.customerId.take(6)})" else "Appointment #${booking.qrReference}"
+                tvCustomer?.text = displayName
+                tvService?.text = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min"
+                tvDateTime?.text = "${booking.appointmentDate} · ${booking.appointmentTime}"
 
-        view.findViewById<Button>(R.id.btn_reject_ava)?.setOnClickListener {
-            OwnerDialogHelper.showConfirmationDialog(
-                context = requireContext(),
-                title = "Reject request BB-24110?",
-                message = "Reject this request? The sample reason is shown to the account owner.",
-                confirmButtonText = "Confirm Rejection",
-                isDestructive = true,
-                onConfirm = {
-                    view.findViewById<View>(R.id.card_booking_ava)?.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Request BB-24110 rejected.", Toast.LENGTH_SHORT).show()
+                // Card Click -> Booking Details
+                card.setOnClickListener {
+                    (activity as? MainActivity)?.navigateTo(
+                        OwnerBookingDetailsFragment.newInstance(
+                            bookingId = booking.id,
+                            customerName = displayName,
+                            customerEmail = "customer@bizbridge.example",
+                            customerPhone = "+1 (555) 019-2834",
+                            serviceName = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
+                            dateTime = "${booking.appointmentDate} · ${booking.appointmentTime}",
+                            customerNote = booking.customerNotes.ifEmpty { "Customer notes: None provided." }
+                        ),
+                        addToBackStack = true
+                    )
                 }
-            )
+
+                // Confirm Action
+                btnConfirm?.setOnClickListener {
+                    btnConfirm.isEnabled = false
+                    btnConfirm.text = "Confirming…"
+                    BookingRepository.updateBookingStatus(
+                        bookingId = booking.id,
+                        newStatus = "CONFIRMED",
+                        onSuccess = {
+                            if (isAdded) {
+                                Toast.makeText(requireContext(), "Booking ${booking.qrReference} confirmed.", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onFailure = { e ->
+                            if (isAdded) {
+                                btnConfirm.isEnabled = true
+                                btnConfirm.text = "Confirm request"
+                                Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to confirm.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                }
+
+                // Reject Action with confirmation dialog
+                btnReject?.setOnClickListener {
+                    OwnerDialogHelper.showConfirmationDialog(
+                        context = requireContext(),
+                        title = "Reject booking ${booking.qrReference}?",
+                        message = "Reject this appointment? The customer will receive an immediate update.",
+                        confirmButtonText = "Confirm Rejection",
+                        cancelButtonText = "Keep Reviewing",
+                        isDestructive = true,
+                        onConfirm = {
+                            BookingRepository.updateBookingStatus(
+                                bookingId = booking.id,
+                                newStatus = "REJECTED",
+                                reason = "Schedule conflict",
+                                onSuccess = {
+                                    if (isAdded) {
+                                        Toast.makeText(requireContext(), "Booking ${booking.qrReference} rejected.", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                onFailure = { e ->
+                                    if (isAdded) {
+                                        Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to reject.", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            )
+                        }
+                    )
+                }
+            } else {
+                card.visibility = View.GONE
+            }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bookingsListener?.remove()
     }
 }

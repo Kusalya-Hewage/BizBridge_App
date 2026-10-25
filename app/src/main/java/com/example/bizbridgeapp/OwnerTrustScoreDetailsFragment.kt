@@ -5,9 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.repository.BusinessRepository
+import com.google.firebase.firestore.ListenerRegistration
 
 class OwnerTrustScoreDetailsFragment : Fragment() {
+
+    private var businessListener: ListenerRegistration? = null
+    private var currentBusinessId: String = "biz_juniper_studio"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -21,6 +27,7 @@ class OwnerTrustScoreDetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val mainActivity = activity as? MainActivity
+        currentBusinessId = BusinessRepository.getOwnerBusinessId()
 
         // Back button
         view.findViewById<ImageView>(R.id.btn_back_trust_score)?.setOnClickListener {
@@ -37,5 +44,16 @@ class OwnerTrustScoreDetailsFragment : Fragment() {
         view.findViewById<View>(R.id.card_strengthen_3)?.setOnClickListener {
             mainActivity?.navigateTo(OwnerCustomerReviewsFragment(), addToBackStack = true)
         }
+
+        // Real-time listener for Trust Score
+        businessListener = BusinessRepository.listenToOwnerBusiness(currentBusinessId) { biz ->
+            if (!isAdded || biz == null) return@listenToOwnerBusiness
+            view.findViewById<TextView>(R.id.tv_big_trust_score)?.text = "${biz.trustScore} / 100"
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        businessListener?.remove()
     }
 }

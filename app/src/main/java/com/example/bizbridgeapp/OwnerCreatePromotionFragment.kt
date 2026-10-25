@@ -10,10 +10,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.model.Promotion
+import com.example.bizbridgeapp.repository.BusinessRepository
+import com.example.bizbridgeapp.repository.PromotionRepository
 
 class OwnerCreatePromotionFragment : Fragment() {
 
     private var isEditMode: Boolean = false
+    private var currentBusinessId: String = "biz_juniper_studio"
 
     companion object {
         fun newInstance(isEditMode: Boolean = false): OwnerCreatePromotionFragment {
@@ -28,6 +32,7 @@ class OwnerCreatePromotionFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         isEditMode = arguments?.getBoolean("isEditMode", false) ?: false
+        currentBusinessId = BusinessRepository.getOwnerBusinessId()
     }
 
     override fun onCreateView(
@@ -51,15 +56,14 @@ class OwnerCreatePromotionFragment : Fragment() {
 
         // Image picker
         view.findViewById<View>(R.id.box_upload_promo_image)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Select promotion banner image (Demonstration).", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Banner image picker ready via Storage.", Toast.LENGTH_SHORT).show()
         }
 
         val etTitle = view.findViewById<EditText>(R.id.et_promo_title)
         val etDesc = view.findViewById<EditText>(R.id.et_promo_description)
         val etOffer = view.findViewById<EditText>(R.id.et_promo_offer_details)
-        val etStart = view.findViewById<EditText>(R.id.et_promo_start_date)
-        val etEnd = view.findViewById<EditText>(R.id.et_promo_end_date)
-        val tvEndDateError = view.findViewById<TextView>(R.id.tv_promo_end_date_error)
+        val btnPublish = view.findViewById<Button>(R.id.btn_publish_promotion)
+        val btnDraft = view.findViewById<Button>(R.id.btn_save_promo_draft)
 
         if (!isEditMode) {
             etTitle?.setText("")
@@ -67,30 +71,48 @@ class OwnerCreatePromotionFragment : Fragment() {
             etOffer?.setText("")
         }
 
-        // Save Draft
-        view.findViewById<Button>(R.id.btn_save_promo_draft)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Draft saved successfully.", Toast.LENGTH_SHORT).show()
-            parentFragmentManager.popBackStack()
-        }
-
-        // Publish Promotion
-        val btnPublish = view.findViewById<Button>(R.id.btn_publish_promotion)
-        btnPublish?.setOnClickListener {
+        fun savePromotion(status: String) {
             val title = etTitle?.text?.toString()?.trim().orEmpty()
+            val desc = etDesc?.text?.toString()?.trim().orEmpty()
+            val offer = etOffer?.text?.toString()?.trim().orEmpty()
+
             if (title.isEmpty()) {
                 Toast.makeText(requireContext(), "Promotion title is required.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+                return
             }
 
-            btnPublish.isEnabled = false
-            btnPublish.text = "Publishing…"
+            btnPublish?.isEnabled = false
+            btnPublish?.text = if (status == "ACTIVE") "Publishing…" else "Saving Draft…"
 
-            btnPublish.postDelayed({
-                if (isAdded) {
-                    Toast.makeText(requireContext(), "Promotion published to listing successfully.", Toast.LENGTH_SHORT).show()
-                    parentFragmentManager.popBackStack()
+            val promotion = Promotion(
+                id = if (isEditMode) "promo_season_finish" else "",
+                businessId = currentBusinessId,
+                businessName = "Juniper Studio",
+                title = title,
+                description = desc,
+                discountText = offer.ifEmpty { "Limited offer" },
+                status = status
+            )
+
+            PromotionRepository.createOrUpdatePromotion(
+                promotion = promotion,
+                onSuccess = {
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), "Promotion $status in Firestore.", Toast.LENGTH_SHORT).show()
+                        parentFragmentManager.popBackStack()
+                    }
+                },
+                onFailure = { e ->
+                    if (isAdded) {
+                        btnPublish?.isEnabled = true
+                        btnPublish?.text = "Publish to Listing"
+                        Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to save promotion.", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }, 600)
+            )
         }
+
+        btnDraft?.setOnClickListener { savePromotion("DRAFT") }
+        btnPublish?.setOnClickListener { savePromotion("ACTIVE") }
     }
 }

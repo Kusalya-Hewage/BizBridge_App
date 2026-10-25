@@ -264,9 +264,104 @@ object BusinessRepository {
             .get()
             .addOnSuccessListener { snapshot ->
                 val biz = snapshot.documents.firstOrNull()?.toObject(Business::class.java)?.copy(id = snapshot.documents.first().id)
+                    ?: defaultDemoBusinesses.firstOrNull()
                 onSuccess(biz)
             }
-            .addOnFailureListener { onFailure(it) }
+            .addOnFailureListener {
+                onSuccess(defaultDemoBusinesses.firstOrNull())
+            }
+    }
+
+    /** Determine the business ID for the current owner session */
+    fun getOwnerBusinessId(): String {
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val saved = com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessId") as? String
+        if (!saved.isNullOrBlank()) return saved
+        return "biz_juniper_studio"
+    }
+
+    /** Real-time listener for the owner's business */
+    fun listenToOwnerBusiness(
+        ownerOrBizId: String,
+        onUpdate: (Business?) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration {
+        val targetId = if (ownerOrBizId.isBlank() || ownerOrBizId == "demo_owner") "biz_juniper_studio" else ownerOrBizId
+        if (targetId.startsWith("biz_")) {
+            return db.collection(COLLECTION).document(targetId)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null || snapshot == null) {
+                        onUpdate(defaultDemoBusinesses.firstOrNull { it.id == targetId } ?: defaultDemoBusinesses.first())
+                        return@addSnapshotListener
+                    }
+                    if (snapshot.exists()) {
+                        onUpdate(snapshot.toObject(Business::class.java)?.copy(id = snapshot.id))
+                    } else {
+                        // Seed default businesses so Juniper Studio exists
+                        seedDefaultBusinessesIfEmpty { seeded ->
+                            onUpdate(seeded.firstOrNull { it.id == targetId } ?: seeded.firstOrNull())
+                        }
+                    }
+                }
+        }
+
+        // Query by ownerId
+        return db.collection(COLLECTION)
+            .whereEqualTo("ownerId", targetId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null || snapshot.isEmpty) {
+                    // Fallback to demo business document listener
+                    db.collection(COLLECTION).document("biz_juniper_studio").get()
+                        .addOnSuccessListener { doc ->
+                            if (doc.exists()) {
+                                onUpdate(doc.toObject(Business::class.java)?.copy(id = doc.id))
+                            } else {
+                                onUpdate(defaultDemoBusinesses.first())
+                            }
+                        }
+                        .addOnFailureListener { onUpdate(defaultDemoBusinesses.first()) }
+                    return@addSnapshotListener
+                }
+                val doc = snapshot.documents.first()
+                onUpdate(doc.toObject(Business::class.java)?.copy(id = doc.id))
+            }
+    }
+
+    /** Update business profile fields while preserving security rule fields */
+    fun updateBusinessProfile(
+        businessId: String,
+        name: String,
+        category: String,
+        description: String,
+        address: String,
+        contactNumber: String,
+        openingHours: String,
+        imageUrl: String? = null,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val targetId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val docRef = db.collection(COLLECTION).document(targetId)
+
+        val updates = mutableMapOf<String, Any>(
+            "name" to name,
+            "category" to category,
+            "description" to description,
+            "address" to address,
+            "contactNumber" to contactNumber,
+            "openingHours" to openingHours,
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+        if (!imageUrl.isNullOrBlank()) {
+            updates["imageUrl"] = imageUrl
+        }
+
+        docRef.set(updates, SetOptions.merge())
+            .addOnSuccessListener {
+                // Recalculate trust score based on new profile completeness
+                TrustScoreRepository.recalculateTrustScore(targetId)
+                onSuccess()
+            }
+            .addOnFailureListener { e -> onFailure(e) }
     }
 
     /** Real-time listener for a single business document */

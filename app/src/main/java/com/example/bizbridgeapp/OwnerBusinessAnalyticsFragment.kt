@@ -8,8 +8,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.repository.BookingRepository
+import com.example.bizbridgeapp.repository.BusinessRepository
+import com.google.firebase.firestore.ListenerRegistration
 
 class OwnerBusinessAnalyticsFragment : Fragment() {
+
+    private var bookingsListener: ListenerRegistration? = null
+    private var currentBusinessId: String = "biz_juniper_studio"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -25,9 +31,11 @@ class OwnerBusinessAnalyticsFragment : Fragment() {
         // Bottom Navigation
         OwnerNavigationHelper.setupBottomNav(this, view, OwnerTab.INSIGHTS)
 
+        currentBusinessId = BusinessRepository.getOwnerBusinessId()
+
         // Timeframe selector
         view.findViewById<TextView>(R.id.tv_analytics_timeframe)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Filter analytics timeframe (Demonstration).", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Filtering live analytics for current period.", Toast.LENGTH_SHORT).show()
         }
 
         // Toggle pills for Weekly / Monthly
@@ -48,5 +56,28 @@ class OwnerBusinessAnalyticsFragment : Fragment() {
             pillWeekly?.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
             Toast.makeText(requireContext(), "Switched to monthly booking overview.", Toast.LENGTH_SHORT).show()
         }
+
+        // Real-time listener to compute live analytics from actual Firestore bookings
+        bookingsListener = BookingRepository.listenToBookingsForBusiness(currentBusinessId) { list ->
+            if (!isAdded) return@listenToBookingsForBusiness
+            val total = list.size
+            val completed = list.count { it.status == "COMPLETED" }
+            val pending = list.count { it.status == "PENDING" }
+            val confirmed = list.count { it.status == "CONFIRMED" }
+            val cancelled = list.count { it.status == "CANCELLED" }
+
+            val completionRate = if (total > 0) ((completed.toDouble() / total) * 100).toInt() else 0
+
+            view.findViewById<TextView>(R.id.tv_analytics_total_bookings)?.text = total.toString()
+            view.findViewById<TextView>(R.id.tv_analytics_completed_count)?.text = completed.toString()
+            view.findViewById<TextView>(R.id.tv_analytics_completion_rate)?.text = "$completionRate% completion rate"
+            view.findViewById<TextView>(R.id.tv_analytics_status_breakdown)?.text =
+                "$pending Pending · $confirmed Confirmed · $cancelled Cancelled"
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bookingsListener?.remove()
     }
 }

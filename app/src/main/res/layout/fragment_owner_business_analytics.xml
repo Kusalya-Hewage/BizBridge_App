@@ -82,6 +82,7 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tv_analytics_total_bookings"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
@@ -122,6 +123,7 @@
                             android:textSize="12sp" />
 
                         <TextView
+                            android:id="@+id/tv_analytics_completed_count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
@@ -132,6 +134,7 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_analytics_completion_rate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
@@ -144,6 +147,7 @@
 
                 <!-- Status Subtitle -->
                 <TextView
+                    android:id="@+id/tv_analytics_status_breakdown"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
