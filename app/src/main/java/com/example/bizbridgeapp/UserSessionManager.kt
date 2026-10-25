@@ -53,6 +53,71 @@ object UserSessionManager {
                 )
             )
         }
+
+        // Seed default qualification documents for demonstration & testing
+        if (getAllQualificationDocuments().isEmpty()) {
+            saveQualificationDocument(
+                QualificationDocument(
+                    id = "doc_hair_design",
+                    businessId = "biz_juniper_studio",
+                    ownerId = "owner_elena",
+                    businessName = "Juniper Studio",
+                    title = "Hair Design Certificate",
+                    issuingOrg = "California Beauty Academy",
+                    experience = "8 years · Stylist since 2018",
+                    documentType = "CERTIFICATE",
+                    storagePath = "qualification_docs/biz_juniper_studio/cert_hair_design.pdf",
+                    fileUrl = "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
+                    verificationStatus = "VERIFIED"
+                )
+            )
+            saveQualificationDocument(
+                QualificationDocument(
+                    id = "doc_color_systems",
+                    businessId = "biz_juniper_studio",
+                    ownerId = "owner_elena",
+                    businessName = "Juniper Studio",
+                    title = "Advanced Color Systems",
+                    issuingOrg = "L'Oréal Professionnel Academy",
+                    experience = "Colorist Masterclass 2022",
+                    documentType = "CERTIFICATE",
+                    storagePath = "qualification_docs/biz_juniper_studio/cert_color_systems.pdf",
+                    fileUrl = "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
+                    verificationStatus = "PENDING"
+                )
+            )
+            saveQualificationDocument(
+                QualificationDocument(
+                    id = "doc_experience_letter",
+                    businessId = "biz_juniper_studio",
+                    ownerId = "owner_elena",
+                    businessName = "Juniper Studio",
+                    title = "Experience letter",
+                    issuingOrg = "Salon Colombo",
+                    experience = "Senior Stylist (2018-2022)",
+                    documentType = "EXPERIENCE_LETTER",
+                    storagePath = "qualification_docs/biz_juniper_studio/exp_letter.pdf",
+                    fileUrl = "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=600&q=80",
+                    verificationStatus = "REJECTED",
+                    rejectionReason = "Dates are not legible. Upload a clearer copy."
+                )
+            )
+            saveQualificationDocument(
+                QualificationDocument(
+                    id = "doc_massage_cert",
+                    businessId = "biz_hairloft",
+                    ownerId = "owner_hairloft",
+                    businessName = "Hair Loft",
+                    title = "Therapeutic & Spa Treatment License",
+                    issuingOrg = "International Wellness Institute",
+                    experience = "6 years · Certified Practitioner",
+                    documentType = "CERTIFICATE",
+                    storagePath = "qualification_docs/biz_hairloft/cert_spa.pdf",
+                    fileUrl = "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=600&q=80",
+                    verificationStatus = "PENDING"
+                )
+            )
+        }
     }
 
     /** Save a map (profile) as a JSON string. */
