@@ -303,6 +303,57 @@ object UserSessionManager {
         prefs.edit().putString(KEY_APPLICATIONS, array.toString()).apply()
     }
 
+    fun businessToJson(b: Business): JSONObject {
+        val o = JSONObject()
+        o.put("id", b.id)
+        o.put("ownerId", b.ownerId)
+        o.put("name", b.name)
+        o.put("category", b.category)
+        o.put("description", b.description)
+        o.put("address", b.address)
+        o.put("contactNumber", b.contactNumber)
+        o.put("openingHours", b.openingHours)
+        if (!b.imageUrl.isNullOrBlank()) {
+            o.put("imageUrl", b.imageUrl)
+        }
+        o.put("approved", b.approved)
+        o.put("active", b.active)
+        o.put("approvalStatus", b.approvalStatus)
+        o.put("verificationStatus", b.verificationStatus)
+        o.put("trustScore", b.trustScore)
+        o.put("rating", b.rating ?: 0.0)
+        o.put("reviewCount", b.reviewCount)
+        if (!b.price.isNullOrBlank()) o.put("price", b.price)
+        if (b.latitude != null) o.put("latitude", b.latitude)
+        if (b.longitude != null) o.put("longitude", b.longitude)
+        return o
+    }
+
+    fun jsonToBusiness(o: JSONObject): Business {
+        val img = if (o.has("imageUrl") && !o.isNull("imageUrl")) o.optString("imageUrl").ifBlank { null } else null
+        return Business(
+            id = o.optString("id"),
+            ownerId = o.optString("ownerId"),
+            name = o.optString("name"),
+            category = o.optString("category"),
+            description = o.optString("description"),
+            address = o.optString("address"),
+            contactNumber = o.optString("contactNumber"),
+            openingHours = o.optString("openingHours", "9:00 AM - 7:00 PM"),
+            imageUrl = img,
+            approved = o.optBoolean("approved", false),
+            active = o.optBoolean("active", false),
+            approvalStatus = o.optString("approvalStatus", "PENDING"),
+            verificationStatus = o.optString("verificationStatus", "PENDING"),
+            trustScore = o.optInt("trustScore", 80),
+            rating = o.optDouble("rating", 0.0),
+            reviewCount = o.optInt("reviewCount", 0),
+            price = if (o.has("price") && !o.isNull("price")) o.optString("price").ifBlank { null } else null,
+            latitude = if (o.has("latitude") && !o.isNull("latitude")) o.optDouble("latitude") else null,
+            longitude = if (o.has("longitude") && !o.isNull("longitude")) o.optDouble("longitude") else null
+        )
+    }
+
     /** Save or update business */
     fun saveBusiness(biz: Business) {
         if (!::prefs.isInitialized) return
@@ -315,22 +366,7 @@ object UserSessionManager {
         }
         val array = JSONArray()
         for (b in current) {
-            val o = JSONObject()
-            o.put("id", b.id)
-            o.put("ownerId", b.ownerId)
-            o.put("name", b.name)
-            o.put("category", b.category)
-            o.put("description", b.description)
-            o.put("address", b.address)
-            o.put("contactNumber", b.contactNumber)
-            o.put("approved", b.approved)
-            o.put("active", b.active)
-            o.put("approvalStatus", b.approvalStatus)
-            o.put("verificationStatus", b.verificationStatus)
-            o.put("trustScore", b.trustScore)
-            o.put("rating", b.rating ?: 0.0)
-            o.put("reviewCount", b.reviewCount)
-            array.put(o)
+            array.put(businessToJson(b))
         }
         prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
     }
@@ -343,24 +379,7 @@ object UserSessionManager {
         val list = mutableListOf<Business>()
         for (i in 0 until array.length()) {
             val o = array.getJSONObject(i)
-            list.add(
-                Business(
-                    id = o.optString("id"),
-                    ownerId = o.optString("ownerId"),
-                    name = o.optString("name"),
-                    category = o.optString("category"),
-                    description = o.optString("description"),
-                    address = o.optString("address"),
-                    contactNumber = o.optString("contactNumber"),
-                    approved = o.optBoolean("approved", false),
-                    active = o.optBoolean("active", false),
-                    approvalStatus = o.optString("approvalStatus", "PENDING"),
-                    verificationStatus = o.optString("verificationStatus", "PENDING"),
-                    trustScore = o.optInt("trustScore", 80),
-                    rating = o.optDouble("rating", 0.0),
-                    reviewCount = o.optInt("reviewCount", 0)
-                )
-            )
+            list.add(jsonToBusiness(o))
         }
         return list
     }
@@ -415,22 +434,7 @@ object UserSessionManager {
         }
         val array = JSONArray()
         for (b in currentList) {
-            val o = JSONObject()
-            o.put("id", b.id)
-            o.put("ownerId", b.ownerId)
-            o.put("name", b.name)
-            o.put("category", b.category)
-            o.put("description", b.description)
-            o.put("address", b.address)
-            o.put("contactNumber", b.contactNumber)
-            o.put("approved", b.approved)
-            o.put("active", b.active)
-            o.put("approvalStatus", b.approvalStatus)
-            o.put("verificationStatus", b.verificationStatus)
-            o.put("trustScore", b.trustScore)
-            o.put("rating", b.rating ?: 0.0)
-            o.put("reviewCount", b.reviewCount)
-            array.put(o)
+            array.put(businessToJson(b))
         }
         prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
 
@@ -468,22 +472,7 @@ object UserSessionManager {
         }
         val array = JSONArray()
         for (b in businesses) {
-            val o = JSONObject()
-            o.put("id", b.id)
-            o.put("ownerId", b.ownerId)
-            o.put("name", b.name)
-            o.put("category", b.category)
-            o.put("description", b.description)
-            o.put("address", b.address)
-            o.put("contactNumber", b.contactNumber)
-            o.put("approved", b.approved)
-            o.put("active", b.active)
-            o.put("approvalStatus", b.approvalStatus)
-            o.put("verificationStatus", b.verificationStatus)
-            o.put("trustScore", b.trustScore)
-            o.put("rating", b.rating ?: 0.0)
-            o.put("reviewCount", b.reviewCount)
-            array.put(o)
+            array.put(businessToJson(b))
         }
         prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
 
