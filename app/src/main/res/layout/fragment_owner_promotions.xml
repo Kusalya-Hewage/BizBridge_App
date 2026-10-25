@@ -234,7 +234,7 @@
             </LinearLayout>
 
             <!-- + Create Promotion Primary Button -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_create_promotion"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
