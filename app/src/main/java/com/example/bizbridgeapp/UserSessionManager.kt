@@ -368,21 +368,50 @@ object UserSessionManager {
         approved: Boolean,
         active: Boolean,
         approvalStatus: String,
-        verificationStatus: String
+        verificationStatus: String,
+        name: String = "",
+        category: String = "",
+        address: String = "",
+        ownerId: String = "",
+        contactNumber: String = ""
     ) {
         if (!::prefs.isInitialized) return
-        val businesses = getAllBusinesses().map {
-            if (it.id == businessId) {
-                it.copy(
+        val currentList = getAllBusinesses().toMutableList()
+        val index = currentList.indexOfFirst { it.id == businessId }
+        if (index >= 0) {
+            currentList[index] = currentList[index].copy(
+                approved = approved,
+                active = active,
+                approvalStatus = approvalStatus,
+                verificationStatus = verificationStatus,
+                name = if (name.isNotBlank()) name else currentList[index].name,
+                category = if (category.isNotBlank()) category else currentList[index].category,
+                address = if (address.isNotBlank()) address else currentList[index].address,
+                ownerId = if (ownerId.isNotBlank()) ownerId else currentList[index].ownerId,
+                contactNumber = if (contactNumber.isNotBlank()) contactNumber else currentList[index].contactNumber
+            )
+        } else {
+            currentList.add(
+                0,
+                Business(
+                    id = businessId,
+                    ownerId = ownerId,
+                    name = name.ifBlank { "Approved Business" },
+                    category = category.ifBlank { "Services" },
+                    address = address.ifBlank { "Colombo, Sri Lanka" },
+                    contactNumber = contactNumber,
                     approved = approved,
                     active = active,
                     approvalStatus = approvalStatus,
-                    verificationStatus = verificationStatus
+                    verificationStatus = verificationStatus,
+                    trustScore = 85,
+                    rating = 5.0,
+                    reviewCount = 0
                 )
-            } else it
+            )
         }
         val array = JSONArray()
-        for (b in businesses) {
+        for (b in currentList) {
             val o = JSONObject()
             o.put("id", b.id)
             o.put("ownerId", b.ownerId)
@@ -581,16 +610,10 @@ object UserSessionManager {
     /** Retrieve qualification documents for a specific business or owner */
     fun getQualificationsForBusiness(businessId: String, ownerId: String = ""): List<QualificationDocument> {
         val all = getAllQualificationDocuments()
-        val filtered = all.filter {
+        return all.filter {
             (businessId.isNotBlank() && it.businessId == businessId) ||
             (ownerId.isNotBlank() && it.ownerId == ownerId)
         }
-        if (filtered.isNotEmpty()) return filtered
-        // If query is for default/demo or initial state, return demo documents
-        if (businessId.isBlank() || businessId == "biz_juniper_studio" || ownerId == "owner_elena" || ownerId.isBlank()) {
-            return all.filter { it.businessId == "biz_juniper_studio" || it.ownerId == "owner_elena" }
-        }
-        return emptyList()
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */
