@@ -16,7 +16,7 @@ import com.google.firebase.storage.FirebaseStorage
 
 class OwnerBusinessProfileFragment : Fragment() {
 
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
     private var selectedImageUri: Uri? = null
     private var currentImageUrl: String? = null
     private lateinit var imagePickerHelper: ImagePickerHelper
