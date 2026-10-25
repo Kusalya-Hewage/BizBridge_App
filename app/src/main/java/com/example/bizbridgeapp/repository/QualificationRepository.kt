@@ -18,19 +18,47 @@ object QualificationRepository {
         onSuccess: (id: String) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
         val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-        val finalOwnerId = if (doc.ownerId.isNotBlank() && doc.ownerId != "owner_elena") doc.ownerId else (currentUid ?: "owner_elena")
-        val finalBizId = if (doc.businessId.isNotBlank() && doc.businessId != "biz_juniper_studio") doc.businessId else BusinessRepository.getOwnerBusinessId()
+            ?: (sessionProfile?.get("uid") as? String)
+        val sessionBizId = (sessionProfile?.get("businessId") as? String)
+        val sessionBizName = (sessionProfile?.get("businessName") as? String) ?: ""
+
+        val finalOwnerId = if (doc.ownerId.isNotBlank() && doc.ownerId != "owner_elena" && doc.ownerId != "owner_bizbridge") {
+            doc.ownerId
+        } else {
+            currentUid ?: "owner_elena"
+        }
+        val finalBizId = if (doc.businessId.isNotBlank() && doc.businessId != "biz_juniper_studio") {
+            doc.businessId
+        } else if (!sessionBizId.isNullOrBlank()) {
+            sessionBizId
+        } else {
+            BusinessRepository.getOwnerBusinessId()
+        }
 
         val docRef = if (doc.id.isNotEmpty()) db.collection(QUALIFICATIONS).document(doc.id) else db.collection(QUALIFICATIONS).document()
         val toSave = doc.copy(
             id = docRef.id,
             ownerId = finalOwnerId,
-            businessId = finalBizId
+            businessId = finalBizId,
+            businessName = if (doc.businessName.isNotBlank()) doc.businessName else sessionBizName
         )
+
+        // Always save locally immediately so the user never loses their submitted document
+        com.example.bizbridgeapp.UserSessionManager.saveQualificationDocument(toSave)
+        TrustScoreRepository.recalculateTrustScore(finalBizId)
+
         docRef.set(toSave.toMap())
-            .addOnSuccessListener { onSuccess(docRef.id) }
-            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener {
+                com.example.bizbridgeapp.UserSessionManager.saveQualificationDocument(toSave)
+                onSuccess(docRef.id)
+            }
+            .addOnFailureListener {
+                // Succeeded locally
+                com.example.bizbridgeapp.UserSessionManager.saveQualificationDocument(toSave)
+                onSuccess(docRef.id)
+            }
     }
 
     /** Retrieve a single qualification document by ID */
@@ -41,6 +69,11 @@ object QualificationRepository {
     ) {
         if (docId.isBlank()) {
             onSuccess(null)
+            return
+        }
+        val local = com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments().firstOrNull { it.id == docId }
+        if (local != null) {
+            onSuccess(local)
             return
         }
         db.collection(QUALIFICATIONS).document(docId).get()
@@ -62,6 +95,7 @@ object QualificationRepository {
         onSuccess: (List<QualificationDocument>) -> Unit,
         onFailure: (Exception) -> Unit = {}
     ) {
+        val localList = com.example.bizbridgeapp.UserSessionManager.getQualificationsForBusiness(businessId, ownerId)
         val query = if (businessId.isNotBlank() && businessId != "biz_juniper_studio") {
             db.collection(QUALIFICATIONS).whereEqualTo("businessId", businessId)
         } else if (ownerId.isNotBlank()) {
@@ -72,11 +106,12 @@ object QualificationRepository {
 
         query.get()
             .addOnSuccessListener { snapshot ->
-                val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
-                onSuccess(list)
+                val firestoreList = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
+                val merged = (localList + firestoreList).distinctBy { it.id }
+                onSuccess(merged)
             }
             .addOnFailureListener {
-                onSuccess(emptyList())
+                onSuccess(localList)
             }
     }
 
@@ -86,7 +121,13 @@ object QualificationRepository {
         onUpdate: (List<QualificationDocument>) -> Unit
     ): ListenerRegistration {
         val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+            ?: (com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("uid") as? String)
         val targetBizId = if (businessId.isNotBlank() && businessId != "biz_juniper_studio") businessId else BusinessRepository.getOwnerBusinessId()
+
+        val localList = com.example.bizbridgeapp.UserSessionManager.getQualificationsForBusiness(targetBizId, currentUid ?: "")
+        if (localList.isNotEmpty()) {
+            onUpdate(localList)
+        }
 
         val query = if (!currentUid.isNullOrBlank()) {
             db.collection(QUALIFICATIONS).whereEqualTo("ownerId", currentUid)
@@ -95,12 +136,14 @@ object QualificationRepository {
         }
 
         return query.addSnapshotListener { snapshot, error ->
+            val localCurrent = com.example.bizbridgeapp.UserSessionManager.getQualificationsForBusiness(targetBizId, currentUid ?: "")
             if (error != null || snapshot == null) {
-                onUpdate(emptyList())
+                onUpdate(localCurrent)
                 return@addSnapshotListener
             }
-            val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
-            onUpdate(list)
+            val firestoreList = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
+            val merged = (localCurrent + firestoreList).distinctBy { it.id }
+            onUpdate(merged)
         }
     }
 
