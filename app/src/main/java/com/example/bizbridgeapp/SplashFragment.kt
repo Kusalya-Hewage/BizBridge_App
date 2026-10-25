@@ -44,7 +44,9 @@ class SplashFragment : Fragment() {
             val savedProfile = UserSessionManager.getProfile()
             val role = savedProfile?.get("role") as? String ?: ""
             when {
-                role.equals("ADMIN", ignoreCase = true) || currentUser.email.equals("alex@bizbridge.example", ignoreCase = true) -> {
+                role.equals("ADMIN", ignoreCase = true) ||
+                currentUser.email.equals("alex@bizbridge.example", ignoreCase = true) ||
+                currentUser.email.equals("admin@bizbridge.com", ignoreCase = true) -> {
                     (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
                 }
                 role.equals("BUSINESS_OWNER", ignoreCase = true) || role.equals("OWNER", ignoreCase = true) -> {
