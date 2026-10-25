@@ -22,6 +22,10 @@ object PromotionRepository {
 
     fun seedDefaultPromotionsIfEmpty(businessId: String, onComplete: (List<Promotion>) -> Unit = {}) {
         val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        if (targetBizId != "biz_juniper_studio") {
+            onComplete(emptyList())
+            return
+        }
         val colRef = db.collection(PROMOTIONS)
         colRef.whereEqualTo("businessId", targetBizId).get().addOnSuccessListener { snap ->
             if (snap.isEmpty) {
@@ -67,8 +71,12 @@ object PromotionRepository {
                     return@addSnapshotListener
                 }
                 if (snapshot.isEmpty) {
-                    seedDefaultPromotionsIfEmpty(targetBizId) { seeded ->
-                        onUpdate(seeded)
+                    if (targetBizId == "biz_juniper_studio") {
+                        seedDefaultPromotionsIfEmpty(targetBizId) { seeded ->
+                            onUpdate(seeded)
+                        }
+                    } else {
+                        onUpdate(emptyList())
                     }
                 } else {
                     val list = snapshot.documents.mapNotNull { it.toObject(Promotion::class.java)?.copy(id = it.id) }
