@@ -153,16 +153,24 @@ object UserSessionManager {
         accountsObj.put(normalizedEmail, accountData)
         prefs.edit().putString(KEY_REGISTERED_ACCOUNTS, accountsObj.toString()).apply()
 
-        // If this is a business owner, automatically ensure application & business exist
+        // If this is a business owner, automatically ensure application & business exist without overriding customized data
         val role = data["role"] as? String ?: ""
         if (role.equals("BUSINESS_OWNER", ignoreCase = true)) {
             val uid = (data["uid"] as? String)?.ifBlank { null } ?: "owner_${normalizedEmail.hashCode()}"
             val bizId = (data["businessId"] as? String)?.ifBlank { null } ?: "biz_${uid.take(12)}"
             val appId = "app_${bizId.removePrefix("biz_")}"
-            val bizName = (data["businessName"] as? String)?.ifBlank { null } ?: "My Business"
-            val ownerName = (data["fullName"] as? String)?.ifBlank { null } ?: "Business Owner"
-            val category = (data["category"] as? String)?.ifBlank { null } ?: "Hair salon"
-            val phone = (data["phone"] as? String) ?: ""
+            val existingBiz = getAllBusinesses().firstOrNull { it.id == bizId }
+            val existingApp = getAllApplications().firstOrNull { it.id == appId || it.businessId == bizId }
+
+            val bizName = (data["businessName"] as? String)?.ifBlank { null } ?: existingBiz?.name ?: "Business"
+            val ownerName = (data["fullName"] as? String)?.ifBlank { null } ?: existingApp?.ownerName ?: "Business Owner"
+            val category = (data["category"] as? String)?.ifBlank { null } ?: existingBiz?.category ?: "Hair salon"
+            val phone = (data["phone"] as? String) ?: existingBiz?.contactNumber ?: ""
+            val isApproved = (data["approved"] as? Boolean) ?: existingBiz?.approved ?: false
+            val isActive = (data["active"] as? Boolean) ?: existingBiz?.active ?: false
+            val approvalStatus = (data["approvalStatus"] as? String) ?: existingBiz?.approvalStatus ?: "PENDING"
+            val verificationStatus = (data["verificationStatus"] as? String) ?: existingBiz?.verificationStatus ?: "PENDING"
+            val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 80
 
             saveApplication(
                 BusinessApplication(
@@ -174,8 +182,8 @@ object UserSessionManager {
                     email = normalizedEmail,
                     contactNumber = phone,
                     category = category,
-                    address = "Colombo, Sri Lanka",
-                    status = (data["approvalStatus"] as? String) ?: "PENDING"
+                    address = existingBiz?.address?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka",
+                    status = approvalStatus
                 )
             )
 
@@ -186,14 +194,14 @@ object UserSessionManager {
                     name = bizName,
                     category = category,
                     contactNumber = phone,
-                    address = "Colombo, Sri Lanka",
-                    approved = (data["approved"] as? Boolean) ?: false,
-                    active = (data["active"] as? Boolean) ?: false,
-                    approvalStatus = (data["approvalStatus"] as? String) ?: "PENDING",
-                    verificationStatus = (data["verificationStatus"] as? String) ?: "PENDING",
-                    trustScore = 80,
-                    rating = 0.0,
-                    reviewCount = 0
+                    address = existingBiz?.address?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka",
+                    approved = isApproved,
+                    active = isActive,
+                    approvalStatus = approvalStatus,
+                    verificationStatus = verificationStatus,
+                    trustScore = trustScore,
+                    rating = existingBiz?.rating ?: 0.0,
+                    reviewCount = existingBiz?.reviewCount ?: 0
                 )
             )
         }
