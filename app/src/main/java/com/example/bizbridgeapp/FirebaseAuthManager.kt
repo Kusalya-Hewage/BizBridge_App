@@ -153,13 +153,48 @@ object FirebaseAuthManager {
                 batch.set(bizDoc, businessData)
                 batch.set(appDoc, appData)
 
+                val saveLocalFallback = {
+                    UserSessionManager.saveApplication(
+                        com.example.bizbridgeapp.model.BusinessApplication(
+                            id = appId,
+                            ownerId = user.uid,
+                            businessId = businessId,
+                            businessName = businessName,
+                            ownerName = ownerName,
+                            email = email,
+                            contactNumber = phone,
+                            category = category,
+                            address = "Colombo, Sri Lanka",
+                            status = "PENDING"
+                        )
+                    )
+                    UserSessionManager.saveBusiness(
+                        com.example.bizbridgeapp.model.Business(
+                            id = businessId,
+                            ownerId = user.uid,
+                            name = businessName,
+                            category = category,
+                            contactNumber = phone,
+                            address = "Colombo, Sri Lanka",
+                            approved = false,
+                            active = false,
+                            approvalStatus = "PENDING",
+                            verificationStatus = "PENDING",
+                            trustScore = 80,
+                            rating = 0.0,
+                            reviewCount = 0
+                        )
+                    )
+                }
+                saveLocalFallback()
+
                 batch.commit().addOnSuccessListener {
                     onSuccess(user, businessId)
                 }.addOnFailureListener { e ->
-                    Log.e(TAG, "Batch commit failed: ${e.message}. Saving user profile directly...", e)
-                    userDoc.set(userProfile).addOnSuccessListener {
-                        onSuccess(user, businessId)
-                    }.addOnFailureListener {
+                    Log.e(TAG, "Batch commit failed: ${e.message}. Saving individual documents directly...", e)
+                    userDoc.set(userProfile)
+                    bizDoc.set(businessData)
+                    appDoc.set(appData).addOnCompleteListener {
                         onSuccess(user, businessId)
                     }
                 }
@@ -211,6 +246,38 @@ object FirebaseAuthManager {
                                     "updatedAt" to FieldValue.serverTimestamp()
                                 )
                                 bizDoc.set(businessData, com.google.firebase.firestore.SetOptions.merge())
+
+                                val appDoc = firestore.collection("businessApplications").document(appId)
+                                val appData = hashMapOf(
+                                    "id" to appId,
+                                    "ownerId" to user.uid,
+                                    "businessId" to businessId,
+                                    "businessName" to businessName,
+                                    "ownerName" to ownerName,
+                                    "email" to email,
+                                    "contactNumber" to phone,
+                                    "category" to category,
+                                    "address" to "Colombo, Sri Lanka",
+                                    "status" to "PENDING",
+                                    "submittedAt" to FieldValue.serverTimestamp(),
+                                    "rejectionReason" to ""
+                                )
+                                appDoc.set(appData, com.google.firebase.firestore.SetOptions.merge())
+
+                                UserSessionManager.saveApplication(
+                                    com.example.bizbridgeapp.model.BusinessApplication(
+                                        id = appId,
+                                        ownerId = user.uid,
+                                        businessId = businessId,
+                                        businessName = businessName,
+                                        ownerName = ownerName,
+                                        email = email,
+                                        contactNumber = phone,
+                                        category = category,
+                                        address = "Colombo, Sri Lanka",
+                                        status = "PENDING"
+                                    )
+                                )
 
                                 onSuccess(user, businessId)
                                 return@addOnSuccessListener
