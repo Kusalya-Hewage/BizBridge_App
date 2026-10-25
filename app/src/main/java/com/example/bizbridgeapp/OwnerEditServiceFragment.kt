@@ -23,6 +23,14 @@ class OwnerEditServiceFragment : Fragment() {
     private var initialServicePrice: Double = 0.0
     private var initialServiceDuration: Int = 30
     private var currentBusinessId: String = "biz_juniper_studio"
+    private lateinit var imagePickerHelper: ImagePickerHelper
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        imagePickerHelper = ImagePickerHelper(this) { uri ->
+            Toast.makeText(requireContext(), "Service image selected from ${if (uri.scheme == "file" || uri.path?.contains("photo_") == true) "Camera" else "Gallery"}!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     companion object {
         private const val ARG_IS_EDIT = "arg_is_edit"
@@ -86,9 +94,9 @@ class OwnerEditServiceFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // Image picker box
+        // Image picker box -> Camera or Gallery
         view.findViewById<View>(R.id.box_add_service_image)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Service photo upload enabled via Storage.", Toast.LENGTH_SHORT).show()
+            imagePickerHelper.showImageSourceDialog("Add Service Photo")
         }
 
         val etName = view.findViewById<EditText>(R.id.et_service_name)
