@@ -322,7 +322,7 @@
             </LinearLayout>
 
             <!-- Buttons: QR Verification & Mark as Completed -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_booking_qr_verification"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -336,7 +336,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_booking_mark_completed"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
