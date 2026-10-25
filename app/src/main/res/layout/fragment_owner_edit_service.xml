@@ -279,7 +279,7 @@
             </RelativeLayout>
 
             <!-- Save Service Primary Button -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_save_service"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
