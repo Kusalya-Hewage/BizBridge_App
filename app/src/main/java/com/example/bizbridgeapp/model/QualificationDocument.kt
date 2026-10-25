@@ -13,6 +13,8 @@ data class QualificationDocument(
     val businessName: String = "",
     val documentType: String = "CERTIFICATE", // CERTIFICATE, BUSINESS_REG, IDENTITY, LICENSE
     val title: String = "",
+    val issuingOrg: String = "",
+    val experience: String = "",
     val storagePath: String = "",
     val fileUrl: String = "",
     val verificationStatus: String = "PENDING", // PENDING, VERIFIED, REJECTED
@@ -28,6 +30,8 @@ data class QualificationDocument(
         "businessName" to businessName,
         "documentType" to documentType,
         "title" to title,
+        "issuingOrg" to issuingOrg,
+        "experience" to experience,
         "storagePath" to storagePath,
         "fileUrl" to fileUrl,
         "verificationStatus" to verificationStatus,
