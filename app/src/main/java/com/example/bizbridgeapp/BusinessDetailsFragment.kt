@@ -92,10 +92,18 @@ class BusinessDetailsFragment : Fragment() {
                     if (!isAdded) return@let
                     currentBusinessName = it.name
                     view?.findViewById<TextView>(R.id.txt_business_name)?.text = it.name
+                    view?.findViewById<TextView>(R.id.txt_business_name_main)?.text = it.name
                     view?.findViewById<TextView>(R.id.txt_category)?.text = it.category
-                    view?.findViewById<TextView>(R.id.txt_rating)?.text = "${it.rating} (${it.reviewCount} reviews)"
-                    view?.findViewById<TextView>(R.id.txt_description)?.text = it.description
-                    view?.findViewById<TextView>(R.id.txt_address)?.text = it.address
+                    val ratingStr = if (it.rating != null && it.rating > 0) String.format(java.util.Locale.US, "%.1f", it.rating) else "5.0"
+                    view?.findViewById<TextView>(R.id.txt_rating)?.text = "$ratingStr (${it.reviewCount} reviews)"
+                    view?.findViewById<TextView>(R.id.txt_description)?.text = if (it.description.isNotBlank()) it.description else "Welcome to ${it.name}! Professional services tailored for you."
+                    view?.findViewById<TextView>(R.id.txt_address)?.text = if (it.address.isNotBlank()) it.address else "Colombo, Sri Lanka"
+                    view?.findViewById<TextView>(R.id.txt_trust_score)?.text = "${it.trustScore} / 100"
+
+                    val imgView = view?.findViewById<ImageView>(R.id.img_business)
+                    if (imgView != null) {
+                        com.example.bizbridgeapp.utils.ImageLoader.loadImage(imgView, it.imageUrl, R.drawable.img_salon_interior)
+                    }
                 } ?: run {
                     if (isAdded) {
                         android.widget.Toast.makeText(requireContext(), "Business not found or not accessible", android.widget.Toast.LENGTH_SHORT).show()
