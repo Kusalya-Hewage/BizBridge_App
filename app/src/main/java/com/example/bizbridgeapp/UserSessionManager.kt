@@ -2,6 +2,7 @@ package com.example.bizbridgeapp
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.bizbridgeapp.model.AdminAuditLog
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
 import com.example.bizbridgeapp.model.QualificationDocument
@@ -19,6 +20,7 @@ object UserSessionManager {
     private const val KEY_APPLICATIONS = "local_business_applications"
     private const val KEY_BUSINESSES = "local_businesses"
     private const val KEY_QUALIFICATIONS = "local_qualifications"
+    private const val KEY_AUDIT_LOGS = "local_admin_audit_logs"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -50,6 +52,22 @@ object UserSessionManager {
                     "email" to "alex@bizbridge.example",
                     "role" to "ADMIN",
                     "accountStatus" to "ACTIVE"
+                )
+            )
+        }
+
+        if (getAllAuditLogs().isEmpty()) {
+            saveAuditLog(
+                AdminAuditLog(
+                    id = "log_init_console",
+                    adminUid = "admin_bizbridge",
+                    adminEmail = "admin@bizbridge.com",
+                    actionType = "SYSTEM_INITIALIZED",
+                    targetType = "CONSOLE",
+                    targetId = "BizBridge Operations",
+                    newStatus = "ACTIVE",
+                    reason = "Platform Administration Console initialized",
+                    createdAt = com.google.firebase.Timestamp.now()
                 )
             )
         }
@@ -618,6 +636,57 @@ object UserSessionManager {
             (businessId.isNotBlank() && it.businessId == businessId) ||
             (ownerId.isNotBlank() && it.ownerId == ownerId)
         }
+    }
+
+    /** Save an administrative audit log locally */
+    fun saveAuditLog(log: AdminAuditLog) {
+        if (!::prefs.isInitialized) return
+        val current = getAllAuditLogs().toMutableList()
+        current.removeAll { it.id == log.id }
+        current.add(0, log)
+        val array = JSONArray()
+        for (l in current.take(50)) {
+            val o = JSONObject()
+            o.put("id", l.id)
+            o.put("adminUid", l.adminUid)
+            o.put("adminEmail", l.adminEmail)
+            o.put("actionType", l.actionType)
+            o.put("targetType", l.targetType)
+            o.put("targetId", l.targetId)
+            o.put("previousStatus", l.previousStatus)
+            o.put("newStatus", l.newStatus)
+            o.put("reason", l.reason)
+            o.put("timestamp", l.createdAt?.toDate()?.time ?: System.currentTimeMillis())
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_AUDIT_LOGS, array.toString()).apply()
+    }
+
+    /** Retrieve all saved administrative audit logs */
+    fun getAllAuditLogs(): List<AdminAuditLog> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_AUDIT_LOGS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<AdminAuditLog>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            val timeMs = o.optLong("timestamp", System.currentTimeMillis())
+            list.add(
+                AdminAuditLog(
+                    id = o.optString("id"),
+                    adminUid = o.optString("adminUid"),
+                    adminEmail = o.optString("adminEmail"),
+                    actionType = o.optString("actionType"),
+                    targetType = o.optString("targetType"),
+                    targetId = o.optString("targetId"),
+                    previousStatus = o.optString("previousStatus"),
+                    newStatus = o.optString("newStatus"),
+                    reason = o.optString("reason"),
+                    createdAt = com.google.firebase.Timestamp(java.util.Date(timeMs))
+                )
+            )
+        }
+        return list
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */
