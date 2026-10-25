@@ -443,6 +443,81 @@ object UserSessionManager {
                 saveProfile(updated)
             }
         }
+
+        // Also update registered account credentials
+        updateRegisteredAccountBusiness(
+            businessId,
+            mapOf(
+                "approved" to approved,
+                "active" to active,
+                "approvalStatus" to approvalStatus,
+                "verificationStatus" to verificationStatus
+            )
+        )
+    }
+
+    /** Update business trust score across session, stored businesses, and registered accounts */
+    fun updateBusinessTrustScore(businessId: String, trustScore: Int) {
+        if (!::prefs.isInitialized) return
+        val businesses = getAllBusinesses().map {
+            if (it.id == businessId) it.copy(trustScore = trustScore) else it
+        }
+        val array = JSONArray()
+        for (b in businesses) {
+            val o = JSONObject()
+            o.put("id", b.id)
+            o.put("ownerId", b.ownerId)
+            o.put("name", b.name)
+            o.put("category", b.category)
+            o.put("description", b.description)
+            o.put("address", b.address)
+            o.put("contactNumber", b.contactNumber)
+            o.put("approved", b.approved)
+            o.put("active", b.active)
+            o.put("approvalStatus", b.approvalStatus)
+            o.put("verificationStatus", b.verificationStatus)
+            o.put("trustScore", b.trustScore)
+            o.put("rating", b.rating ?: 0.0)
+            o.put("reviewCount", b.reviewCount)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
+
+        val activeProfile = getProfile()
+        if (activeProfile != null) {
+            val currentBizId = activeProfile["businessId"] as? String
+            if (currentBizId == businessId) {
+                val updated = activeProfile.toMutableMap()
+                updated["trustScore"] = trustScore
+                saveProfile(updated)
+            }
+        }
+
+        updateRegisteredAccountBusiness(businessId, mapOf("trustScore" to trustScore))
+    }
+
+    /** Update fields in registered accounts for a given businessId or matching email */
+    fun updateRegisteredAccountBusiness(businessId: String, updates: Map<String, Any>) {
+        if (!::prefs.isInitialized) return
+        val accountsJson = prefs.getString(KEY_REGISTERED_ACCOUNTS, "{}") ?: "{}"
+        val accountsObj = JSONObject(accountsJson)
+        val keys = accountsObj.keys()
+        var changed = false
+        while (keys.hasNext()) {
+            val emailKey = keys.next()
+            val acc = accountsObj.getJSONObject(emailKey)
+            val bizId = acc.optString("businessId")
+            if (bizId == businessId || (businessId == "biz_hairloft" && emailKey.startsWith("hairloft"))) {
+                for ((k, v) in updates) {
+                    acc.put(k, v)
+                }
+                accountsObj.put(emailKey, acc)
+                changed = true
+            }
+        }
+        if (changed) {
+            prefs.edit().putString(KEY_REGISTERED_ACCOUNTS, accountsObj.toString()).apply()
+        }
     }
 
     /** Save or update a qualification document locally */
