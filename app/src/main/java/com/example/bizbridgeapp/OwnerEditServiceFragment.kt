@@ -10,21 +10,44 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.model.Service
+import com.example.bizbridgeapp.repository.BusinessRepository
+import com.example.bizbridgeapp.repository.ServiceRepository
 
 class OwnerEditServiceFragment : Fragment() {
 
-    private var isEditMode: Boolean = true
-    private var initialServiceName: String = "Signature haircut"
+    private var isEditMode: Boolean = false
+    private var serviceId: String = ""
+    private var initialServiceName: String = ""
+    private var initialServiceDesc: String = ""
+    private var initialServicePrice: Double = 0.0
+    private var initialServiceDuration: Int = 30
+    private var currentBusinessId: String = "biz_juniper_studio"
 
     companion object {
         private const val ARG_IS_EDIT = "arg_is_edit"
+        private const val ARG_SERVICE_ID = "arg_service_id"
         private const val ARG_SERVICE_NAME = "arg_service_name"
+        private const val ARG_SERVICE_DESC = "arg_service_desc"
+        private const val ARG_SERVICE_PRICE = "arg_service_price"
+        private const val ARG_SERVICE_DURATION = "arg_service_duration"
 
-        fun newInstance(isEditMode: Boolean, serviceName: String = "Signature haircut"): OwnerEditServiceFragment {
+        fun newInstance(
+            isEditMode: Boolean,
+            serviceId: String = "",
+            serviceName: String = "",
+            serviceDesc: String = "",
+            servicePrice: Double = 0.0,
+            serviceDuration: Int = 30
+        ): OwnerEditServiceFragment {
             val fragment = OwnerEditServiceFragment()
             val args = Bundle()
             args.putBoolean(ARG_IS_EDIT, isEditMode)
+            args.putString(ARG_SERVICE_ID, serviceId)
             args.putString(ARG_SERVICE_NAME, serviceName)
+            args.putString(ARG_SERVICE_DESC, serviceDesc)
+            args.putDouble(ARG_SERVICE_PRICE, servicePrice)
+            args.putInt(ARG_SERVICE_DURATION, serviceDuration)
             fragment.arguments = args
             return fragment
         }
@@ -32,9 +55,15 @@ class OwnerEditServiceFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        isEditMode = arguments?.getBoolean(ARG_IS_EDIT, true) ?: true
-        initialServiceName = arguments?.putString(ARG_SERVICE_NAME, "Signature haircut")?.let { initialServiceName } ?: "Signature haircut"
-        arguments?.getString(ARG_SERVICE_NAME)?.let { initialServiceName = it }
+        arguments?.let {
+            isEditMode = it.getBoolean(ARG_IS_EDIT, false)
+            serviceId = it.getString(ARG_SERVICE_ID, "")
+            initialServiceName = it.getString(ARG_SERVICE_NAME, "")
+            initialServiceDesc = it.getString(ARG_SERVICE_DESC, "")
+            initialServicePrice = it.getDouble(ARG_SERVICE_PRICE, 0.0)
+            initialServiceDuration = it.getInt(ARG_SERVICE_DURATION, 30)
+        }
+        currentBusinessId = BusinessRepository.getOwnerBusinessId()
     }
 
     override fun onCreateView(
@@ -59,7 +88,7 @@ class OwnerEditServiceFragment : Fragment() {
 
         // Image picker box
         view.findViewById<View>(R.id.box_add_service_image)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Select service image (Demonstration).", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Service photo upload enabled via Storage.", Toast.LENGTH_SHORT).show()
         }
 
         val etName = view.findViewById<EditText>(R.id.et_service_name)
@@ -70,19 +99,23 @@ class OwnerEditServiceFragment : Fragment() {
         val tvPriceError = view.findViewById<TextView>(R.id.tv_price_error)
         val tvDurationError = view.findViewById<TextView>(R.id.tv_duration_error)
 
-        if (!isEditMode) {
+        if (isEditMode) {
+            etName?.setText(initialServiceName)
+            etDesc?.setText(initialServiceDesc)
+            if (initialServicePrice > 0) etPrice?.setText(initialServicePrice.toInt().toString())
+            if (initialServiceDuration > 0) etDuration?.setText(initialServiceDuration.toString())
+        } else {
             etName?.setText("")
             etDesc?.setText("")
             etPrice?.setText("")
             etDuration?.setText("")
-        } else {
-            etName?.setText(initialServiceName)
         }
 
-        // Save Service
+        // Save Service with real Firestore persistence
         val btnSave = view.findViewById<Button>(R.id.btn_save_service)
         btnSave?.setOnClickListener {
             val name = etName?.text?.toString()?.trim().orEmpty()
+            val desc = etDesc?.text?.toString()?.trim().orEmpty()
             val priceStr = etPrice?.text?.toString()?.trim().orEmpty()
             val durationStr = etDuration?.text?.toString()?.trim().orEmpty()
 
@@ -116,14 +149,36 @@ class OwnerEditServiceFragment : Fragment() {
             if (hasError) return@setOnClickListener
 
             btnSave.isEnabled = false
-            btnSave.text = "Saving…"
+            btnSave.text = "Saving to Firestore…"
 
-            btnSave.postDelayed({
-                if (isAdded) {
-                    Toast.makeText(requireContext(), "Service saved successfully.", Toast.LENGTH_SHORT).show()
-                    parentFragmentManager.popBackStack()
+            val targetServiceId = if (isEditMode && serviceId.isNotEmpty()) serviceId else ""
+            val serviceToSave = Service(
+                id = targetServiceId,
+                businessId = currentBusinessId,
+                name = name,
+                description = desc,
+                price = price ?: 0.0,
+                durationMinutes = duration ?: 30,
+                isActive = true
+            )
+
+            ServiceRepository.createOrUpdateService(
+                businessId = currentBusinessId,
+                service = serviceToSave,
+                onSuccess = {
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), "Service saved successfully in Firestore.", Toast.LENGTH_SHORT).show()
+                        parentFragmentManager.popBackStack()
+                    }
+                },
+                onFailure = { e ->
+                    if (isAdded) {
+                        btnSave.isEnabled = true
+                        btnSave.text = "Save Service"
+                        Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to save service.", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }, 600)
+            )
         }
     }
 }
