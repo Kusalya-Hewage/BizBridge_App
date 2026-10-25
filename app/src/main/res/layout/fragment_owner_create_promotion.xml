@@ -271,7 +271,7 @@
             </LinearLayout>
 
             <!-- Buttons: Save Draft & Publish Promotion -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_save_promo_draft"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -285,7 +285,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_publish_promotion"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
