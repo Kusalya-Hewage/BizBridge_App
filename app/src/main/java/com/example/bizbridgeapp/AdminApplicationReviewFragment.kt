@@ -49,18 +49,6 @@ class AdminApplicationReviewFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // Navigate to Screen A04 (Verify qualification)
-        val openVerifyDoc = View.OnClickListener {
-            val docId = "doc_${currentApplication?.businessId?.removePrefix("biz_") ?: "qual"}"
-            (activity as? MainActivity)?.navigateTo(AdminVerifyQualificationFragment.newInstance(docId), addToBackStack = true)
-        }
-        view.findViewById<View>(R.id.card_doc_massage_cert)?.setOnClickListener(openVerifyDoc)
-        view.findViewById<View>(R.id.btn_review_massage_cert)?.setOnClickListener(openVerifyDoc)
-
-        view.findViewById<View>(R.id.btn_open_bus_reg)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Opening Business registration document preview...", Toast.LENGTH_SHORT).show()
-        }
-
         val etRejectionReason = view.findViewById<EditText>(R.id.et_rejection_reason)
         val btnApprove = view.findViewById<View>(R.id.btn_approve_application)
         val btnReject = view.findViewById<View>(R.id.btn_reject_application)
@@ -82,9 +70,14 @@ class AdminApplicationReviewFragment : Fragment() {
         // Approve action
         btnApprove?.setOnClickListener {
             val adminUser = FirebaseAuthManager.getCurrentUser()
-            val adminUid = adminUser?.uid ?: "admin_alex"
-            val adminEmail = adminUser?.email ?: "admin@bizbridge.com"
-            val appId = if (applicationId.isNotEmpty()) applicationId else "app_hairloft"
+            val adminUid = adminUser?.uid ?: ""
+            val adminEmail = adminUser?.email ?: ""
+            val appId = applicationId
+
+            if (appId.isBlank()) {
+                Toast.makeText(requireContext(), "No application ID found to approve.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             btnApprove.isEnabled = false
             Toast.makeText(requireContext(), "Approving application...", Toast.LENGTH_SHORT).show()
@@ -119,9 +112,14 @@ class AdminApplicationReviewFragment : Fragment() {
             }
 
             val adminUser = FirebaseAuthManager.getCurrentUser()
-            val adminUid = adminUser?.uid ?: "admin_alex"
-            val adminEmail = adminUser?.email ?: "admin@bizbridge.com"
-            val appId = if (applicationId.isNotEmpty()) applicationId else "app_hairloft"
+            val adminUid = adminUser?.uid ?: ""
+            val adminEmail = adminUser?.email ?: ""
+            val appId = applicationId
+
+            if (appId.isBlank()) {
+                Toast.makeText(requireContext(), "No application ID found to reject.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             btnReject.isEnabled = false
             AdminRepository.rejectApplication(
@@ -136,7 +134,7 @@ class AdminApplicationReviewFragment : Fragment() {
                         parentFragmentManager.popBackStack()
                     }
                 },
-                onFailure = {
+                onFailure = { e ->
                     activity?.runOnUiThread {
                         btnReject.isEnabled = true
                         Toast.makeText(requireContext(), "Application rejected.", Toast.LENGTH_SHORT).show()
@@ -192,12 +190,31 @@ class AdminApplicationReviewFragment : Fragment() {
         // Load submitted qualification documents for this business/owner
         val docsContainer = rootView.findViewById<android.widget.LinearLayout>(R.id.ll_admin_submitted_docs_container)
         if (docsContainer != null) {
+            docsContainer.removeAllViews()
             com.example.bizbridgeapp.repository.QualificationRepository.getDocumentsForBusiness(
                 businessId = app.businessId,
                 ownerId = app.ownerId,
                 onSuccess = { docs ->
-                    if (!isAdded || docs.isEmpty()) return@getDocumentsForBusiness
+                    if (!isAdded) return@getDocumentsForBusiness
                     docsContainer.removeAllViews()
+                    if (docs.isEmpty()) {
+                        val emptyView = TextView(requireContext()).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                bottomMargin = (16 * resources.displayMetrics.density).toInt()
+                            }
+                            text = "No qualification documents submitted for this application."
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.admin_text_muted))
+                            textSize = 13f
+                            val pad = (16 * resources.displayMetrics.density).toInt()
+                            setPadding(pad, pad, pad, pad)
+                            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_admin_card)
+                        }
+                        docsContainer.addView(emptyView)
+                        return@getDocumentsForBusiness
+                    }Views()
 
                     for (doc in docs) {
                         val docCard = android.widget.LinearLayout(requireContext()).apply {
