@@ -47,7 +47,7 @@ class NearbyMapFragment : Fragment(), OnMapReadyCallback {
         // Initialize Places SDK (API key placeholder from manifest)
         if (!Places.isInitialized()) {
             // The API key is read from the manifest meta-data
-            val apiKey = "YOUR_API_KEY"
+            val apiKey = "AIzaSyDFL8w7PZ5whXWMxoDdPZ32fS2SHqa0b6g"
             Places.initialize(requireContext(), apiKey)
         }
         placesClient = Places.createClient(requireContext())

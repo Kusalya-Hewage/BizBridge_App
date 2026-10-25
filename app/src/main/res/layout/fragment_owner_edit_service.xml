@@ -147,7 +147,7 @@
                         android:text="Price must be $0 or more."
                         android:textColor="@color/error_text"
                         android:textSize="11sp"
-                        android:visibility="GONE" />
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <!-- Duration (minutes) -->
@@ -190,7 +190,7 @@
                         android:text="Choose 5–480 minutes."
                         android:textColor="@color/error_text"
                         android:textSize="11sp"
-                        android:visibility="GONE" />
+                        android:visibility="gone" />
                 </LinearLayout>
             </LinearLayout>
 
