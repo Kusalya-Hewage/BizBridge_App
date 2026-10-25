@@ -93,11 +93,12 @@
                         android:background="@drawable/bg_admin_tab_active">
 
                         <TextView
+                            android:id="@+id/tv_admin_initials"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:fontFamily="@font/inter_variable"
-                            android:text="AM"
+                            android:text="AD"
                             android:textColor="@color/white"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -110,20 +111,22 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/tv_admin_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Alex Morgan"
+                            android:text="Administrator"
                             android:textColor="@color/admin_text_title"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_admin_email_role"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="alex@bizbridge.example · Platform administrator"
+                            android:text="admin@bizbridge.com · Platform administrator"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -186,11 +189,12 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_profile_two_step_status"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Enabled · Authenticator app"
+                            android:text="Enabled · Authenticated Session"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -244,11 +248,12 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_profile_password_last_changed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Last changed Oct 11, 2026"
+                            android:text="Tap to request password reset link"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -302,11 +307,12 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_profile_active_sessions"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="This Android device · Last active now"
+                            android:text="This Android device · Active now"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -330,93 +336,27 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Item 1 -->
+            <!-- Dynamic Profile Recent Actions Container -->
             <LinearLayout
+                android:id="@+id/layout_profile_recent_actions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="14dp">
+                android:orientation="vertical" />
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_verified"
-                    app:tint="@color/admin_primary" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Verified hair design certificate"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Juniper Studio · Oct 23, 3:10 PM"
-                        android:textColor="@color/admin_text_muted"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Item 2 -->
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_profile_no_recent_actions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
                 android:background="@drawable/bg_admin_card"
                 android:elevation="1dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="14dp">
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_shield_check"
-                    app:tint="@color/admin_primary" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Approved Amber Studio"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Oct 23, 2:15 PM · Audit A04-8742"
-                        android:textColor="@color/admin_text_muted"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </LinearLayout>
+                android:fontFamily="@font/inter_variable"
+                android:gravity="center"
+                android:padding="20dp"
+                android:text="No recent administrative actions recorded for your account."
+                android:textColor="@color/admin_text_muted"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
             <!-- Log Out of Admin Button -->
             <androidx.appcompat.widget.AppCompatButton

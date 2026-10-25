@@ -88,10 +88,11 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tv_report_date_range"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Oct 1–23, 2026"
+                        android:text="All Time"
                         android:textColor="@color/white"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -134,7 +135,7 @@
                 </LinearLayout>
             </RelativeLayout>
 
-            <!-- 2 Summary Cards: 148 New registrations | 18 Business approvals -->
+            <!-- 2 Summary Cards -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -152,10 +153,11 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_report_new_registrations"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="148"
+                        android:text="0"
                         android:textColor="@color/admin_text_title"
                         android:textSize="26sp"
                         android:textStyle="bold" />
@@ -165,7 +167,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="New registrations"
+                        android:text="Total users"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -181,10 +183,11 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tv_report_business_approvals"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="18"
+                        android:text="0"
                         android:textColor="@color/admin_text_title"
                         android:textSize="26sp"
                         android:textStyle="bold" />
@@ -194,7 +197,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Business approvals"
+                        android:text="Verified businesses"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -226,11 +229,12 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_chart_total_bookings"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="438 total"
+                        android:text="0 total"
                         android:textColor="@color/admin_primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -243,7 +247,7 @@
                     android:gravity="bottom"
                     android:orientation="horizontal">
 
-                    <!-- May -->
+                    <!-- Month 1 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -252,22 +256,24 @@
                         android:orientation="vertical">
 
                         <View
+                            android:id="@+id/bar_1"
                             android:layout_width="22dp"
-                            android:layout_height="45dp"
+                            android:layout_height="35dp"
                             android:background="@drawable/bg_admin_tab_active"
                             android:backgroundTint="@color/admin_chart_bar_inactive" />
 
                         <TextView
+                            android:id="@+id/tv_bar_month_1"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="May"
+                            android:text="M1"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="11sp" />
                     </LinearLayout>
 
-                    <!-- Jun -->
+                    <!-- Month 2 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -276,22 +282,50 @@
                         android:orientation="vertical">
 
                         <View
+                            android:id="@+id/bar_2"
+                            android:layout_width="22dp"
+                            android:layout_height="50dp"
+                            android:background="@drawable/bg_admin_tab_active"
+                            android:backgroundTint="@color/admin_chart_bar_inactive" />
+
+                        <TextView
+                            android:id="@+id/tv_bar_month_2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="M2"
+                            android:textColor="@color/admin_text_muted"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- Month 3 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="bottom|center_horizontal"
+                        android:orientation="vertical">
+
+                        <View
+                            android:id="@+id/bar_3"
                             android:layout_width="22dp"
                             android:layout_height="65dp"
                             android:background="@drawable/bg_admin_tab_active"
                             android:backgroundTint="@color/admin_chart_bar_inactive" />
 
                         <TextView
+                            android:id="@+id/tv_bar_month_3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Jun"
+                            android:text="M3"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="11sp" />
                     </LinearLayout>
 
-                    <!-- Jul -->
+                    <!-- Month 4 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -300,22 +334,50 @@
                         android:orientation="vertical">
 
                         <View
+                            android:id="@+id/bar_4"
+                            android:layout_width="22dp"
+                            android:layout_height="55dp"
+                            android:background="@drawable/bg_admin_tab_active"
+                            android:backgroundTint="@color/admin_chart_bar_inactive" />
+
+                        <TextView
+                            android:id="@+id/tv_bar_month_4"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:fontFamily="@font/inter_variable"
+                            android:text="M4"
+                            android:textColor="@color/admin_text_muted"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <!-- Month 5 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="bottom|center_horizontal"
+                        android:orientation="vertical">
+
+                        <View
+                            android:id="@+id/bar_5"
                             android:layout_width="22dp"
                             android:layout_height="80dp"
                             android:background="@drawable/bg_admin_tab_active"
                             android:backgroundTint="@color/admin_chart_bar_inactive" />
 
                         <TextView
+                            android:id="@+id/tv_bar_month_5"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Jul"
+                            android:text="M5"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="11sp" />
                     </LinearLayout>
 
-                    <!-- Aug -->
+                    <!-- Month 6 (Latest / Current) -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -324,65 +386,19 @@
                         android:orientation="vertical">
 
                         <View
-                            android:layout_width="22dp"
-                            android:layout_height="68dp"
-                            android:background="@drawable/bg_admin_tab_active"
-                            android:backgroundTint="@color/admin_chart_bar_inactive" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Aug"
-                            android:textColor="@color/admin_text_muted"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <!-- Sep -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="bottom|center_horizontal"
-                        android:orientation="vertical">
-
-                        <View
+                            android:id="@+id/bar_6"
                             android:layout_width="22dp"
                             android:layout_height="100dp"
-                            android:background="@drawable/bg_admin_tab_active"
-                            android:backgroundTint="@color/admin_chart_bar_inactive" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Sep"
-                            android:textColor="@color/admin_text_muted"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <!-- Oct (Highest and Highlighted) -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="bottom|center_horizontal"
-                        android:orientation="vertical">
-
-                        <View
-                            android:layout_width="22dp"
-                            android:layout_height="118dp"
                             android:background="@drawable/bg_admin_tab_active"
                             android:backgroundTint="@color/admin_chart_bar_active" />
 
                         <TextView
+                            android:id="@+id/tv_bar_month_6"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Oct"
+                            android:text="Now"
                             android:textColor="@color/admin_primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -419,82 +435,24 @@
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
-                <!-- Row 1: Hair & beauty -->
-                <RelativeLayout
+                <!-- Dynamic Categories Container -->
+                <LinearLayout
+                    android:id="@+id/layout_categories_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp">
+                    android:orientation="vertical" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Hair &amp; beauty"
-                        android:textColor="@color/admin_text_body"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="42 · 49%"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <!-- Row 2: Repair services -->
-                <RelativeLayout
+                <TextView
+                    android:id="@+id/tv_no_categories"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Repair services"
-                        android:textColor="@color/admin_text_body"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="33 · 27%"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <!-- Row 3: Wellness -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Wellness"
-                        android:textColor="@color/admin_text_body"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="21 · 24%"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
+                    android:fontFamily="@font/inter_variable"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:text="No registered business categories yet"
+                    android:textColor="@color/admin_text_muted"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- Community Health Card -->
@@ -518,28 +476,31 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_community_reviews_summary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
-                    android:text="312 reviews · 4.7 average rating"
+                    android:text="0 reviews · 0.0 average rating"
                     android:textColor="@color/admin_text_body"
                     android:textSize="13sp" />
 
                 <TextView
+                    android:id="@+id/tv_community_reports_summary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="4 open reports · 11 resolved this month"
+                    android:text="0 open reports · 0 resolved"
                     android:textColor="@color/admin_text_muted"
                     android:textSize="12sp" />
 
                 <TextView
+                    android:id="@+id/tv_community_applications_summary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Applications: 18 approved · 4 rejected · 7 pending"
+                    android:text="Applications: 0 approved · 0 rejected · 0 pending"
                     android:textColor="@color/admin_text_muted"
                     android:textSize="12sp" />
             </LinearLayout>

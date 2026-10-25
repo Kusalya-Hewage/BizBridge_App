@@ -288,20 +288,22 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tv_action_docs_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="12 documents awaiting review"
+                        android:text="0 documents awaiting review"
                         android:textColor="@color/admin_text_title"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_action_docs_subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Oldest submission: Oct 21"
+                        android:text="All applications up to date"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -345,20 +347,22 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tv_action_reports_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="4 open reports"
+                        android:text="0 open reports"
                         android:textColor="@color/admin_text_title"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_action_reports_subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="2 reviews · 1 listing"
+                        android:text="No pending reports"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -377,7 +381,7 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- 438 bookings this month card -->
+            <!-- Bookings card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -388,20 +392,22 @@
                 android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/tv_bookings_month_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
-                    android:text="438 bookings this month"
+                    android:text="Bookings overview"
                     android:textColor="@color/admin_text_title"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_bookings_month_breakdown"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="21 Pending · 152 Confirmed · 268 Completed · 29 Cancelled"
+                    android:text="0 Pending · 0 Confirmed · 0 Completed · 0 Cancelled"
                     android:textColor="@color/admin_text_muted"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -417,93 +423,27 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Action Item 1 -->
+            <!-- Dynamic Recent Admin Actions Container -->
             <LinearLayout
+                android:id="@+id/layout_recent_admin_actions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="14dp">
+                android:orientation="vertical" />
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_shield_check"
-                    app:tint="@color/admin_primary" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Juniper Studio approved"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Alex Morgan · Oct 23, 3:15 PM"
-                        android:textColor="@color/admin_text_muted"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Action Item 2 -->
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_no_recent_admin_actions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_admin_card"
                 android:elevation="1dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="14dp">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_verified"
-                    app:tint="@color/admin_primary" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Hair Design Certificate verified"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Alex Morgan · Oct 23, 3:10 PM"
-                        android:textColor="@color/admin_text_muted"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </LinearLayout>
+                android:fontFamily="@font/inter_variable"
+                android:gravity="center"
+                android:padding="20dp"
+                android:text="No recent admin actions recorded."
+                android:textColor="@color/admin_text_muted"
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
