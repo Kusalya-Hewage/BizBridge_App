@@ -81,9 +81,9 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
+                android:hint="e.g. Advanced Hair Design Certificate"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="Advanced Hair Design Certificate"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
@@ -105,9 +105,9 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
+                android:hint="e.g. California Beauty Academy"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="California Beauty Academy"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
@@ -129,9 +129,9 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
+                android:hint="e.g. 5 years · Industry Experience"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
-                android:text="8 years · Stylist since 2018"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 

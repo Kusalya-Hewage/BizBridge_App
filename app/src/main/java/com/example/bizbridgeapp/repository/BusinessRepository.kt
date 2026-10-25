@@ -11,64 +11,7 @@ object BusinessRepository {
     private val db = FirebaseFirestore.getInstance()
     private const val COLLECTION = "businesses"
 
-    val defaultDemoBusinesses = listOf(
-        Business(
-            id = "biz_juniper_studio",
-            name = "Juniper Studio",
-            category = "Hair salon",
-            description = "Premium haircare, modern styling, and specialized organic treatments by award-winning stylists.",
-            address = "42 Flower Road, Colombo 07",
-            rating = 4.9,
-            reviewCount = 124,
-            price = "From $35",
-            approved = true,
-            active = true,
-            latitude = 6.9034,
-            longitude = 79.8601
-        ),
-        Business(
-            id = "biz_oliver_beauty",
-            name = "Oliver Beauty Bar",
-            category = "Beauty & Spa",
-            description = "Full service salon offering luxury manicures, facials, skincare, and bridal treatments.",
-            address = "18 Havelock Road, Colombo 05",
-            rating = 4.7,
-            reviewCount = 86,
-            price = "From $28",
-            approved = true,
-            active = true,
-            latitude = 6.8850,
-            longitude = 79.8650
-        ),
-        Business(
-            id = "biz_daily_cut",
-            name = "The Daily Cut Barber",
-            category = "Hair salon",
-            description = "Classic and contemporary gentleman's grooming, beard styling, and hot towel treatments.",
-            address = "75 Galle Road, Colombo 03",
-            rating = 4.8,
-            reviewCount = 95,
-            price = "From $25",
-            approved = true,
-            active = true,
-            latitude = 6.9120,
-            longitude = 79.8510
-        ),
-        Business(
-            id = "biz_lotus_wellness",
-            name = "Lotus Wellness & Spa",
-            category = "Wellness",
-            description = "Holistic herbal treatments, deep tissue massage, aromatherapy, and mindfulness sessions.",
-            address = "12 Rosmead Place, Colombo 07",
-            rating = 4.9,
-            reviewCount = 68,
-            price = "From $45",
-            approved = true,
-            active = true,
-            latitude = 6.9150,
-            longitude = 79.8700
-        )
-    )
+    val defaultDemoBusinesses = emptyList<Business>()
 
     /** Seed initial demo businesses - disabled so real data is used */
     fun seedDefaultBusinessesIfEmpty(onComplete: (List<Business>) -> Unit = {}) {
@@ -92,10 +35,10 @@ object BusinessRepository {
                     doc.toObject(Business::class.java)?.copy(id = doc.id)
                 }
                 val merged = (localApproved + firestoreList).distinctBy { it.id }
-                onSuccess(merged.ifEmpty { defaultDemoBusinesses })
+                onSuccess(merged)
             }
             .addOnFailureListener { e ->
-                onSuccess(localApproved.ifEmpty { defaultDemoBusinesses })
+                onSuccess(localApproved)
             }
     }
 
@@ -186,8 +129,7 @@ object BusinessRepository {
                             )
                         )
                     } else {
-                        val demo = defaultDemoBusinesses.firstOrNull { it.id == businessId }
-                        onSuccess(demo)
+                        onSuccess(null)
                     }
                 }
             }
@@ -205,7 +147,7 @@ object BusinessRepository {
                         )
                     )
                 } else {
-                    onSuccess(defaultDemoBusinesses.firstOrNull { it.id == businessId })
+                    onSuccess(null)
                 }
             }
     }
@@ -254,7 +196,7 @@ object BusinessRepository {
                     }
                 onSuccess(result)
             }
-            .addOnFailureListener { e -> onSuccess(defaultDemoBusinesses) }
+            .addOnFailureListener { e -> onSuccess(emptyList()) }
     }
 
     /** Helper to create or update a business document (used by Owner flow). */
@@ -286,11 +228,10 @@ object BusinessRepository {
             .get()
             .addOnSuccessListener { snapshot ->
                 val biz = snapshot.documents.firstOrNull()?.toObject(Business::class.java)?.copy(id = snapshot.documents.first().id)
-                    ?: defaultDemoBusinesses.firstOrNull()
                 onSuccess(biz)
             }
             .addOnFailureListener {
-                onSuccess(defaultDemoBusinesses.firstOrNull())
+                onSuccess(null)
             }
     }
 
@@ -298,10 +239,9 @@ object BusinessRepository {
     fun getOwnerBusinessId(): String {
         val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
         val saved = com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessId") as? String
-        if (!saved.isNullOrBlank() && saved != "biz_juniper_studio") return saved
-        if (!currentUid.isNullOrBlank()) return "biz_${currentUid.take(12)}"
         if (!saved.isNullOrBlank()) return saved
-        return "biz_juniper_studio"
+        if (!currentUid.isNullOrBlank()) return "biz_${currentUid.take(12)}"
+        return ""
     }
 
     /** Real-time listener for the owner's business */
@@ -401,7 +341,7 @@ object BusinessRepository {
                         )
                         onUpdate(constructed)
                     } else {
-                        onUpdate(defaultDemoBusinesses.firstOrNull { it.id == effectiveBizId } ?: defaultDemoBusinesses.first())
+                        onUpdate(null)
                     }
                 }
             }
@@ -581,12 +521,12 @@ object BusinessRepository {
                 val localApproved = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
                     .filter { it.approved && it.active }
                 if (error != null || snapshot == null) {
-                    onUpdate(localApproved.ifEmpty { defaultDemoBusinesses })
+                    onUpdate(localApproved)
                     return@addSnapshotListener
                 }
                 val firestoreList = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
                 val merged = (localApproved + firestoreList).distinctBy { it.id }
-                onUpdate(merged.ifEmpty { defaultDemoBusinesses })
+                onUpdate(merged)
             }
     }
 }
