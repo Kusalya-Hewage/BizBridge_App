@@ -153,7 +153,7 @@ object BusinessRepository {
         onFailure: (Exception) -> Unit
     ) {
         if (businessId.isBlank()) {
-            onSuccess(defaultDemoBusinesses.firstOrNull())
+            onSuccess(null)
             return
         }
         db.collection(COLLECTION).document(businessId).get()
@@ -162,13 +162,47 @@ object BusinessRepository {
                     val bus = snap.toObject(Business::class.java)?.copy(id = snap.id)
                     onSuccess(bus)
                 } else {
-                    val fallback = defaultDemoBusinesses.firstOrNull { it.id == businessId } ?: defaultDemoBusinesses.firstOrNull()
-                    onSuccess(fallback)
+                    val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
+                    val savedBizId = sessionProfile?.get("businessId") as? String
+                    val savedName = sessionProfile?.get("businessName") as? String
+                    if (!savedName.isNullOrBlank() && (savedBizId == businessId || businessId.startsWith("biz_"))) {
+                        onSuccess(
+                            Business(
+                                id = businessId,
+                                ownerId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                                name = savedName,
+                                category = (sessionProfile["category"] as? String) ?: "Hair salon",
+                                contactNumber = (sessionProfile["phone"] as? String) ?: "",
+                                description = "Welcome to $savedName!",
+                                approvalStatus = (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
+                                verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
+                                approved = (sessionProfile["approved"] as? Boolean) ?: false,
+                                active = (sessionProfile["active"] as? Boolean) ?: false,
+                                trustScore = 80
+                            )
+                        )
+                    } else {
+                        val demo = defaultDemoBusinesses.firstOrNull { it.id == businessId }
+                        onSuccess(demo)
+                    }
                 }
             }
             .addOnFailureListener { e ->
-                val fallback = defaultDemoBusinesses.firstOrNull { it.id == businessId } ?: defaultDemoBusinesses.firstOrNull()
-                onSuccess(fallback)
+                val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
+                val savedName = sessionProfile?.get("businessName") as? String
+                if (!savedName.isNullOrBlank()) {
+                    onSuccess(
+                        Business(
+                            id = businessId,
+                            ownerId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                            name = savedName,
+                            category = (sessionProfile["category"] as? String) ?: "Hair salon",
+                            contactNumber = (sessionProfile["phone"] as? String) ?: ""
+                        )
+                    )
+                } else {
+                    onSuccess(defaultDemoBusinesses.firstOrNull { it.id == businessId })
+                }
             }
     }
 
@@ -258,10 +292,11 @@ object BusinessRepository {
 
     /** Determine the business ID for the current owner session */
     fun getOwnerBusinessId(): String {
-        val saved = com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessId") as? String
-        if (!saved.isNullOrBlank()) return saved
         val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val saved = com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessId") as? String
+        if (!saved.isNullOrBlank() && saved != "biz_juniper_studio") return saved
         if (!currentUid.isNullOrBlank()) return "biz_${currentUid.take(12)}"
+        if (!saved.isNullOrBlank()) return saved
         return "biz_juniper_studio"
     }
 
@@ -270,74 +305,80 @@ object BusinessRepository {
         ownerOrBizId: String,
         onUpdate: (Business?) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
         val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
-        val savedName = sessionProfile?.get("businessName") as? String
+        val savedName = sessionProfile?.get("businessName") as? String ?: "My Business"
         val savedCategory = sessionProfile?.get("category") as? String ?: "Hair salon"
         val savedPhone = sessionProfile?.get("phone") as? String ?: ""
 
-        val targetId = if (ownerOrBizId.isBlank() || ownerOrBizId == "demo_owner") {
+        val effectiveBizId = if (ownerOrBizId.isNotBlank() && ownerOrBizId != "biz_juniper_studio" && ownerOrBizId != "demo_owner") {
+            ownerOrBizId
+        } else if (!currentUid.isNullOrBlank()) {
+            "biz_${currentUid.take(12)}"
+        } else {
             (sessionProfile?.get("businessId") as? String) ?: "biz_juniper_studio"
-        } else ownerOrBizId
+        }
 
-        if (targetId.startsWith("biz_")) {
-            return db.collection(COLLECTION).document(targetId)
+        // If a real Firebase user is logged in
+        if (!currentUid.isNullOrBlank()) {
+            return db.collection(COLLECTION).document(effectiveBizId)
                 .addSnapshotListener { snapshot, error ->
-                    if (error != null || snapshot == null || !snapshot.exists()) {
-                        val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
-                        if (localBiz != null) {
-                            onUpdate(localBiz)
-                            return@addSnapshotListener
-                        }
-                        if (!savedName.isNullOrBlank()) {
-                            val isApproved = (sessionProfile?.get("approved") as? Boolean) ?: false
-                            val isAct = (sessionProfile?.get("active") as? Boolean) ?: false
-                            val appStat = (sessionProfile?.get("approvalStatus") as? String) ?: "PENDING"
-                            val verStat = (sessionProfile?.get("verificationStatus") as? String) ?: "PENDING"
-                            onUpdate(
-                                Business(
-                                    id = targetId,
+                    if (snapshot != null && snapshot.exists()) {
+                        val bizObj = snapshot.toObject(Business::class.java)?.copy(id = snapshot.id)
+                        onUpdate(bizObj)
+                        return@addSnapshotListener
+                    }
+
+                    // Query businesses where ownerId == currentUid
+                    db.collection(COLLECTION).whereEqualTo("ownerId", currentUid).limit(1).get()
+                        .addOnSuccessListener { querySnap ->
+                            if (!querySnap.isEmpty) {
+                                val doc = querySnap.documents.first()
+                                onUpdate(doc.toObject(Business::class.java)?.copy(id = doc.id))
+                            } else {
+                                val newBiz = Business(
+                                    id = effectiveBizId,
+                                    ownerId = currentUid,
                                     name = savedName,
                                     category = savedCategory,
                                     contactNumber = savedPhone,
                                     description = "Welcome to $savedName!",
-                                    approvalStatus = appStat,
-                                    verificationStatus = verStat,
-                                    approved = isApproved,
-                                    active = isAct,
+                                    approvalStatus = "PENDING",
+                                    verificationStatus = "PENDING",
+                                    approved = false,
+                                    active = false,
                                     trustScore = 80
                                 )
-                            )
-                            return@addSnapshotListener
+                                db.collection(COLLECTION).document(effectiveBizId).set(newBiz.toMap(), SetOptions.merge())
+                                onUpdate(newBiz)
+                            }
                         }
-                        onUpdate(defaultDemoBusinesses.firstOrNull { it.id == targetId } ?: defaultDemoBusinesses.first())
-                        return@addSnapshotListener
-                    }
-                    if (snapshot.exists()) {
-                        val bizObj = snapshot.toObject(Business::class.java)?.copy(id = snapshot.id)
-                        onUpdate(bizObj)
-                    }
+                        .addOnFailureListener {
+                            onUpdate(
+                                Business(
+                                    id = effectiveBizId,
+                                    ownerId = currentUid,
+                                    name = savedName,
+                                    category = savedCategory,
+                                    contactNumber = savedPhone,
+                                    approvalStatus = "PENDING",
+                                    verificationStatus = "PENDING",
+                                    approved = false,
+                                    active = false
+                                )
+                            )
+                        }
                 }
         }
 
-        // Query by ownerId
-        return db.collection(COLLECTION)
-            .whereEqualTo("ownerId", targetId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || snapshot.isEmpty) {
-                    // Fallback to demo business document listener
-                    db.collection(COLLECTION).document("biz_juniper_studio").get()
-                        .addOnSuccessListener { doc ->
-                            if (doc.exists()) {
-                                onUpdate(doc.toObject(Business::class.java)?.copy(id = doc.id))
-                            } else {
-                                onUpdate(defaultDemoBusinesses.first())
-                            }
-                        }
-                        .addOnFailureListener { onUpdate(defaultDemoBusinesses.first()) }
-                    return@addSnapshotListener
+        // Fallback for demo session without Firebase Auth
+        return db.collection(COLLECTION).document(effectiveBizId)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null && snapshot.exists()) {
+                    onUpdate(snapshot.toObject(Business::class.java)?.copy(id = snapshot.id))
+                } else {
+                    onUpdate(defaultDemoBusinesses.firstOrNull { it.id == effectiveBizId } ?: defaultDemoBusinesses.first())
                 }
-                val doc = snapshot.documents.first()
-                onUpdate(doc.toObject(Business::class.java)?.copy(id = doc.id))
             }
     }
 
@@ -354,10 +395,19 @@ object BusinessRepository {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val targetId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val targetId = if (businessId.isNotBlank() && businessId != "biz_juniper_studio") {
+            businessId
+        } else if (!currentUid.isNullOrBlank()) {
+            "biz_${currentUid.take(12)}"
+        } else {
+            "biz_juniper_studio"
+        }
+
         val docRef = db.collection(COLLECTION).document(targetId)
 
         val updates = mutableMapOf<String, Any>(
+            "id" to targetId,
             "name" to name,
             "category" to category,
             "description" to description,
@@ -366,12 +416,49 @@ object BusinessRepository {
             "openingHours" to openingHours,
             "updatedAt" to FieldValue.serverTimestamp()
         )
+        if (!currentUid.isNullOrBlank()) {
+            updates["ownerId"] = currentUid
+        }
         if (!imageUrl.isNullOrBlank()) {
             updates["imageUrl"] = imageUrl
         }
 
         docRef.set(updates, SetOptions.merge())
             .addOnSuccessListener {
+                // Keep local session updated
+                val profile = com.example.bizbridgeapp.UserSessionManager.getProfile()?.toMutableMap() ?: mutableMapOf()
+                profile["businessId"] = targetId
+                profile["businessName"] = name
+                profile["category"] = category
+                profile["phone"] = contactNumber
+                com.example.bizbridgeapp.UserSessionManager.saveProfile(profile)
+
+                // Update users document if signed in
+                if (!currentUid.isNullOrBlank()) {
+                    db.collection("users").document(currentUid).set(
+                        mapOf(
+                            "businessId" to targetId,
+                            "businessName" to name,
+                            "category" to category,
+                            "phone" to contactNumber,
+                            "updatedAt" to FieldValue.serverTimestamp()
+                        ),
+                        SetOptions.merge()
+                    )
+                }
+
+                // Update business application if present
+                val appId = "app_${targetId.removePrefix("biz_")}"
+                db.collection("businessApplications").document(appId).set(
+                    mapOf(
+                        "businessName" to name,
+                        "category" to category,
+                        "address" to address,
+                        "contactNumber" to contactNumber
+                    ),
+                    SetOptions.merge()
+                )
+
                 // Recalculate trust score based on new profile completeness
                 TrustScoreRepository.recalculateTrustScore(targetId)
                 onSuccess()
