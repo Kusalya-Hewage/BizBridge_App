@@ -25,17 +25,77 @@ object QualificationRepository {
             .addOnFailureListener { onFailure(it) }
     }
 
+    val defaultDemoQualifications = listOf(
+        QualificationDocument(
+            id = "doc_cosmetology_license",
+            businessId = "biz_juniper_studio",
+            ownerId = "owner_elena",
+            title = "State Cosmetology License",
+            documentType = "PROFESSIONAL_CERT",
+            verificationStatus = "VERIFIED"
+        ),
+        QualificationDocument(
+            id = "doc_advanced_colouring",
+            businessId = "biz_juniper_studio",
+            ownerId = "owner_elena",
+            title = "Advanced Hair Colouring Certificate",
+            documentType = "PROFESSIONAL_CERT",
+            verificationStatus = "VERIFIED"
+        ),
+        QualificationDocument(
+            id = "doc_salon_reg",
+            businessId = "biz_juniper_studio",
+            ownerId = "owner_elena",
+            title = "Salon Business Registration",
+            documentType = "BUSINESS_REGISTRATION",
+            verificationStatus = "PENDING"
+        )
+    )
+
+    fun seedDefaultQualificationsIfEmpty(businessId: String, onComplete: (List<QualificationDocument>) -> Unit = {}) {
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        db.collection(QUALIFICATIONS).whereEqualTo("businessId", targetBizId).get().addOnSuccessListener { snap ->
+            if (snap.isEmpty) {
+                val batch = db.batch()
+                val seeded = defaultDemoQualifications.map { d ->
+                    val docRef = db.collection(QUALIFICATIONS).document(d.id)
+                    val toSave = d.copy(businessId = targetBizId)
+                    batch.set(docRef, toSave.toMap())
+                    toSave
+                }
+                batch.commit()
+                    .addOnSuccessListener { onComplete(seeded) }
+                    .addOnFailureListener { onComplete(seeded) }
+            } else {
+                val list = snap.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
+                onComplete(list)
+            }
+        }.addOnFailureListener {
+            onComplete(defaultDemoQualifications.map { it.copy(businessId = targetBizId) })
+        }
+    }
+
     /** Listen to qualifications for a specific business */
     fun listenToQualificationsForBusiness(
         businessId: String,
         onUpdate: (List<QualificationDocument>) -> Unit
     ): ListenerRegistration {
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
         return db.collection(QUALIFICATIONS)
-            .whereEqualTo("businessId", businessId)
+            .whereEqualTo("businessId", targetBizId)
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
-                val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
-                onUpdate(list)
+                if (error != null || snapshot == null) {
+                    onUpdate(defaultDemoQualifications.filter { it.businessId == targetBizId })
+                    return@addSnapshotListener
+                }
+                if (snapshot.isEmpty) {
+                    seedDefaultQualificationsIfEmpty(targetBizId) { seeded ->
+                        onUpdate(seeded)
+                    }
+                } else {
+                    val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
+                    onUpdate(list)
+                }
             }
     }
 
