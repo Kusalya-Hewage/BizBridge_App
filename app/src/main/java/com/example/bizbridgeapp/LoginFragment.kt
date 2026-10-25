@@ -77,6 +77,11 @@ class LoginFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
         }
 
+        // Demo Business Owner Navigation
+        view.findViewById<View>(R.id.btn_demo_owner)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = true)
+        }
+
         // Log in action with validation
         btnLogin?.setOnClickListener {
             val email = etEmail?.text?.toString()?.trim().orEmpty()
@@ -84,6 +89,11 @@ class LoginFragment : Fragment() {
 
             if (email.equals("alex@bizbridge.example", ignoreCase = true)) {
                 (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
+                return@setOnClickListener
+            }
+
+            if (email.equals("elena@juniper.example", ignoreCase = true)) {
+                (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
                 return@setOnClickListener
             }
 
