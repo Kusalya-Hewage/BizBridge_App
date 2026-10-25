@@ -309,6 +309,21 @@ object BookingRepository {
             }
     }
 
+    /** Seed default bookings if business has none */
+    fun seedDefaultBookingsIfEmpty(businessId: String, onComplete: (List<Booking>) -> Unit = {}) {
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        val batch = db.batch()
+        val toSeed = defaultDemoBookings.map { b ->
+            val docRef = db.collection(BOOKINGS).document(b.id)
+            val toSave = b.copy(businessId = targetBizId)
+            batch.set(docRef, toSave.toMap())
+            toSave
+        }
+        batch.commit()
+            .addOnSuccessListener { onComplete(toSeed) }
+            .addOnFailureListener { onComplete(toSeed) }
+    }
+
     /**
      * Real-time listener for business owner bookings.
      */
@@ -316,18 +331,24 @@ object BookingRepository {
         businessId: String,
         onUpdate: (List<Booking>) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
         return db.collection(BOOKINGS)
-            .whereEqualTo("businessId", businessId)
+            .whereEqualTo("businessId", targetBizId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) {
-                    onUpdate(localBookingsCache.filter { it.businessId == businessId })
+                    onUpdate(localBookingsCache.filter { it.businessId == targetBizId })
                     return@addSnapshotListener
                 }
-                val cloudList = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Booking::class.java)?.copy(id = doc.id)
+                if (snapshot.isEmpty) {
+                    seedDefaultBookingsIfEmpty(targetBizId) { seeded ->
+                        onUpdate(seeded)
+                    }
+                } else {
+                    val cloudList = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(Booking::class.java)?.copy(id = doc.id)
+                    }
+                    onUpdate(cloudList)
                 }
-                val merged = (cloudList + localBookingsCache.filter { it.businessId == businessId }).distinctBy { it.id }
-                onUpdate(merged)
             }
     }
 
@@ -344,7 +365,7 @@ object BookingRepository {
         val bookingRef = db.collection(BOOKINGS).document(bookingId)
         bookingRef.get().addOnSuccessListener { snap ->
             if (!snap.exists()) {
-                val idx = localBookingsCache.indexOfFirst { it.id == bookingId }
+                val idx = localBookingsCache.indexOfFirst { it.id == bookingId || it.qrReference == bookingId }
                 if (idx >= 0) {
                     localBookingsCache[idx] = localBookingsCache[idx].copy(status = newStatus, cancellationReason = reason)
                 }
@@ -404,53 +425,78 @@ object BookingRepository {
         onSuccess: (Booking) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val normalizedCode = qrRef.trim().uppercase()
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+
+        // Query by qrReference
         db.collection(BOOKINGS)
-            .whereEqualTo("qrReference", qrRef)
+            .whereEqualTo("qrReference", normalizedCode)
             .get()
             .addOnSuccessListener { snapshot ->
-                val bookingDoc = snapshot.documents.firstOrNull()
-                val booking = bookingDoc?.toObject(Booking::class.java)?.copy(id = bookingDoc.id)
-                    ?: localBookingsCache.firstOrNull { it.qrReference.equals(qrRef, ignoreCase = true) }
-
-                if (booking == null) {
-                    onFailure(IllegalArgumentException("Invalid QR code. No matching booking found."))
+                var bookingDoc = snapshot.documents.firstOrNull()
+                if (bookingDoc == null) {
+                    // Try by document ID
+                    db.collection(BOOKINGS).document(normalizedCode).get()
+                        .addOnSuccessListener { byIdDoc ->
+                            val booking = if (byIdDoc.exists()) {
+                                byIdDoc.toObject(Booking::class.java)?.copy(id = byIdDoc.id)
+                            } else {
+                                localBookingsCache.firstOrNull { it.qrReference.equals(normalizedCode, ignoreCase = true) || it.id.equals(normalizedCode, ignoreCase = true) }
+                            }
+                            processQrBooking(booking, targetBizId, onSuccess, onFailure)
+                        }
+                        .addOnFailureListener {
+                            val local = localBookingsCache.firstOrNull { it.qrReference.equals(normalizedCode, ignoreCase = true) }
+                            processQrBooking(local, targetBizId, onSuccess, onFailure)
+                        }
                     return@addOnSuccessListener
                 }
 
-                if (booking.businessId != businessId && businessId.isNotEmpty()) {
-                    onFailure(IllegalStateException("This booking reference belongs to a different business."))
-                    return@addOnSuccessListener
-                }
-
-                if (booking.status == "COMPLETED") {
-                    onFailure(IllegalStateException("This appointment has already been checked in and completed."))
-                    return@addOnSuccessListener
-                }
-
-                if (booking.status == "CANCELLED" || booking.status == "REJECTED") {
-                    onFailure(IllegalStateException("Cannot verify a ${booking.status.lowercase()} appointment."))
-                    return@addOnSuccessListener
-                }
-
-                // Update status to COMPLETED atomically
-                updateBookingStatus(
-                    bookingId = booking.id,
-                    newStatus = "COMPLETED",
-                    onSuccess = {
-                        onSuccess(booking.copy(status = "COMPLETED"))
-                    },
-                    onFailure = {
-                        onSuccess(booking.copy(status = "COMPLETED"))
-                    }
-                )
+                val booking = bookingDoc.toObject(Booking::class.java)?.copy(id = bookingDoc.id)
+                processQrBooking(booking, targetBizId, onSuccess, onFailure)
             }
             .addOnFailureListener {
-                val local = localBookingsCache.firstOrNull { it.qrReference.equals(qrRef, ignoreCase = true) }
-                if (local != null) {
-                    onSuccess(local.copy(status = "COMPLETED"))
-                } else {
-                    onFailure(it)
-                }
+                val local = localBookingsCache.firstOrNull { it.qrReference.equals(normalizedCode, ignoreCase = true) }
+                processQrBooking(local, targetBizId, onSuccess, onFailure)
             }
+    }
+
+    private fun processQrBooking(
+        booking: Booking?,
+        businessId: String,
+        onSuccess: (Booking) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (booking == null) {
+            onFailure(IllegalArgumentException("Code not recognized. This reference does not match any booking."))
+            return
+        }
+
+        if (booking.businessId.isNotBlank() && businessId.isNotBlank() && booking.businessId != businessId) {
+            onFailure(IllegalStateException("Not for this business. This appointment belongs to another business."))
+            return
+        }
+
+        if (booking.status == "COMPLETED") {
+            onFailure(IllegalStateException("Already checked in. This appointment has already been completed."))
+            return
+        }
+
+        if (booking.status == "CANCELLED" || booking.status == "REJECTED") {
+            onFailure(IllegalStateException("Cannot verify an appointment marked as ${booking.status.lowercase()}."))
+            return
+        }
+
+        // Update status to COMPLETED in Firestore atomically
+        updateBookingStatus(
+            bookingId = booking.id,
+            newStatus = "COMPLETED",
+            onSuccess = {
+                onSuccess(booking.copy(status = "COMPLETED"))
+            },
+            onFailure = {
+                onSuccess(booking.copy(status = "COMPLETED"))
+            }
+        )
     }
 }
