@@ -350,7 +350,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <!-- Demonstration Note -->
+            <!-- Status Note -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -358,7 +358,7 @@
                 android:layout_marginBottom="24dp"
                 android:fontFamily="@font/inter_variable"
                 android:lineSpacingExtra="2dp"
-                android:text="Demonstration only. Completing this booking marks a customer review available."
+                android:text="Completing this appointment enables the customer to submit a verified rating and review."
                 android:textColor="@color/text_muted"
                 android:textSize="11sp" />
 
