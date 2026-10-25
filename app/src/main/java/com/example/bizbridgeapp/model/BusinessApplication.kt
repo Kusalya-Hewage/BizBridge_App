@@ -14,6 +14,7 @@ data class BusinessApplication(
     val ownerName: String = "",
     val email: String = "",
     val category: String = "",
+    val contactNumber: String = "",
     val address: String = "Colombo, Sri Lanka",
     val status: String = "PENDING", // PENDING, APPROVED, REJECTED
     val submittedAt: Timestamp? = null,
@@ -29,6 +30,7 @@ data class BusinessApplication(
         "ownerName" to ownerName,
         "email" to email,
         "category" to category,
+        "contactNumber" to contactNumber,
         "address" to address,
         "status" to status,
         "submittedAt" to (submittedAt ?: FieldValue.serverTimestamp()),
