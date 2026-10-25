@@ -495,13 +495,47 @@ object UserSessionManager {
         return list
     }
 
+    /** Update status of a qualification document locally */
+    fun updateQualificationStatus(docId: String, status: String, reason: String = "") {
+        if (!::prefs.isInitialized) return
+        val docs = getAllQualificationDocuments().map {
+            if (it.id == docId) {
+                it.copy(verificationStatus = status, rejectionReason = reason)
+            } else it
+        }
+        val array = JSONArray()
+        for (d in docs) {
+            val o = JSONObject()
+            o.put("id", d.id)
+            o.put("ownerId", d.ownerId)
+            o.put("businessId", d.businessId)
+            o.put("businessName", d.businessName)
+            o.put("title", d.title)
+            o.put("issuingOrg", d.issuingOrg)
+            o.put("experience", d.experience)
+            o.put("documentType", d.documentType)
+            o.put("storagePath", d.storagePath)
+            o.put("fileUrl", d.fileUrl)
+            o.put("verificationStatus", d.verificationStatus)
+            o.put("rejectionReason", d.rejectionReason)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_QUALIFICATIONS, array.toString()).apply()
+    }
+
     /** Retrieve qualification documents for a specific business or owner */
     fun getQualificationsForBusiness(businessId: String, ownerId: String = ""): List<QualificationDocument> {
         val all = getAllQualificationDocuments()
-        return all.filter {
-            (businessId.isNotBlank() && (it.businessId == businessId || it.businessId.startsWith("biz_"))) ||
+        val filtered = all.filter {
+            (businessId.isNotBlank() && it.businessId == businessId) ||
             (ownerId.isNotBlank() && it.ownerId == ownerId)
         }
+        if (filtered.isNotEmpty()) return filtered
+        // If query is for default/demo or initial state, return demo documents
+        if (businessId.isBlank() || businessId == "biz_juniper_studio" || ownerId == "owner_elena" || ownerId.isBlank()) {
+            return all.filter { it.businessId == "biz_juniper_studio" || it.ownerId == "owner_elena" }
+        }
+        return emptyList()
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */
