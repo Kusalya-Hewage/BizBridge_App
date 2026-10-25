@@ -76,6 +76,105 @@ object ReviewRepository {
             .addOnFailureListener { e -> onFailure(e) }
     }
 
+    val defaultDemoReviews = listOf(
+        Review(
+            id = "rev_maya",
+            customerId = "cust_maya",
+            customerName = "Maya Chen",
+            businessId = "biz_juniper_studio",
+            bookingId = "BB-24108",
+            rating = 5,
+            comment = "Elena listened to exactly what I wanted. Such a lovely neighbourhood studio.",
+            moderationStatus = "APPROVED"
+        ),
+        Review(
+            id = "rev_jordan",
+            customerId = "cust_jordan",
+            customerName = "Jordan Lee",
+            businessId = "biz_juniper_studio",
+            bookingId = "BB-23910",
+            rating = 5,
+            comment = "Consistently great cuts and calm atmosphere. Highly recommend Juniper Studio.",
+            moderationStatus = "APPROVED"
+        )
+    )
+
+    fun seedDefaultReviewsIfEmpty(businessId: String, onComplete: (List<Review>) -> Unit = {}) {
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        db.collection(REVIEWS).whereEqualTo("businessId", targetBizId).get().addOnSuccessListener { snap ->
+            if (snap.isEmpty) {
+                val batch = db.batch()
+                val seeded = defaultDemoReviews.map { r ->
+                    val docRef = db.collection(REVIEWS).document(r.id)
+                    val toSave = r.copy(businessId = targetBizId)
+                    batch.set(docRef, toSave.toMap())
+                    toSave
+                }
+                batch.commit()
+                    .addOnSuccessListener { onComplete(seeded) }
+                    .addOnFailureListener { onComplete(seeded) }
+            } else {
+                val list = snap.documents.mapNotNull { it.toObject(Review::class.java)?.copy(id = it.id) }
+                onComplete(list)
+            }
+        }.addOnFailureListener {
+            onComplete(defaultDemoReviews.map { it.copy(businessId = targetBizId) })
+        }
+    }
+
+    /**
+     * Real-time listener for reviews belonging to a business.
+     */
+    fun listenToReviewsForBusiness(
+        businessId: String,
+        onUpdate: (List<Review>) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration {
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
+        return db.collection(REVIEWS)
+            .whereEqualTo("businessId", targetBizId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) {
+                    onUpdate(defaultDemoReviews.filter { it.businessId == targetBizId })
+                    return@addSnapshotListener
+                }
+                if (snapshot.isEmpty) {
+                    seedDefaultReviewsIfEmpty(targetBizId) { seeded ->
+                        onUpdate(seeded)
+                    }
+                } else {
+                    val list = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(Review::class.java)?.copy(id = doc.id)
+                    }
+                    onUpdate(list)
+                }
+            }
+    }
+
+    /**
+     * Submit moderation report for an inappropriate review (Phase 7 - Reviews & Reports).
+     */
+    fun reportReview(
+        reviewId: String,
+        reason: String,
+        reporterId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val reportDoc = db.collection("reports").document()
+        val data = hashMapOf(
+            "id" to reportDoc.id,
+            "targetType" to "REVIEW",
+            "targetId" to reviewId,
+            "reason" to reason,
+            "reporterId" to reporterId,
+            "status" to "PENDING",
+            "createdAt" to FieldValue.serverTimestamp()
+        )
+        reportDoc.set(data)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it) }
+    }
+
     /**
      * Retrieve all reviews for a business.
      */
@@ -84,14 +183,21 @@ object ReviewRepository {
         onSuccess: (List<Review>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
         db.collection(REVIEWS)
-            .whereEqualTo("businessId", businessId)
+            .whereEqualTo("businessId", targetBizId)
             .get()
             .addOnSuccessListener { snapshot ->
-                val list = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Review::class.java)?.copy(id = doc.id)
+                if (snapshot.isEmpty) {
+                    seedDefaultReviewsIfEmpty(targetBizId) { seeded ->
+                        onSuccess(seeded)
+                    }
+                } else {
+                    val list = snapshot.documents.mapNotNull { doc ->
+                        doc.toObject(Review::class.java)?.copy(id = doc.id)
+                    }
+                    onSuccess(list)
                 }
-                onSuccess(list)
             }
             .addOnFailureListener { e -> onFailure(e) }
     }
