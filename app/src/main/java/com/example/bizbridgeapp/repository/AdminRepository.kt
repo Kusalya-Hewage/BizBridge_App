@@ -207,6 +207,7 @@ object AdminRepository {
                     approvalStatus = "APPROVED",
                     verificationStatus = "VERIFIED"
                 )
+                TrustScoreRepository.recalculateTrustScore(targetBizId)
 
                 val appRef = db.collection(APPLICATIONS).document(finalApp.id)
                 val bizRef = db.collection(BUSINESSES).document(targetBizId)
