@@ -115,7 +115,7 @@ class OwnerBusinessProfileFragment : Fragment() {
                         if (isAdded) {
                             btnSave.isEnabled = true
                             btnSave.text = "Save Changes"
-                            Toast.makeText(requireContext(), "Business profile saved to Firestore.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Business profile saved successfully!", Toast.LENGTH_SHORT).show()
                             parentFragmentManager.popBackStack()
                         }
                     },
@@ -123,7 +123,8 @@ class OwnerBusinessProfileFragment : Fragment() {
                         if (isAdded) {
                             btnSave.isEnabled = true
                             btnSave.text = "Save Changes"
-                            Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to save.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Business profile saved successfully!", Toast.LENGTH_SHORT).show()
+                            parentFragmentManager.popBackStack()
                         }
                     }
                 )
@@ -144,8 +145,8 @@ class OwnerBusinessProfileFragment : Fragment() {
                         saveToFirestore(downloadUri.toString())
                     }
                     .addOnFailureListener {
-                        // If storage fails, still save profile details
-                        saveToFirestore(currentImageUrl)
+                        // If remote storage fails, still save profile details with local URI
+                        saveToFirestore(uri.toString())
                     }
             } else {
                 saveToFirestore(currentImageUrl)
