@@ -214,7 +214,7 @@ class AdminApplicationReviewFragment : Fragment() {
                         }
                         docsContainer.addView(emptyView)
                         return@getDocumentsForBusiness
-                    }Views()
+                    }
 
                     for (doc in docs) {
                         val docCard = android.widget.LinearLayout(requireContext()).apply {
