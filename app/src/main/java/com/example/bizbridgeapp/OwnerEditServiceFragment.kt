@@ -25,13 +25,6 @@ class OwnerEditServiceFragment : Fragment() {
     private var currentBusinessId: String = "biz_juniper_studio"
     private lateinit var imagePickerHelper: ImagePickerHelper
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        imagePickerHelper = ImagePickerHelper(this) { uri ->
-            Toast.makeText(requireContext(), "Service image selected from ${if (uri.scheme == "file" || uri.path?.contains("photo_") == true) "Camera" else "Gallery"}!", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     companion object {
         private const val ARG_IS_EDIT = "arg_is_edit"
         private const val ARG_SERVICE_ID = "arg_service_id"
@@ -63,6 +56,9 @@ class OwnerEditServiceFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        imagePickerHelper = ImagePickerHelper(this) { uri ->
+            Toast.makeText(requireContext(), "Service image selected from ${if (uri.scheme == "file" || uri.path?.contains("photo_") == true) "Camera" else "Gallery"}!", Toast.LENGTH_SHORT).show()
+        }
         arguments?.let {
             isEditMode = it.getBoolean(ARG_IS_EDIT, false)
             serviceId = it.getString(ARG_SERVICE_ID, "")
