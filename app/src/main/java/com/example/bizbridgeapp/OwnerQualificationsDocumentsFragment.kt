@@ -24,7 +24,7 @@ import com.google.firebase.storage.FirebaseStorage
 class OwnerQualificationsDocumentsFragment : Fragment() {
 
     private var docsListener: ListenerRegistration? = null
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
     private var selectedDocUri: Uri? = null
     private lateinit var imagePickerHelper: ImagePickerHelper
 
@@ -60,7 +60,6 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
 
         val btnSelectFile = view.findViewById<Button>(R.id.btn_select_doc_file)
         val btnUpload = view.findViewById<Button>(R.id.btn_upload_document)
-        val btnResubmit = view.findViewById<TextView>(R.id.btn_resubmit_document)
 
         // Attach optional certificate image
         btnSelectFile?.setOnClickListener {
@@ -72,10 +71,8 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
             submitQualificationFromInputs()
         }
 
-        // Resubmit document via Camera or Gallery
-        btnResubmit?.setOnClickListener {
-            imagePickerHelper.showImageSourceDialog("Resubmit Certificate")
-        }
+        // Call initial render immediately
+        renderSubmittedDocuments(view, emptyList())
 
         // Real-time listener for Qualification Documents
         docsListener = QualificationRepository.listenToQualificationsForBusiness(currentBusinessId) { list ->
@@ -187,14 +184,33 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
 
     private fun renderSubmittedDocuments(rootView: View, docs: List<QualificationDocument>) {
         val container = rootView.findViewById<LinearLayout>(R.id.ll_submitted_documents_container) ?: return
+        container.removeAllViews()
+
         val effectiveDocs = if (docs.isNotEmpty()) {
             docs
         } else {
             UserSessionManager.getQualificationsForBusiness(currentBusinessId)
         }
-        if (effectiveDocs.isEmpty()) return
 
-        container.removeAllViews()
+        if (effectiveDocs.isEmpty()) {
+            val emptyCard = TextView(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = (10 * resources.displayMetrics.density).toInt()
+                }
+                text = "No qualification documents submitted yet.\nUse the form above to submit your credentials to Admin for verification."
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
+                textSize = 13f
+                gravity = android.view.Gravity.CENTER
+                val pad = (20 * resources.displayMetrics.density).toInt()
+                setPadding(pad, pad, pad, pad)
+                background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_card_white)
+            }
+            container.addView(emptyCard)
+            return
+        }
 
         for (doc in effectiveDocs) {
             val card = LinearLayout(requireContext()).apply {
