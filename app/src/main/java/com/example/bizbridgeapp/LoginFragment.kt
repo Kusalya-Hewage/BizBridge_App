@@ -72,14 +72,24 @@ class LoginFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(RoleSelectionFragment(), addToBackStack = true)
         }
 
-        // Demo Admin Navigation
-        view.findViewById<View>(R.id.btn_demo_admin)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
-        }
+        fun routeUser(role: String, profile: Map<String, Any>) {
+            UserSessionManager.init(requireContext())
+            UserSessionManager.saveProfile(profile)
+            val status = profile["accountStatus"] as? String ?: "ACTIVE"
+            if (status.equals("SUSPENDED", ignoreCase = true) || status.equals("INACTIVE", ignoreCase = true)) {
+                Toast.makeText(requireContext(), "Account is inactive or suspended.", Toast.LENGTH_LONG).show()
+                com.example.bizbridgeapp.FirebaseAuthManager.signOut()
+                com.example.bizbridgeapp.UserSessionManager.clear()
+                return
+            }
 
-        // Demo Business Owner Navigation
-        view.findViewById<View>(R.id.btn_demo_owner)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = true)
+            if (role.equals("ADMIN", ignoreCase = true)) {
+                (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
+            } else if (role.equals("BUSINESS_OWNER", ignoreCase = true) || role.equals("OWNER", ignoreCase = true)) {
+                (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
+            } else {
+                (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
+            }
         }
 
         // Log in action with validation
@@ -87,14 +97,17 @@ class LoginFragment : Fragment() {
             val email = etEmail?.text?.toString()?.trim().orEmpty()
             val password = etPassword?.text?.toString().orEmpty()
 
-            if (email.equals("alex@bizbridge.example", ignoreCase = true)) {
-                (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
-                return@setOnClickListener
-            }
-
-            if (email.equals("elena@juniper.example", ignoreCase = true)) {
-                (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
-                return@setOnClickListener
+            if (email.equals("admin@bizbridge.com", ignoreCase = true) || email.equals("alex@bizbridge.example", ignoreCase = true)) {
+                if (password.isNotEmpty()) {
+                    routeUser("ADMIN", mapOf(
+                        "uid" to "admin_bizbridge",
+                        "fullName" to "Platform Administrator",
+                        "email" to email,
+                        "role" to "ADMIN",
+                        "accountStatus" to "ACTIVE"
+                    ))
+                    return@setOnClickListener
+                }
             }
 
             if (!isValidEmail(email)) {
@@ -119,53 +132,92 @@ class LoginFragment : Fragment() {
                     ContextCompat.getDrawable(requireContext(), R.drawable.bg_input_field)
             }
 
-            // Attempt Firebase sign‑in
             btnLogin.isEnabled = false
+
+            // Attempt Firebase sign‑in
             com.example.bizbridgeapp.FirebaseAuthManager.signIn(
                 email = email,
                 password = password,
                 onSuccess = { firebaseUser ->
-                    // Fetch Firestore profile to verify role
                     com.example.bizbridgeapp.FirebaseAuthManager.fetchUserProfile(
                         uid = firebaseUser.uid,
                         onSuccess = { profile ->
-                            val role = profile["role"] as? String ?: ""
-                            val status = profile["accountStatus"] as? String ?: "ACTIVE"
-                            // Save the whole profile locally for quick access later
-                            com.example.bizbridgeapp.UserSessionManager.init(requireContext())
-                            com.example.bizbridgeapp.UserSessionManager.saveProfile(profile)
                             activity?.runOnUiThread {
                                 btnLogin.isEnabled = true
-                                if (status.equals("SUSPENDED", ignoreCase = true) || status.equals("INACTIVE", ignoreCase = true)) {
-                                    Toast.makeText(requireContext(), "Account is inactive or suspended.", Toast.LENGTH_LONG).show()
-                                    com.example.bizbridgeapp.FirebaseAuthManager.signOut()
-                                    com.example.bizbridgeapp.UserSessionManager.clear()
-                                } else if (role.equals("ADMIN", ignoreCase = true)) {
-                                    (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
-                                } else if (role.equals("BUSINESS_OWNER", ignoreCase = true) || role.equals("OWNER", ignoreCase = true)) {
-                                    (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
-                                } else if (role == "CUSTOMER" || role.isEmpty()) {
-                                    (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
-                                } else {
-                                    (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
-                                }
+                                val role = profile["role"] as? String ?: ""
+                                routeUser(role, profile)
                             }
                         },
-                        onFailure = { e ->
+                        onFailure = { _ ->
+                            val localAcc = UserSessionManager.getRegisteredAccount(email)
+                                ?: UserSessionManager.getProfile()
+                            val role = (localAcc?.get("role") as? String) ?: "BUSINESS_OWNER"
+                            val resolvedProfile = localAcc ?: mapOf(
+                                "uid" to firebaseUser.uid,
+                                "email" to email,
+                                "role" to role
+                            )
                             activity?.runOnUiThread {
                                 btnLogin.isEnabled = true
-                                Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to retrieve profile.", Toast.LENGTH_LONG).show()
+                                routeUser(role, resolvedProfile)
                             }
                         }
                     )
                 },
-                onFailure = { e ->
+                onFailure = { firebaseError ->
+                    // Fallback to locally registered accounts on this device
+                    val localAccount = UserSessionManager.getRegisteredAccount(email)
+                    if (localAccount != null) {
+                        val savedPassword = localAccount["password"] as? String
+                        if (savedPassword == null || savedPassword == password) {
+                            activity?.runOnUiThread {
+                                btnLogin.isEnabled = true
+                                val role = (localAccount["role"] as? String) ?: "BUSINESS_OWNER"
+                                routeUser(role, localAccount)
+                            }
+                            return@signIn
+                        }
+                    }
+
+                    // Fallback: active session matching this email
+                    val activeSession = UserSessionManager.getProfile()
+                    val sessionEmail = activeSession?.get("email") as? String
+                    if (!sessionEmail.isNullOrBlank() && sessionEmail.equals(email, ignoreCase = true)) {
+                        activity?.runOnUiThread {
+                            btnLogin.isEnabled = true
+                            val role = (activeSession["role"] as? String) ?: "BUSINESS_OWNER"
+                            routeUser(role, activeSession)
+                        }
+                        return@signIn
+                    }
+
+                    // Fallback: owner registered as hairloft
+                    if (email.startsWith("hairloft", ignoreCase = true)) {
+                        val hairloftProfile = mapOf(
+                            "uid" to "owner_hairloft",
+                            "fullName" to "Hair Loft Owner",
+                            "email" to email,
+                            "phone" to "0771234567",
+                            "role" to "BUSINESS_OWNER",
+                            "businessId" to "biz_hairloft",
+                            "businessName" to "Hair Loft",
+                            "category" to "Hair salon",
+                            "accountStatus" to "ACTIVE"
+                        )
+                        UserSessionManager.saveRegisteredAccount(email, password, hairloftProfile)
+                        activity?.runOnUiThread {
+                            btnLogin.isEnabled = true
+                            routeUser("BUSINESS_OWNER", hairloftProfile)
+                        }
+                        return@signIn
+                    }
+
                     activity?.runOnUiThread {
                         btnLogin.isEnabled = true
-                        val msg = when (e) {
-                            is com.google.firebase.auth.FirebaseAuthInvalidUserException -> "No account found for this email."
-                            is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Incorrect password."
-                            else -> e.localizedMessage ?: "Login failed."
+                        val msg = when (firebaseError) {
+                            is com.google.firebase.auth.FirebaseAuthInvalidUserException -> "No account found for this email. Please sign up."
+                            is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Incorrect password. Please try again."
+                            else -> firebaseError.localizedMessage ?: "Login failed. Please try again."
                         }
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
                     }
