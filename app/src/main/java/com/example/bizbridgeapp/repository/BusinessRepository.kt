@@ -452,15 +452,19 @@ object BusinessRepository {
         }
 
         // 4. Immediately persist to registered accounts so future logins preserve business name
+        val acctUpdates = mutableMapOf<String, Any>(
+            "businessName" to name,
+            "category" to category,
+            "phone" to contactNumber,
+            "address" to address,
+            "description" to description
+        )
+        if (!imageUrl.isNullOrBlank()) {
+            acctUpdates["imageUrl"] = imageUrl
+        }
         com.example.bizbridgeapp.UserSessionManager.updateRegisteredAccountBusiness(
             targetId,
-            mapOf(
-                "businessName" to name,
-                "category" to category,
-                "phone" to contactNumber,
-                "address" to address,
-                "description" to description
-            )
+            acctUpdates
         )
 
         val docRef = db.collection(COLLECTION).document(targetId)
