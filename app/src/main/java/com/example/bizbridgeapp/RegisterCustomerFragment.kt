@@ -156,15 +156,16 @@ class RegisterCustomerFragment : Fragment() {
                 onSuccess = { firebaseUser ->
                     activity?.runOnUiThread {
                         // Initialize session manager and save profile locally
-                        UserSessionManager.init(requireContext())
-                        UserSessionManager.saveProfile(mapOf(
+                        val custProfile = mapOf(
                             "uid" to firebaseUser.uid,
                             "fullName" to name,
                             "email" to email,
                             "phone" to phone,
                             "role" to "CUSTOMER",
                             "accountStatus" to "ACTIVE"
-                        ))
+                        )
+                        UserSessionManager.saveRegisteredAccount(email, password, custProfile)
+                        UserSessionManager.saveProfile(custProfile)
                         btnCreateAccount.isEnabled = true
                         AlertDialog.Builder(requireContext())
                             .setTitle("Account Created")
