@@ -39,7 +39,7 @@
         android:orientation="vertical">
 
         <!-- Primary Confirm Action Button -->
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_dialog_confirm"
             android:layout_width="match_parent"
             android:layout_height="48dp"
@@ -53,7 +53,7 @@
             android:textStyle="bold" />
 
         <!-- Cancel / Safe Way Back Button -->
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_dialog_cancel"
             android:layout_width="match_parent"
             android:layout_height="48dp"
