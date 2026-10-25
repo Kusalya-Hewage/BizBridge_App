@@ -21,7 +21,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <!-- Top Demonstration Badge -->
+            <!-- Top Console Badge -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN · LIVE FIRESTORE DATA"
+                    android:text="ADMIN CONSOLE · OPERATIONS"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -67,7 +67,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Friday, October 23 · Operations workspace"
+                        android:text="Platform Operations &amp; Moderation"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -107,7 +107,7 @@
                     android:layout_weight="1"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="2dp"
-                    android:text="Privileged access · Demonstration workspace. Administrative actions are static examples."
+                    android:text="Privileged access · Platform Administration Console. Review and moderate businesses in real time."
                     android:textColor="@color/admin_primary"
                     android:textSize="12sp" />
             </LinearLayout>
