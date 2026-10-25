@@ -10,10 +10,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.repository.BookingRepository
+import com.example.bizbridgeapp.repository.BusinessRepository
 
 class OwnerQrVerificationFragment : Fragment() {
 
     private var initialRef: String = "BB-24108"
+    private var currentBusinessId: String = "biz_juniper_studio"
 
     companion object {
         fun newInstance(reference: String = "BB-24108"): OwnerQrVerificationFragment {
@@ -28,6 +31,7 @@ class OwnerQrVerificationFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.getString("reference")?.let { initialRef = it }
+        currentBusinessId = BusinessRepository.getOwnerBusinessId()
     }
 
     override fun onCreateView(
@@ -54,75 +58,95 @@ class OwnerQrVerificationFragment : Fragment() {
             etRef?.setText("BB-24108")
         }
         view.findViewById<TextView>(R.id.pill_test_checked_in)?.setOnClickListener {
-            etRef?.setText("BB-23974")
+            etRef?.setText("BB-23914")
         }
         view.findViewById<TextView>(R.id.pill_test_wrong_biz)?.setOnClickListener {
-            etRef?.setText("BB-24120")
+            etRef?.setText("BB-99999")
         }
 
-        // Look Up & Enter Booking
-        view.findViewById<Button>(R.id.btn_lookup_booking)?.setOnClickListener {
-            val code = etRef?.text?.toString()?.trim()?.uppercase().orEmpty()
+        val btnLookup = view.findViewById<Button>(R.id.btn_lookup_booking)
 
-            when {
-                code == "BB-24108" -> {
-                    // Valid appointment dialog (Page 3 Supporting State)
+        // Look Up & Enter Booking using real Firestore verification
+        btnLookup?.setOnClickListener {
+            val code = etRef?.text?.toString()?.trim()?.uppercase().orEmpty()
+            if (code.isEmpty()) {
+                Toast.makeText(requireContext(), "Please enter a booking reference or QR code.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            btnLookup.isEnabled = false
+            btnLookup.text = "Verifying…"
+
+            BookingRepository.verifyBookingQr(
+                businessId = currentBusinessId,
+                qrRef = code,
+                onSuccess = { booking ->
+                    if (!isAdded) return@verifyBookingQr
+                    btnLookup.isEnabled = true
+                    btnLookup.text = "Look Up & Enter"
+
                     OwnerDialogHelper.showQrOutcomeDialog(
                         context = requireContext(),
                         title = "Valid appointment",
-                        message = "BB-24108 belongs to Juniper Studio. Maya Chen · Signature haircut · Oct 24, 10:00 AM.",
-                        primaryButtonText = "Confirm Arrival",
+                        message = "${booking.qrReference.ifEmpty { booking.id }} belongs to your business.\nService: ${booking.serviceNameSnapshot}\nDate: ${booking.appointmentDate} at ${booking.appointmentTime}.",
+                        primaryButtonText = "Confirm Arrival & Complete",
                         secondaryButtonText = "Back to Scanner",
-                        badgeText = "Demonstration result only · No code was scanned or verified.",
+                        badgeText = "Verified Live via Firebase Cloud Database",
                         onPrimaryAction = {
-                            Toast.makeText(requireContext(), "Arrival confirmed for Maya Chen (BB-24108).", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Arrival confirmed and appointment marked COMPLETED.", Toast.LENGTH_SHORT).show()
                             parentFragmentManager.popBackStack()
                         }
                     )
-                }
-                code == "BB-23974" -> {
-                    // Already checked in dialog (Page 3 Supporting State)
-                    OwnerDialogHelper.showQrOutcomeDialog(
-                        context = requireContext(),
-                        title = "Already checked in",
-                        message = "BB-23974 was checked in and completed on Oct 10, 2026. This code cannot be used again.",
-                        primaryButtonText = "View Booking History",
-                        secondaryButtonText = "Back to Scanner",
-                        badgeText = "Demonstration result only · No code was scanned or verified.",
-                        onPrimaryAction = {
-                            Toast.makeText(requireContext(), "Opening booking history.", Toast.LENGTH_SHORT).show()
+                },
+                onFailure = { e ->
+                    if (!isAdded) return@verifyBookingQr
+                    btnLookup.isEnabled = true
+                    btnLookup.text = "Look Up & Enter"
+
+                    val msg = e.message.orEmpty()
+                    when {
+                        msg.contains("Already checked in", ignoreCase = true) -> {
+                            OwnerDialogHelper.showQrOutcomeDialog(
+                                context = requireContext(),
+                                title = "Already checked in",
+                                message = "$code has already been checked in and marked completed. This QR code cannot be reused.",
+                                primaryButtonText = "View Booking History",
+                                secondaryButtonText = "Back to Scanner",
+                                badgeText = "Live Firestore Record Check",
+                                onPrimaryAction = {
+                                    (activity as? MainActivity)?.navigateTo(OwnerManageBookingsFragment(), addToBackStack = true)
+                                }
+                            )
                         }
-                    )
-                }
-                code == "BB-24120" -> {
-                    // Not for this business dialog (Page 3 Supporting State)
-                    OwnerDialogHelper.showQrOutcomeDialog(
-                        context = requireContext(),
-                        title = "Not for this business",
-                        message = "BB-24120 is for Bloom Beauty Bar, not Juniper Studio. Do not check in this appointment.",
-                        primaryButtonText = "Scan Another Code",
-                        secondaryButtonText = "Back to Scanner",
-                        badgeText = "Demonstration result only · No code was scanned or verified.",
-                        onPrimaryAction = {
-                            etRef?.setText("")
+                        msg.contains("Not for this business", ignoreCase = true) -> {
+                            OwnerDialogHelper.showQrOutcomeDialog(
+                                context = requireContext(),
+                                title = "Not for this business",
+                                message = "$code is booked for a different service provider. Do not check in this appointment.",
+                                primaryButtonText = "Scan Another Code",
+                                secondaryButtonText = "Back to Scanner",
+                                badgeText = "Live Firestore Cross-Business Security Check",
+                                onPrimaryAction = {
+                                    etRef?.setText("")
+                                }
+                            )
                         }
-                    )
-                }
-                else -> {
-                    // Code not recognized dialog (Page 3 Supporting State)
-                    OwnerDialogHelper.showQrOutcomeDialog(
-                        context = requireContext(),
-                        title = "Code not recognized",
-                        message = "This sample code does not match a booking. Check the reference or ask the customer to open Booking Details.",
-                        primaryButtonText = "Try Another Reference",
-                        secondaryButtonText = "Back to Scanner",
-                        badgeText = "Demonstration result only · No code was scanned or verified.",
-                        onPrimaryAction = {
-                            etRef?.selectAll()
+                        else -> {
+                            OwnerDialogHelper.showQrOutcomeDialog(
+                                context = requireContext(),
+                                title = "Code not recognized",
+                                message = "The reference '$code' does not match any appointment in Firestore. Please verify the code or ask the customer to open Booking Details.",
+                                primaryButtonText = "Try Another Reference",
+                                secondaryButtonText = "Back to Scanner",
+                                badgeText = "Firestore Search Result",
+                                onPrimaryAction = {
+                                    etRef?.selectAll()
+                                }
+                            )
                         }
-                    )
+                    }
                 }
-            }
+            )
         }
     }
 }
