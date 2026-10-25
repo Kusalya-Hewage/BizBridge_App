@@ -205,7 +205,12 @@ object AdminRepository {
                     approved = true,
                     active = true,
                     approvalStatus = "APPROVED",
-                    verificationStatus = "VERIFIED"
+                    verificationStatus = "VERIFIED",
+                    name = finalApp.businessName,
+                    category = finalApp.category,
+                    address = finalApp.address,
+                    ownerId = finalApp.ownerId,
+                    contactNumber = finalApp.contactNumber
                 )
                 TrustScoreRepository.recalculateTrustScore(targetBizId)
 
@@ -222,17 +227,22 @@ object AdminRepository {
                     ),
                     com.google.firebase.firestore.SetOptions.merge()
                 )
-                batch.set(
-                    bizRef,
-                    mapOf(
-                        "approved" to true,
-                        "active" to true,
-                        "approvalStatus" to "APPROVED",
-                        "verificationStatus" to "VERIFIED",
-                        "updatedAt" to FieldValue.serverTimestamp()
-                    ),
-                    com.google.firebase.firestore.SetOptions.merge()
+
+                val bizData = mutableMapOf<String, Any>(
+                    "id" to targetBizId,
+                    "approved" to true,
+                    "active" to true,
+                    "approvalStatus" to "APPROVED",
+                    "verificationStatus" to "VERIFIED",
+                    "updatedAt" to FieldValue.serverTimestamp()
                 )
+                if (finalApp.businessName.isNotBlank()) bizData["name"] = finalApp.businessName
+                if (finalApp.category.isNotBlank()) bizData["category"] = finalApp.category
+                if (finalApp.address.isNotBlank()) bizData["address"] = finalApp.address
+                if (finalApp.ownerId.isNotBlank()) bizData["ownerId"] = finalApp.ownerId
+                if (finalApp.contactNumber.isNotBlank()) bizData["contactNumber"] = finalApp.contactNumber
+
+                batch.set(bizRef, bizData, com.google.firebase.firestore.SetOptions.merge())
 
                 // Audit log
                 val logRef = db.collection(AUDIT_LOGS).document()
@@ -440,10 +450,17 @@ object AdminRepository {
         val logRef = db.collection(AUDIT_LOGS).document()
 
         val batch = db.batch()
-        batch.update(bizRef, mapOf(
-            "active" to active,
-            "updatedAt" to FieldValue.serverTimestamp()
-        ))
+        batch.set(
+            bizRef,
+            mapOf(
+                "approved" to active,
+                "active" to active,
+                "approvalStatus" to (if (active) "APPROVED" else "SUSPENDED"),
+                "verificationStatus" to (if (active) "VERIFIED" else "PENDING"),
+                "updatedAt" to FieldValue.serverTimestamp()
+            ),
+            com.google.firebase.firestore.SetOptions.merge()
+        )
         val log = AdminAuditLog(
             id = logRef.id,
             adminUid = adminUid,
@@ -457,8 +474,26 @@ object AdminRepository {
         batch.set(logRef, log.toMap())
 
         batch.commit()
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener {
+                com.example.bizbridgeapp.UserSessionManager.updateBusinessApprovalStatus(
+                    businessId = businessId,
+                    approved = active,
+                    active = active,
+                    approvalStatus = if (active) "APPROVED" else "SUSPENDED",
+                    verificationStatus = if (active) "VERIFIED" else "PENDING"
+                )
+                onSuccess()
+            }
+            .addOnFailureListener {
+                com.example.bizbridgeapp.UserSessionManager.updateBusinessApprovalStatus(
+                    businessId = businessId,
+                    approved = active,
+                    active = active,
+                    approvalStatus = if (active) "APPROVED" else "SUSPENDED",
+                    verificationStatus = if (active) "VERIFIED" else "PENDING"
+                )
+                onSuccess()
+            }
     }
 
     /** Record an administrative audit log */
