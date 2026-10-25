@@ -102,6 +102,8 @@ object FirebaseAuthManager {
                     "role" to "BUSINESS_OWNER",
                     "profileImageUrl" to "",
                     "businessId" to businessId,
+                    "businessName" to businessName,
+                    "category" to category,
                     "accountStatus" to "ACTIVE",
                     "createdAt" to FieldValue.serverTimestamp(),
                     "updatedAt" to FieldValue.serverTimestamp()
@@ -180,6 +182,8 @@ object FirebaseAuthManager {
                                     "phone" to phone,
                                     "role" to "BUSINESS_OWNER",
                                     "businessId" to businessId,
+                                    "businessName" to businessName,
+                                    "category" to category,
                                     "accountStatus" to "ACTIVE",
                                     "updatedAt" to FieldValue.serverTimestamp()
                                 )
@@ -229,6 +233,8 @@ object FirebaseAuthManager {
                         "role" to "BUSINESS_OWNER",
                         "profileImageUrl" to "",
                         "businessId" to businessId,
+                        "businessName" to businessName,
+                        "category" to category,
                         "accountStatus" to "ACTIVE",
                         "createdAt" to FieldValue.serverTimestamp(),
                         "updatedAt" to FieldValue.serverTimestamp()
@@ -344,10 +350,42 @@ object FirebaseAuthManager {
     ) {
         firestore.collection("users").document(uid).get()
             .addOnSuccessListener { snap ->
-                if (snap.exists()) {
-                    onSuccess(snap.data ?: emptyMap())
+                if (snap.exists() && snap.data != null) {
+                    val data = snap.data!!.toMutableMap()
+                    val bizId = data["businessId"] as? String
+                    if (!bizId.isNullOrBlank() && (data["businessName"] == null || (data["businessName"] as? String).isNullOrBlank())) {
+                        firestore.collection("businesses").document(bizId).get()
+                            .addOnSuccessListener { bSnap ->
+                                if (bSnap.exists()) {
+                                    data["businessName"] = bSnap.getString("name") ?: ""
+                                    data["category"] = bSnap.getString("category") ?: "Hair salon"
+                                }
+                                onSuccess(data)
+                            }
+                            .addOnFailureListener { onSuccess(data) }
+                    } else {
+                        onSuccess(data)
+                    }
                 } else {
-                    onFailure(Exception("User profile not found in Firestore"))
+                    // Fallback: check businesses collection where ownerId == uid
+                    firestore.collection("businesses").whereEqualTo("ownerId", uid).limit(1).get()
+                        .addOnSuccessListener { querySnap ->
+                            if (!querySnap.isEmpty) {
+                                val bDoc = querySnap.documents.first()
+                                val recovered = mutableMapOf<String, Any>(
+                                    "uid" to uid,
+                                    "role" to "BUSINESS_OWNER",
+                                    "businessId" to bDoc.id,
+                                    "businessName" to (bDoc.getString("name") ?: "My Business"),
+                                    "category" to (bDoc.getString("category") ?: "Hair salon"),
+                                    "accountStatus" to "ACTIVE"
+                                )
+                                onSuccess(recovered)
+                            } else {
+                                onFailure(Exception("User profile not found in Firestore"))
+                            }
+                        }
+                        .addOnFailureListener { onFailure(Exception("User profile not found in Firestore")) }
                 }
             }
             .addOnFailureListener { e -> onFailure(e) }
