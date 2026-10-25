@@ -17,7 +17,14 @@ data class AdminOverviewStats(
     val pendingApplications: Int = 0,
     val verifiedBusinesses: Int = 0,
     val openReports: Int = 0,
-    val totalBookings: Int = 0
+    val reviewReportsCount: Int = 0,
+    val listingReportsCount: Int = 0,
+    val totalBookings: Int = 0,
+    val pendingBookings: Int = 0,
+    val confirmedBookings: Int = 0,
+    val completedBookings: Int = 0,
+    val cancelledBookings: Int = 0,
+    val pendingDocuments: Int = 0
 )
 
 object AdminRepository {
@@ -32,23 +39,37 @@ object AdminRepository {
     /** Listen to real-time Admin Overview statistics */
     fun listenToOverviewStats(onUpdate: (AdminOverviewStats) -> Unit): ListenerRegistration {
         return db.collection(BUSINESSES).addSnapshotListener { bizSnap, _ ->
-            val allBiz = bizSnap?.documents?.mapNotNull { it.toObject(Business::class.java) } ?: emptyList()
+            val firestoreBiz = bizSnap?.documents?.mapNotNull { it.toObject(Business::class.java) } ?: emptyList()
+            val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+            val allBiz = (firestoreBiz + localBiz).distinctBy { it.id }
             val totalBiz = allBiz.size
-            val verifiedBiz = allBiz.count { it.verificationStatus == "VERIFIED" }
+            val verifiedBiz = allBiz.count { it.verificationStatus == "VERIFIED" || it.approved }
+
+            val localPendingApps = com.example.bizbridgeapp.UserSessionManager.getAllApplications().count { it.status.equals("PENDING", ignoreCase = true) }
+            val localPendingDocs = com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments().count { it.verificationStatus.equals("PENDING", ignoreCase = true) }
+            val localUsers = com.example.bizbridgeapp.UserSessionManager.getAllRegisteredAccounts().size
 
             db.collection(APPLICATIONS).whereEqualTo("status", "PENDING").get()
                 .addOnSuccessListener { appSnap ->
-                    val pendingApps = appSnap.size()
+                    val pendingApps = maxOf(appSnap.size(), localPendingApps)
 
                     db.collection(USERS).get().addOnSuccessListener { userSnap ->
-                        val totalUsers = userSnap.size()
+                        val totalUsers = maxOf(userSnap.size(), localUsers)
 
-                        db.collection(REPORTS).whereEqualTo("status", "OPEN").get()
+                        db.collection(REPORTS).whereIn("status", listOf("OPEN", "PENDING")).get()
                             .addOnSuccessListener { repSnap ->
                                 val openReports = repSnap.size()
+                                val reviewReports = repSnap.documents.count { (it.getString("targetType") ?: "").equals("REVIEW", ignoreCase = true) }
+                                val listingReports = maxOf(0, openReports - reviewReports)
 
                                 db.collection(BOOKINGS).get().addOnSuccessListener { bkSnap ->
-                                    val totalBookings = bkSnap.size()
+                                    val bookings = bkSnap.documents.mapNotNull { it.toObject(com.example.bizbridgeapp.model.Booking::class.java) }
+                                    val totalBookings = bookings.size
+                                    val pendingBookings = bookings.count { it.status == "PENDING" }
+                                    val confirmedBookings = bookings.count { it.status == "CONFIRMED" }
+                                    val completedBookings = bookings.count { it.status == "COMPLETED" }
+                                    val cancelledBookings = bookings.count { it.status == "CANCELLED" }
+
                                     onUpdate(
                                         AdminOverviewStats(
                                             totalUsers = totalUsers,
@@ -56,14 +77,62 @@ object AdminRepository {
                                             pendingApplications = pendingApps,
                                             verifiedBusinesses = verifiedBiz,
                                             openReports = openReports,
-                                            totalBookings = totalBookings
+                                            reviewReportsCount = reviewReports,
+                                            listingReportsCount = listingReports,
+                                            totalBookings = totalBookings,
+                                            pendingBookings = pendingBookings,
+                                            confirmedBookings = confirmedBookings,
+                                            completedBookings = completedBookings,
+                                            cancelledBookings = cancelledBookings,
+                                            pendingDocuments = localPendingDocs
                                         )
                                     )
                                 }.addOnFailureListener {
-                                    onUpdate(AdminOverviewStats(totalUsers, totalBiz, pendingApps, verifiedBiz, openReports))
+                                    onUpdate(
+                                        AdminOverviewStats(
+                                            totalUsers = totalUsers,
+                                            totalBusinesses = totalBiz,
+                                            pendingApplications = pendingApps,
+                                            verifiedBusinesses = verifiedBiz,
+                                            openReports = openReports,
+                                            reviewReportsCount = reviewReports,
+                                            listingReportsCount = listingReports,
+                                            pendingDocuments = localPendingDocs
+                                        )
+                                    )
                                 }
+                            }.addOnFailureListener {
+                                onUpdate(
+                                    AdminOverviewStats(
+                                        totalUsers = totalUsers,
+                                        totalBusinesses = totalBiz,
+                                        pendingApplications = pendingApps,
+                                        verifiedBusinesses = verifiedBiz,
+                                        pendingDocuments = localPendingDocs
+                                    )
+                                )
                             }
+                    }.addOnFailureListener {
+                        onUpdate(
+                            AdminOverviewStats(
+                                totalUsers = localUsers,
+                                totalBusinesses = totalBiz,
+                                pendingApplications = pendingApps,
+                                verifiedBusinesses = verifiedBiz,
+                                pendingDocuments = localPendingDocs
+                            )
+                        )
                     }
+                }.addOnFailureListener {
+                    onUpdate(
+                        AdminOverviewStats(
+                            totalUsers = localUsers,
+                            totalBusinesses = totalBiz,
+                            pendingApplications = localPendingApps,
+                            verifiedBusinesses = verifiedBiz,
+                            pendingDocuments = localPendingDocs
+                        )
+                    )
                 }
         }
     }
@@ -257,6 +326,7 @@ object AdminRepository {
                     newStatus = "APPROVED",
                     reason = "Application reviewed and verified by administrator"
                 )
+                com.example.bizbridgeapp.UserSessionManager.saveAuditLog(log)
                 batch.set(logRef, log.toMap())
 
                 batch.commit().addOnSuccessListener {
@@ -354,6 +424,7 @@ object AdminRepository {
                     newStatus = "REJECTED",
                     reason = reason
                 )
+                com.example.bizbridgeapp.UserSessionManager.saveAuditLog(log)
                 batch.set(logRef, log.toMap())
 
                 batch.commit().addOnSuccessListener {
@@ -418,6 +489,7 @@ object AdminRepository {
             newStatus = newStatus,
             reason = reason
         )
+        com.example.bizbridgeapp.UserSessionManager.saveAuditLog(log)
         batch.set(logRef, log.toMap())
 
         batch.commit()
@@ -428,11 +500,16 @@ object AdminRepository {
     /** Listen to all businesses for Business Listings moderation */
     fun listenToAllBusinesses(onUpdate: (List<Business>) -> Unit): ListenerRegistration {
         return db.collection(BUSINESSES).addSnapshotListener { snapshot, error ->
-            if (error != null || snapshot == null) return@addSnapshotListener
+            val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+            if (error != null || snapshot == null) {
+                onUpdate(localBiz)
+                return@addSnapshotListener
+            }
             val list = snapshot.documents.mapNotNull { doc ->
                 doc.toObject(Business::class.java)?.copy(id = doc.id)
             }
-            onUpdate(list)
+            val merged = (list + localBiz).distinctBy { it.id }
+            onUpdate(merged)
         }
     }
 
@@ -471,6 +548,7 @@ object AdminRepository {
             newStatus = if (active) "ACTIVE" else "SUSPENDED",
             reason = reason
         )
+        com.example.bizbridgeapp.UserSessionManager.saveAuditLog(log)
         batch.set(logRef, log.toMap())
 
         batch.commit()
@@ -498,8 +576,43 @@ object AdminRepository {
 
     /** Record an administrative audit log */
     fun logAdminAction(log: AdminAuditLog, onComplete: () -> Unit = {}) {
+        com.example.bizbridgeapp.UserSessionManager.saveAuditLog(log)
         val ref = if (log.id.isNotEmpty()) db.collection(AUDIT_LOGS).document(log.id) else db.collection(AUDIT_LOGS).document()
         ref.set(log.copy(id = ref.id).toMap())
             .addOnCompleteListener { onComplete() }
+    }
+
+    /** Listen to recent administrative audit logs */
+    fun listenToRecentAuditLogs(
+        adminEmail: String? = null,
+        onUpdate: (List<AdminAuditLog>) -> Unit
+    ): ListenerRegistration {
+        val localLogs = com.example.bizbridgeapp.UserSessionManager.getAllAuditLogs()
+        if (localLogs.isNotEmpty()) {
+            val filtered = if (adminEmail.isNullOrBlank()) localLogs else localLogs.filter { it.adminEmail.equals(adminEmail, ignoreCase = true) }
+            onUpdate(filtered)
+        }
+
+        return db.collection(AUDIT_LOGS)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(20)
+            .addSnapshotListener { snapshot, error ->
+                val currentLocal = com.example.bizbridgeapp.UserSessionManager.getAllAuditLogs()
+                if (error != null || snapshot == null) {
+                    val filtered = if (adminEmail.isNullOrBlank()) currentLocal else currentLocal.filter { it.adminEmail.equals(adminEmail, ignoreCase = true) }
+                    onUpdate(filtered)
+                    return@addSnapshotListener
+                }
+
+                val firestoreLogs = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(AdminAuditLog::class.java)?.copy(id = doc.id)
+                }
+                val merged = (firestoreLogs + currentLocal)
+                    .distinctBy { it.id }
+                    .sortedByDescending { it.createdAt?.toDate()?.time ?: 0L }
+
+                val filtered = if (adminEmail.isNullOrBlank()) merged else merged.filter { it.adminEmail.equals(adminEmail, ignoreCase = true) }
+                onUpdate(filtered)
+            }
     }
 }
