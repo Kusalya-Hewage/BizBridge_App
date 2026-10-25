@@ -190,216 +190,52 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- Application Card 1: Willow Wellness -->
+            <!-- Empty State -->
             <LinearLayout
-                android:id="@+id/card_willow_wellness"
+                android:id="@+id/ll_empty_applications"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp"
                 android:background="@drawable/bg_admin_card"
-                android:clickable="true"
-                android:elevation="1dp"
-                android:focusable="true"
+                android:gravity="center"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="32dp"
+                android:visibility="gone">
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp">
-
-                    <TextView
-                        android:id="@+id/tv_willow_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Willow Wellness"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/badge_willow_status"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_admin_badge_pending"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Pending"
-                        android:textColor="@color/admin_badge_pending_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="12dp"
+                    android:src="@drawable/ic_storefront"
+                    app:tint="@color/admin_text_muted" />
 
                 <TextView
-                    android:id="@+id/tv_willow_owner"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Nora Ahmed"
-                    android:textColor="@color/admin_text_body"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/tv_willow_category"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Wellness · Oct 22, 2026"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_open_app_willow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Open Application →"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="13sp"
+                    android:text="No applications found"
+                    android:textColor="@color/admin_text_title"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/inter_variable"
+                    android:gravity="center"
+                    android:text="New business registration requests awaiting review will appear here."
+                    android:textColor="@color/admin_text_muted"
+                    android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- Application Card 2: Linden Beauty Room -->
+            <!-- Dynamic Applications Container -->
             <LinearLayout
-                android:id="@+id/card_linden_beauty"
+                android:id="@+id/ll_applications_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_admin_card"
-                android:clickable="true"
-                android:elevation="1dp"
-                android:focusable="true"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Linden Beauty Room"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_admin_badge_pending"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Pending"
-                        android:textColor="@color/admin_badge_pending_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Isabel Torres"
-                    android:textColor="@color/admin_text_body"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Beauty · Oct 22, 2026"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_open_app_linden"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Open Application →"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- Application Card 3: Fixwell Repairs -->
-            <LinearLayout
-                android:id="@+id/card_fixwell_repairs"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_admin_card"
-                android:clickable="true"
-                android:elevation="1dp"
-                android:focusable="true"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Fixwell Repairs"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_admin_badge_pending"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Pending"
-                        android:textColor="@color/admin_badge_pending_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Daniel Park"
-                    android:textColor="@color/admin_text_body"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Repair services · Oct 21, 2026"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_open_app_fixwell"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Open Application →"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                android:orientation="vertical" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
