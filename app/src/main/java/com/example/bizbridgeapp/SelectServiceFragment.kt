@@ -46,6 +46,10 @@ class SelectServiceFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
+        if (businessName.isNotBlank()) {
+            view.findViewById<TextView>(R.id.tv_select_service_biz_name)?.text = businessName
+        }
+
         val card1 = view.findViewById<LinearLayout>(R.id.card_service_1)
         val card2 = view.findViewById<LinearLayout>(R.id.card_service_2)
         val card3 = view.findViewById<LinearLayout>(R.id.card_service_3)
