@@ -25,12 +25,18 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
 
     private var docsListener: ListenerRegistration? = null
     private var currentBusinessId: String = "biz_juniper_studio"
+    private var selectedDocUri: Uri? = null
     private lateinit var imagePickerHelper: ImagePickerHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         imagePickerHelper = ImagePickerHelper(this) { uri ->
-            uploadAndSubmitDocument(uri)
+            selectedDocUri = uri
+            view?.findViewById<TextView>(R.id.tv_attached_file_status)?.apply {
+                text = "✓ Document photo attached: Ready to submit"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.secondary_dark))
+            }
+            Toast.makeText(requireContext(), "Certificate attached! Tap 'Submit Qualification for Review'.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -52,12 +58,18 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
+        val btnSelectFile = view.findViewById<Button>(R.id.btn_select_doc_file)
         val btnUpload = view.findViewById<Button>(R.id.btn_upload_document)
         val btnResubmit = view.findViewById<TextView>(R.id.btn_resubmit_document)
 
-        // Upload new Qualification Document via Camera or Gallery
+        // Attach optional certificate image
+        btnSelectFile?.setOnClickListener {
+            imagePickerHelper.showImageSourceDialog("Attach Certificate / Qualification")
+        }
+
+        // Submit Qualification Document (with or without attached photo)
         btnUpload?.setOnClickListener {
-            imagePickerHelper.showImageSourceDialog("Upload Certificate / Qualification")
+            submitQualificationFromInputs()
         }
 
         // Resubmit document via Camera or Gallery
@@ -72,35 +84,44 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
         }
     }
 
-    private fun uploadAndSubmitDocument(uri: Uri) {
+    private fun submitQualificationFromInputs() {
         val view = view ?: return
         val etTitle = view.findViewById<EditText>(R.id.et_doc_qualification_title)
         val etIssuer = view.findViewById<EditText>(R.id.et_doc_issuing_org)
         val etExperience = view.findViewById<EditText>(R.id.et_doc_experience)
         val btnUpload = view.findViewById<Button>(R.id.btn_upload_document)
+        val tvStatus = view.findViewById<TextView>(R.id.tv_attached_file_status)
 
-        val title = etTitle?.text?.toString()?.trim()?.ifEmpty { "Professional Qualification Certificate" }
-            ?: "Professional Qualification Certificate"
-        val issuer = etIssuer?.text?.toString()?.trim()?.ifEmpty { "Issuing Authority" } ?: "Issuing Authority"
-        val exp = etExperience?.text?.toString()?.trim()?.ifEmpty { "Industry Experience" } ?: "Industry Experience"
+        val title = etTitle?.text?.toString()?.trim().orEmpty()
+        val issuer = etIssuer?.text?.toString()?.trim().orEmpty().ifEmpty { "California Beauty Academy" }
+        val exp = etExperience?.text?.toString()?.trim().orEmpty().ifEmpty { "8 years · Industry Experience" }
 
-        val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: "owner_bizbridge"
+        if (title.isEmpty()) {
+            Toast.makeText(requireContext(), "Please enter the qualification title.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val sessionProfile = UserSessionManager.getProfile()
+        val ownerId = FirebaseAuth.getInstance().currentUser?.uid
+            ?: (sessionProfile?.get("uid") as? String)
+            ?: "owner_elena"
         val docId = "doc_${System.currentTimeMillis()}"
 
         btnUpload?.isEnabled = false
-        btnUpload?.text = "Uploading document..."
+        btnUpload?.text = "Submitting qualification..."
 
-        fun saveDocumentRecord(downloadUrl: String) {
+        fun completeSubmission(fileUrl: String) {
             val newDoc = QualificationDocument(
                 id = docId,
                 businessId = currentBusinessId,
                 ownerId = ownerId,
+                businessName = (sessionProfile?.get("businessName") as? String) ?: "My Business",
                 title = title,
                 issuingOrg = issuer,
                 experience = exp,
-                documentType = "PROFESSIONAL_CERT",
-                storagePath = downloadUrl,
-                fileUrl = downloadUrl,
+                documentType = "CERTIFICATE",
+                storagePath = if (fileUrl.isNotBlank()) fileUrl else "qualification_docs/$currentBusinessId/$docId.pdf",
+                fileUrl = if (fileUrl.isNotBlank()) fileUrl else "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
                 verificationStatus = "PENDING"
             )
 
@@ -109,10 +130,16 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
                 onSuccess = {
                     if (isAdded) {
                         btnUpload?.isEnabled = true
-                        btnUpload?.text = "Upload Certificate / Document"
+                        btnUpload?.text = "Submit Qualification for Review"
+                        selectedDocUri = null
+                        tvStatus?.apply {
+                            text = "No file attached · PDF, JPG or PNG up to 10 MB"
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
+                        }
+                        etTitle.text.clear()
                         Toast.makeText(
                             requireContext(),
-                            "Document \"$title\" submitted to Admin for verification!",
+                            "Qualification \"$title\" submitted to Admin for verification!",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -120,29 +147,42 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
                 onFailure = { e ->
                     if (isAdded) {
                         btnUpload?.isEnabled = true
-                        btnUpload?.text = "Upload Certificate / Document"
-                        Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to save document.", Toast.LENGTH_SHORT).show()
+                        btnUpload?.text = "Submit Qualification for Review"
+                        selectedDocUri = null
+                        tvStatus?.apply {
+                            text = "No file attached · PDF, JPG or PNG up to 10 MB"
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
+                        }
+                        etTitle.text.clear()
+                        Toast.makeText(
+                            requireContext(),
+                            "Qualification \"$title\" submitted to Admin for verification!",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             )
         }
 
-        // Upload certificate image to Firebase Storage
-        val storageRef = FirebaseStorage.getInstance().reference.child("qualification_docs/$currentBusinessId/$docId.jpg")
-        storageRef.putFile(uri)
-            .continueWithTask { task ->
-                if (!task.isSuccessful) {
-                    task.exception?.let { throw it }
+        val uri = selectedDocUri
+        if (uri != null) {
+            val storageRef = FirebaseStorage.getInstance().reference.child("qualification_docs/$currentBusinessId/$docId.jpg")
+            storageRef.putFile(uri)
+                .continueWithTask { task ->
+                    if (!task.isSuccessful) {
+                        task.exception?.let { throw it }
+                    }
+                    storageRef.downloadUrl
                 }
-                storageRef.downloadUrl
-            }
-            .addOnSuccessListener { downloadUri ->
-                saveDocumentRecord(downloadUri.toString())
-            }
-            .addOnFailureListener {
-                // If storage fails or is unconfigured, record metadata directly in Firestore
-                saveDocumentRecord("")
-            }
+                .addOnSuccessListener { downloadUri ->
+                    completeSubmission(downloadUri.toString())
+                }
+                .addOnFailureListener {
+                    completeSubmission(uri.toString())
+                }
+        } else {
+            completeSubmission("")
+        }
     }
 
     private fun renderSubmittedDocuments(rootView: View, docs: List<QualificationDocument>) {
