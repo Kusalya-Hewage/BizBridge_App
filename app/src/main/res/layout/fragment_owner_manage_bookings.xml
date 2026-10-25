@@ -481,7 +481,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Footer Demonstration Note -->
+                <!-- Footer Note -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -489,7 +489,7 @@
                     android:layout_marginBottom="16dp"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="2dp"
-                    android:text="Confirm requests to reserve the time. Rejected requests notify the customer for this demonstration flow."
+                    android:text="Confirm requests to reserve the time slot. Rejected requests will notify the customer."
                     android:textColor="@color/text_muted"
                     android:textSize="11sp" />
 
