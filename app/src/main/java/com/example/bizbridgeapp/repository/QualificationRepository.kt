@@ -214,6 +214,19 @@ object QualificationRepository {
                 )
 
                 TrustScoreRepository.recalculateTrustScore(doc.businessId)
+
+                val log = AdminAuditLog(
+                    id = "log_${System.currentTimeMillis()}",
+                    adminUid = adminUid,
+                    adminEmail = adminEmail,
+                    actionType = "VERIFY_QUALIFICATION",
+                    targetType = "QUALIFICATION",
+                    targetId = doc.title.ifBlank { docId },
+                    newStatus = "VERIFIED",
+                    reason = "Document verified"
+                )
+                AdminRepository.logAdminAction(log)
+
                 NotificationRepository.createNotification(
                     NotificationItem(
                         userId = doc.ownerId,
@@ -272,6 +285,18 @@ object QualificationRepository {
                     ),
                     com.google.firebase.firestore.SetOptions.merge()
                 )
+
+                val log = AdminAuditLog(
+                    id = "log_${System.currentTimeMillis()}",
+                    adminUid = adminUid,
+                    adminEmail = adminEmail,
+                    actionType = "REJECT_QUALIFICATION",
+                    targetType = "QUALIFICATION",
+                    targetId = doc?.title?.ifBlank { docId } ?: docId,
+                    newStatus = "REJECTED",
+                    reason = reason
+                )
+                AdminRepository.logAdminAction(log)
 
                 NotificationRepository.createNotification(
                     NotificationItem(
