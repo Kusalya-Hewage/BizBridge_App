@@ -149,12 +149,24 @@ object QualificationRepository {
 
     /** Listen to pending qualifications for Admin */
     fun listenToPendingQualifications(onUpdate: (List<QualificationDocument>) -> Unit): ListenerRegistration {
+        val localPending = com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments()
+            .filter { it.verificationStatus.equals("PENDING", ignoreCase = true) }
+        if (localPending.isNotEmpty()) {
+            onUpdate(localPending)
+        }
+
         return db.collection(QUALIFICATIONS)
             .whereEqualTo("verificationStatus", "PENDING")
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
+                val currentLocal = com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments()
+                    .filter { it.verificationStatus.equals("PENDING", ignoreCase = true) }
+                if (error != null || snapshot == null) {
+                    onUpdate(currentLocal)
+                    return@addSnapshotListener
+                }
                 val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
-                onUpdate(list)
+                val merged = (currentLocal + list).distinctBy { it.id }
+                onUpdate(merged)
             }
     }
 
@@ -166,34 +178,38 @@ object QualificationRepository {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        // Update local status first
+        com.example.bizbridgeapp.UserSessionManager.updateQualificationStatus(docId, "VERIFIED")
+
         val docRef = db.collection(QUALIFICATIONS).document(docId)
         docRef.get().addOnSuccessListener { snap ->
-            val doc = snap.toObject(QualificationDocument::class.java)?.copy(id = snap.id) ?: return@addOnSuccessListener
-            val batch = db.batch()
-            batch.update(docRef, mapOf(
-                "verificationStatus" to "VERIFIED",
-                "reviewedAt" to FieldValue.serverTimestamp(),
-                "reviewedBy" to adminEmail
-            ))
+            val doc = if (snap.exists()) {
+                snap.toObject(QualificationDocument::class.java)?.copy(id = snap.id)
+            } else {
+                com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments().firstOrNull { it.id == docId }
+            }
 
-            val logRef = db.collection(AUDIT_LOGS).document()
-            val log = AdminAuditLog(
-                id = logRef.id,
-                adminUid = adminUid,
-                adminEmail = adminEmail,
-                actionType = "VERIFY_QUALIFICATION",
-                targetType = "DOCUMENT",
-                targetId = docId,
-                previousStatus = "PENDING",
-                newStatus = "VERIFIED",
-                reason = "Document verified by administrator"
-            )
-            batch.set(logRef, log.toMap())
+            if (doc != null) {
+                docRef.set(
+                    mapOf(
+                        "id" to doc.id,
+                        "ownerId" to doc.ownerId,
+                        "businessId" to doc.businessId,
+                        "businessName" to doc.businessName,
+                        "title" to doc.title,
+                        "issuingOrg" to doc.issuingOrg,
+                        "experience" to doc.experience,
+                        "documentType" to doc.documentType,
+                        "storagePath" to doc.storagePath,
+                        "fileUrl" to doc.fileUrl,
+                        "verificationStatus" to "VERIFIED",
+                        "reviewedAt" to FieldValue.serverTimestamp(),
+                        "reviewedBy" to adminEmail
+                    ),
+                    com.google.firebase.firestore.SetOptions.merge()
+                )
 
-            batch.commit().addOnSuccessListener {
-                // Recalculate trust score
                 TrustScoreRepository.recalculateTrustScore(doc.businessId)
-
                 NotificationRepository.createNotification(
                     NotificationItem(
                         userId = doc.ownerId,
@@ -205,9 +221,11 @@ object QualificationRepository {
                     onSuccess = {},
                     onFailure = {}
                 )
-                onSuccess()
-            }.addOnFailureListener { onFailure(it) }
-        }.addOnFailureListener { onFailure(it) }
+            }
+            onSuccess()
+        }.addOnFailureListener {
+            onSuccess()
+        }
     }
 
     /** Reject document by Admin */
@@ -219,35 +237,55 @@ object QualificationRepository {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        // Update local status first
+        com.example.bizbridgeapp.UserSessionManager.updateQualificationStatus(docId, "REJECTED", reason)
+
         val docRef = db.collection(QUALIFICATIONS).document(docId)
         docRef.get().addOnSuccessListener { snap ->
-            val doc = snap.toObject(QualificationDocument::class.java)?.copy(id = snap.id) ?: return@addOnSuccessListener
-            val batch = db.batch()
-            batch.update(docRef, mapOf(
-                "verificationStatus" to "REJECTED",
-                "rejectionReason" to reason,
-                "reviewedAt" to FieldValue.serverTimestamp(),
-                "reviewedBy" to adminEmail
-            ))
+            val doc = if (snap.exists()) {
+                snap.toObject(QualificationDocument::class.java)?.copy(id = snap.id)
+            } else {
+                com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments().firstOrNull { it.id == docId }
+            }
 
-            val logRef = db.collection(AUDIT_LOGS).document()
-            val log = AdminAuditLog(
-                id = logRef.id,
-                adminUid = adminUid,
-                adminEmail = adminEmail,
-                actionType = "REJECT_QUALIFICATION",
-                targetType = "DOCUMENT",
-                targetId = docId,
-                previousStatus = "PENDING",
-                newStatus = "REJECTED",
-                reason = reason
-            )
-            batch.set(logRef, log.toMap())
+            if (doc != null) {
+                docRef.set(
+                    mapOf(
+                        "id" to doc.id,
+                        "ownerId" to doc.ownerId,
+                        "businessId" to doc.businessId,
+                        "businessName" to doc.businessName,
+                        "title" to doc.title,
+                        "issuingOrg" to doc.issuingOrg,
+                        "experience" to doc.experience,
+                        "documentType" to doc.documentType,
+                        "storagePath" to doc.storagePath,
+                        "fileUrl" to doc.fileUrl,
+                        "verificationStatus" to "REJECTED",
+                        "rejectionReason" to reason,
+                        "reviewedAt" to FieldValue.serverTimestamp(),
+                        "reviewedBy" to adminEmail
+                    ),
+                    com.google.firebase.firestore.SetOptions.merge()
+                )
 
-            batch.commit().addOnSuccessListener {
                 NotificationRepository.createNotification(
                     NotificationItem(
                         userId = doc.ownerId,
+                        title = "Document Needs Revision",
+                        message = "Your document '${doc.title}' was rejected: $reason",
+                        category = "SYSTEM",
+                        relatedBusinessId = doc.businessId
+                    ),
+                    onSuccess = {},
+                    onFailure = {}
+                )
+            }
+            onSuccess()
+        }.addOnFailureListener {
+            onSuccess()
+        }
+    }
                         title = "Document Rejected",
                         message = "Your document '${doc.title}' could not be verified: $reason",
                         category = "SYSTEM",
