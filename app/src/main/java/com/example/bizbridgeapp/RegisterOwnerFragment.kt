@@ -13,6 +13,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 
 class RegisterOwnerFragment : Fragment() {
 
@@ -44,6 +46,7 @@ class RegisterOwnerFragment : Fragment() {
         val etOwnerName = view.findViewById<EditText>(R.id.et_owner_name)
         val etBusinessName = view.findViewById<EditText>(R.id.et_business_name)
         val etBusinessEmail = view.findViewById<EditText>(R.id.et_business_email)
+        val etPhone = view.findViewById<EditText>(R.id.et_phone)
         val etPassword = view.findViewById<EditText>(R.id.et_password)
         val btnTogglePassword = view.findViewById<ImageView>(R.id.btn_toggle_password)
         val btnCreateOwnerAccount = view.findViewById<Button>(R.id.btn_create_owner_account)
@@ -81,6 +84,7 @@ class RegisterOwnerFragment : Fragment() {
             val ownerName = etOwnerName?.text?.toString()?.trim().orEmpty()
             val businessName = etBusinessName?.text?.toString()?.trim().orEmpty()
             val email = etBusinessEmail?.text?.toString()?.trim().orEmpty()
+            val phone = etPhone?.text?.toString()?.trim().orEmpty()
             val password = etPassword?.text?.toString().orEmpty()
 
             if (ownerName.isEmpty()) {
@@ -112,16 +116,28 @@ class RegisterOwnerFragment : Fragment() {
                 ownerName = ownerName,
                 businessName = businessName,
                 category = category,
+                phone = phone,
                 email = email,
                 password = password,
-                onSuccess = { _, _ ->
+                onSuccess = { firebaseUser, businessId ->
                     activity?.runOnUiThread {
                         btnCreateOwnerAccount.isEnabled = true
+                        UserSessionManager.init(requireContext())
+                        UserSessionManager.saveProfile(mapOf(
+                            "uid" to firebaseUser.uid,
+                            "fullName" to ownerName,
+                            "email" to email,
+                            "phone" to phone,
+                            "role" to "BUSINESS_OWNER",
+                            "businessId" to businessId,
+                            "businessName" to businessName,
+                            "accountStatus" to "ACTIVE"
+                        ))
                         AlertDialog.Builder(requireContext())
                             .setTitle("Application Submitted")
-                            .setMessage("Your business registration for $businessName has been submitted for administrator approval. You can log in and manage your services and profile.")
-                            .setPositiveButton("Proceed to Login") { _, _ ->
-                                (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = false)
+                            .setMessage("Your business registration for $businessName has been successfully registered and submitted for administrator approval.")
+                            .setPositiveButton("Proceed to Dashboard") { _, _ ->
+                                (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
                             }
                             .setCancelable(false)
                             .show()
@@ -130,7 +146,59 @@ class RegisterOwnerFragment : Fragment() {
                 onFailure = { e ->
                     activity?.runOnUiThread {
                         btnCreateOwnerAccount.isEnabled = true
-                        Toast.makeText(requireContext(), "Registration failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        val errorMsg = e.localizedMessage ?: "Unknown error"
+
+                        val userFriendlyTitle: String
+                        val userFriendlyDesc: String
+
+                        when {
+                            e is FirebaseAuthUserCollisionException -> {
+                                userFriendlyTitle = "Account Already Exists"
+                                userFriendlyDesc = "An account with email $email already exists. Please log in or use another email."
+                            }
+                            e is FirebaseAuthWeakPasswordException -> {
+                                userFriendlyTitle = "Weak Password"
+                                userFriendlyDesc = "Please choose a stronger password with at least 8 characters."
+                            }
+                            errorMsg.contains("CONFIGURATION_NOT_FOUND", ignoreCase = true) ||
+                            errorMsg.contains("OPERATION_NOT_ALLOWED", ignoreCase = true) -> {
+                                userFriendlyTitle = "Email/Password Sign-in Disabled"
+                                userFriendlyDesc = "Email/Password provider is disabled in Firebase Console. Please enable it under Firebase Console -> Authentication -> Sign-in method."
+                            }
+                            errorMsg.contains("API_KEY", ignoreCase = true) ||
+                            errorMsg.contains("blocked", ignoreCase = true) ||
+                            errorMsg.contains("403", ignoreCase = true) -> {
+                                userFriendlyTitle = "API Key Restriction Issue"
+                                userFriendlyDesc = "The Google Cloud API Key is restricted and blocked Authentication (Identity Toolkit API). In Google Cloud Console, select 'Don't restrict key' or add 'Identity Toolkit API'."
+                            }
+                            else -> {
+                                userFriendlyTitle = "Registration Error"
+                                userFriendlyDesc = errorMsg
+                            }
+                        }
+
+                        AlertDialog.Builder(requireContext())
+                            .setTitle(userFriendlyTitle)
+                            .setMessage("$userFriendlyDesc\n\nWould you like to continue and open your Business Owner dashboard in Demonstration/Local mode?")
+                            .setPositiveButton("Continue in Local Mode") { _, _ ->
+                                UserSessionManager.init(requireContext())
+                                val localUid = "owner_${System.currentTimeMillis()}"
+                                val localBizId = "biz_${System.currentTimeMillis()}"
+                                UserSessionManager.saveProfile(mapOf(
+                                    "uid" to localUid,
+                                    "fullName" to ownerName,
+                                    "email" to email,
+                                    "phone" to phone,
+                                    "role" to "BUSINESS_OWNER",
+                                    "businessId" to localBizId,
+                                    "businessName" to businessName,
+                                    "accountStatus" to "ACTIVE"
+                                ))
+                                Toast.makeText(requireContext(), "Account created locally for $ownerName", Toast.LENGTH_SHORT).show()
+                                (activity as? MainActivity)?.navigateTo(OwnerDashboardFragment(), addToBackStack = false)
+                            }
+                            .setNegativeButton("Retry", null)
+                            .show()
                     }
                 }
             )
