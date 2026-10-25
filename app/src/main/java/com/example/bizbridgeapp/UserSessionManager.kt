@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
+import com.example.bizbridgeapp.model.QualificationDocument
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -17,6 +18,7 @@ object UserSessionManager {
     private const val KEY_REGISTERED_ACCOUNTS = "registered_accounts"
     private const val KEY_APPLICATIONS = "local_business_applications"
     private const val KEY_BUSINESSES = "local_businesses"
+    private const val KEY_QUALIFICATIONS = "local_qualifications"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -367,6 +369,73 @@ object UserSessionManager {
                 updated["verificationStatus"] = verificationStatus
                 saveProfile(updated)
             }
+        }
+    }
+
+    /** Save or update a qualification document locally */
+    fun saveQualificationDocument(doc: QualificationDocument) {
+        if (!::prefs.isInitialized) return
+        val current = getAllQualificationDocuments().toMutableList()
+        val index = current.indexOfFirst { it.id == doc.id }
+        if (index >= 0) {
+            current[index] = doc
+        } else {
+            current.add(0, doc)
+        }
+        val array = JSONArray()
+        for (d in current) {
+            val o = JSONObject()
+            o.put("id", d.id)
+            o.put("ownerId", d.ownerId)
+            o.put("businessId", d.businessId)
+            o.put("businessName", d.businessName)
+            o.put("title", d.title)
+            o.put("issuingOrg", d.issuingOrg)
+            o.put("experience", d.experience)
+            o.put("documentType", d.documentType)
+            o.put("storagePath", d.storagePath)
+            o.put("fileUrl", d.fileUrl)
+            o.put("verificationStatus", d.verificationStatus)
+            o.put("rejectionReason", d.rejectionReason)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_QUALIFICATIONS, array.toString()).apply()
+    }
+
+    /** Retrieve all locally stored qualification documents */
+    fun getAllQualificationDocuments(): List<QualificationDocument> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_QUALIFICATIONS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<QualificationDocument>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                QualificationDocument(
+                    id = o.optString("id"),
+                    ownerId = o.optString("ownerId"),
+                    businessId = o.optString("businessId"),
+                    businessName = o.optString("businessName"),
+                    title = o.optString("title"),
+                    issuingOrg = o.optString("issuingOrg"),
+                    experience = o.optString("experience"),
+                    documentType = o.optString("documentType", "CERTIFICATE"),
+                    storagePath = o.optString("storagePath"),
+                    fileUrl = o.optString("fileUrl"),
+                    verificationStatus = o.optString("verificationStatus", "PENDING"),
+                    rejectionReason = o.optString("rejectionReason")
+                )
+            )
+        }
+        return list
+    }
+
+    /** Retrieve qualification documents for a specific business or owner */
+    fun getQualificationsForBusiness(businessId: String, ownerId: String = ""): List<QualificationDocument> {
+        val all = getAllQualificationDocuments()
+        return all.filter {
+            (businessId.isNotBlank() && (it.businessId == businessId || it.businessId.startsWith("biz_"))) ||
+            (ownerId.isNotBlank() && it.ownerId == ownerId)
         }
     }
 
