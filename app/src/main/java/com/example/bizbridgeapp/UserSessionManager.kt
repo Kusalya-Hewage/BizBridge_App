@@ -16,6 +16,36 @@ object UserSessionManager {
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        seedDefaultAccountsIfEmpty()
+    }
+
+    private fun seedDefaultAccountsIfEmpty() {
+        if (getRegisteredAccount("admin@bizbridge.com") == null) {
+            saveRegisteredAccount(
+                "admin@bizbridge.com",
+                "admin123",
+                mapOf(
+                    "uid" to "admin_bizbridge",
+                    "fullName" to "Platform Administrator",
+                    "email" to "admin@bizbridge.com",
+                    "role" to "ADMIN",
+                    "accountStatus" to "ACTIVE"
+                )
+            )
+        }
+        if (getRegisteredAccount("alex@bizbridge.example") == null) {
+            saveRegisteredAccount(
+                "alex@bizbridge.example",
+                "admin123",
+                mapOf(
+                    "uid" to "admin_alex",
+                    "fullName" to "Alex Morgan",
+                    "email" to "alex@bizbridge.example",
+                    "role" to "ADMIN",
+                    "accountStatus" to "ACTIVE"
+                )
+            )
+        }
     }
 
     /** Save a map (profile) as a JSON string. */
