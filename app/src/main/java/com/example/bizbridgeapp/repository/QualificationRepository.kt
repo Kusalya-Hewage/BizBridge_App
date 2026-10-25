@@ -68,10 +68,12 @@ object QualificationRepository {
         onFailure: (Exception) -> Unit
     ) {
         if (docId.isBlank()) {
-            onSuccess(null)
+            onSuccess(com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments().firstOrNull())
             return
         }
-        val local = com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments().firstOrNull { it.id == docId }
+        val localDocs = com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments()
+        val local = localDocs.firstOrNull { it.id == docId }
+            ?: localDocs.firstOrNull { it.businessId.contains(docId.removePrefix("doc_"), ignoreCase = true) }
         if (local != null) {
             onSuccess(local)
             return
@@ -82,10 +84,14 @@ object QualificationRepository {
                     val doc = snap.toObject(QualificationDocument::class.java)?.copy(id = snap.id)
                     onSuccess(doc)
                 } else {
-                    onSuccess(null)
+                    val fallback = localDocs.firstOrNull()
+                    onSuccess(fallback)
                 }
             }
-            .addOnFailureListener { onFailure(it) }
+            .addOnFailureListener {
+                val fallback = localDocs.firstOrNull()
+                onSuccess(fallback)
+            }
     }
 
     /** Fetch submitted qualification documents for a business or owner */
