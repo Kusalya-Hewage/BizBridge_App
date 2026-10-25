@@ -18,7 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 class ReviewBookingFragment : Fragment() {
 
     private var businessId: String = ""
-    private var businessName: String = "Juniper Studio"
+    private var businessName: String = ""
     private var serviceId: String = ""
     private var serviceName: String = "Signature haircut"
     private var servicePrice: Double = 45.0
