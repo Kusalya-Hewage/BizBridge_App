@@ -185,6 +185,12 @@ class CustomerHomeFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_nearby_reviews)?.text = "(${b0.reviewCount} reviews)"
             view.findViewById<TextView>(R.id.tv_nearby_distance)?.text = if (b0.address.isNotBlank()) b0.address else "Nearby"
             view.findViewById<TextView>(R.id.tv_nearby_price)?.text = if (!b0.price.isNullOrBlank()) b0.price else "Explore"
+            
+            val ivNearby = view.findViewById<android.widget.ImageView>(R.id.img_nearby_business)
+            if (ivNearby != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivNearby, b0.imageUrl, R.drawable.img_salon_interior)
+            }
+
             cardNearby?.setOnClickListener {
                 (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
             }
@@ -200,6 +206,11 @@ class CustomerHomeFragment : Fragment() {
                     return
                 }
                 cardView.visibility = View.VISIBLE
+                val ivCard = (cardView as? LinearLayout)?.getChildAt(0) as? android.widget.ImageView
+                if (ivCard != null) {
+                    com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivCard, biz.imageUrl, R.drawable.img_salon_interior)
+                }
+
                 val contentLayout = (cardView as? LinearLayout)?.getChildAt(1) as? LinearLayout
                 val tvName = contentLayout?.getChildAt(0) as? TextView
                 val tvCat = contentLayout?.getChildAt(1) as? TextView
