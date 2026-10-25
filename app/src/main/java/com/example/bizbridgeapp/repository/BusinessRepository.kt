@@ -75,23 +75,27 @@ object BusinessRepository {
         onComplete(emptyList())
     }
 
-    /** Fetch all approved and active businesses from Firestore */
+    /** Fetch all approved and active businesses from Firestore and local cache */
     fun getApprovedActiveBusinesses(
         onSuccess: (List<Business>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val localApproved = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+            .filter { it.approved && it.active }
+
         db.collection(COLLECTION)
             .whereEqualTo("approved", true)
             .whereEqualTo("active", true)
             .get()
             .addOnSuccessListener { snapshot ->
-                val list = snapshot.documents.mapNotNull { doc ->
+                val firestoreList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Business::class.java)?.copy(id = doc.id)
                 }
-                onSuccess(list)
+                val merged = (localApproved + firestoreList).distinctBy { it.id }
+                onSuccess(merged.ifEmpty { defaultDemoBusinesses })
             }
             .addOnFailureListener { e ->
-                onSuccess(emptyList())
+                onSuccess(localApproved.ifEmpty { defaultDemoBusinesses })
             }
     }
 
@@ -377,7 +381,28 @@ object BusinessRepository {
                 if (snapshot != null && snapshot.exists()) {
                     onUpdate(snapshot.toObject(Business::class.java)?.copy(id = snapshot.id))
                 } else {
-                    onUpdate(defaultDemoBusinesses.firstOrNull { it.id == effectiveBizId } ?: defaultDemoBusinesses.first())
+                    val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == effectiveBizId }
+                    if (localBiz != null) {
+                        onUpdate(localBiz)
+                    } else if (sessionProfile != null && !(sessionProfile["businessName"] as? String).isNullOrBlank()) {
+                        val constructed = Business(
+                            id = effectiveBizId,
+                            ownerId = (sessionProfile["uid"] as? String) ?: "owner_bizbridge",
+                            name = (sessionProfile["businessName"] as? String) ?: "My Business",
+                            category = (sessionProfile["category"] as? String) ?: "Hair salon",
+                            contactNumber = (sessionProfile["phone"] as? String) ?: "",
+                            address = (sessionProfile["address"] as? String) ?: "Colombo, Sri Lanka",
+                            description = (sessionProfile["description"] as? String) ?: "Welcome!",
+                            approved = (sessionProfile["approved"] as? Boolean) ?: false,
+                            active = (sessionProfile["active"] as? Boolean) ?: false,
+                            approvalStatus = (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
+                            verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
+                            trustScore = (sessionProfile["trustScore"] as? Int) ?: 80
+                        )
+                        onUpdate(constructed)
+                    } else {
+                        onUpdate(defaultDemoBusinesses.firstOrNull { it.id == effectiveBizId } ?: defaultDemoBusinesses.first())
+                    }
                 }
             }
     }
@@ -460,6 +485,18 @@ object BusinessRepository {
             )
         }
 
+        // 4. Immediately persist to registered accounts so future logins preserve business name
+        com.example.bizbridgeapp.UserSessionManager.updateRegisteredAccountBusiness(
+            targetId,
+            mapOf(
+                "businessName" to name,
+                "category" to category,
+                "phone" to contactNumber,
+                "address" to address,
+                "description" to description
+            )
+        )
+
         val docRef = db.collection(COLLECTION).document(targetId)
         val updates = mutableMapOf<String, Any>(
             "id" to targetId,
@@ -531,16 +568,25 @@ object BusinessRepository {
     fun listenToApprovedBusinesses(
         onUpdate: (List<Business>) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
+        val initialLocal = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+            .filter { it.approved && it.active }
+        if (initialLocal.isNotEmpty()) {
+            onUpdate(initialLocal)
+        }
+
         return db.collection(COLLECTION)
             .whereEqualTo("approved", true)
             .whereEqualTo("active", true)
             .addSnapshotListener { snapshot, error ->
+                val localApproved = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+                    .filter { it.approved && it.active }
                 if (error != null || snapshot == null) {
-                    onUpdate(emptyList())
+                    onUpdate(localApproved.ifEmpty { defaultDemoBusinesses })
                     return@addSnapshotListener
                 }
-                val list = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
-                onUpdate(list)
+                val firestoreList = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
+                val merged = (localApproved + firestoreList).distinctBy { it.id }
+                onUpdate(merged.ifEmpty { defaultDemoBusinesses })
             }
     }
 }
