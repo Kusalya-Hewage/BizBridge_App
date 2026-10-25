@@ -90,35 +90,50 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
         val tvStatus = view.findViewById<TextView>(R.id.tv_attached_file_status)
 
         val title = etTitle?.text?.toString()?.trim().orEmpty()
-        val issuer = etIssuer?.text?.toString()?.trim().orEmpty().ifEmpty { "California Beauty Academy" }
-        val exp = etExperience?.text?.toString()?.trim().orEmpty().ifEmpty { "8 years · Industry Experience" }
+        val issuer = etIssuer?.text?.toString()?.trim().orEmpty()
+        val exp = etExperience?.text?.toString()?.trim().orEmpty()
 
         if (title.isEmpty()) {
             Toast.makeText(requireContext(), "Please enter the qualification title.", Toast.LENGTH_SHORT).show()
             return
         }
 
+        if (issuer.isEmpty()) {
+            Toast.makeText(requireContext(), "Please enter the issuing organisation.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val sessionProfile = UserSessionManager.getProfile()
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid
             ?: (sessionProfile?.get("uid") as? String)
-            ?: "owner_elena"
+            ?: ""
+        if (currentBusinessId.isBlank()) {
+            currentBusinessId = BusinessRepository.getOwnerBusinessId()
+            if (currentBusinessId.isBlank()) {
+                currentBusinessId = if (ownerId.isNotBlank()) "biz_$ownerId" else "biz_${System.currentTimeMillis()}"
+            }
+        }
         val docId = "doc_${System.currentTimeMillis()}"
 
         btnUpload?.isEnabled = false
         btnUpload?.text = "Submitting qualification..."
 
         fun completeSubmission(fileUrl: String) {
+            val businessName = (sessionProfile?.get("businessName") as? String)
+                ?: (sessionProfile?.get("name") as? String)
+                ?: "My Business"
+
             val newDoc = QualificationDocument(
                 id = docId,
                 businessId = currentBusinessId,
                 ownerId = ownerId,
-                businessName = (sessionProfile?.get("businessName") as? String) ?: "My Business",
+                businessName = businessName,
                 title = title,
                 issuingOrg = issuer,
                 experience = exp,
                 documentType = "CERTIFICATE",
                 storagePath = if (fileUrl.isNotBlank()) fileUrl else "qualification_docs/$currentBusinessId/$docId.pdf",
-                fileUrl = if (fileUrl.isNotBlank()) fileUrl else "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
+                fileUrl = fileUrl,
                 verificationStatus = "PENDING"
             )
 
@@ -133,7 +148,9 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
                             text = "No file attached · PDF, JPG or PNG up to 10 MB"
                             setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
                         }
-                        etTitle.text.clear()
+                        etTitle?.text?.clear()
+                        etIssuer?.text?.clear()
+                        etExperience?.text?.clear()
                         Toast.makeText(
                             requireContext(),
                             "Qualification \"$title\" submitted to Admin for verification!",
@@ -150,7 +167,9 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
                             text = "No file attached · PDF, JPG or PNG up to 10 MB"
                             setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
                         }
-                        etTitle.text.clear()
+                        etTitle?.text?.clear()
+                        etIssuer?.text?.clear()
+                        etExperience?.text?.clear()
                         Toast.makeText(
                             requireContext(),
                             "Qualification \"$title\" submitted to Admin for verification!",
