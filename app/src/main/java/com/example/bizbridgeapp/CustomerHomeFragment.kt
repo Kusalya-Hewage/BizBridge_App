@@ -171,22 +171,33 @@ class CustomerHomeFragment : Fragment() {
                 }
             }
 
-            // Popular cards
-            if (b0 != null) {
-                view.findViewById<LinearLayout>(R.id.card_popular_1)?.setOnClickListener {
-                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
+            // Bind Popular cards dynamically
+            fun bindPopularCard(cardView: View?, biz: Business?) {
+                if (cardView == null || biz == null) return
+                val contentLayout = (cardView as? LinearLayout)?.getChildAt(1) as? LinearLayout
+                val tvName = contentLayout?.getChildAt(0) as? TextView
+                val tvCat = contentLayout?.getChildAt(1) as? TextView
+                val ratingRow = contentLayout?.getChildAt(2) as? LinearLayout
+                val tvRating = ratingRow?.getChildAt(1) as? TextView
+                val tvReviews = ratingRow?.getChildAt(2) as? TextView
+
+                tvName?.text = biz.name
+                tvCat?.text = biz.category
+                tvRating?.text = String.format("%.1f", biz.rating ?: 5.0)
+                tvReviews?.text = "(${biz.reviewCount})"
+
+                cardView.setOnClickListener {
+                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(biz.id), addToBackStack = true)
                 }
             }
-            if (b1 != null) {
-                view.findViewById<LinearLayout>(R.id.card_popular_2)?.setOnClickListener {
-                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b1.id), addToBackStack = true)
-                }
-            }
-            if (b2 != null) {
-                view.findViewById<LinearLayout>(R.id.card_popular_3)?.setOnClickListener {
-                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b2.id), addToBackStack = true)
-                }
-            }
+
+            val cardP1 = view.findViewById<LinearLayout>(R.id.card_popular_1)
+            val cardP2 = view.findViewById<LinearLayout>(R.id.card_popular_2)
+            val cardP3 = view.findViewById<LinearLayout>(R.id.card_popular_3)
+
+            bindPopularCard(cardP1, b0)
+            bindPopularCard(cardP2, b1)
+            bindPopularCard(cardP3, b2)
         }
 
         // ─── See all popular ───────────────────────────────────────────
