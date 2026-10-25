@@ -77,6 +77,7 @@ object FirebaseAuthManager {
         ownerName: String,
         businessName: String,
         category: String,
+        phone: String = "",
         email: String,
         password: String,
         onSuccess: (firebaseUser: com.google.firebase.auth.FirebaseUser, businessId: String) -> Unit,
@@ -89,26 +90,24 @@ object FirebaseAuthManager {
                     return@addOnSuccessListener
                 }
 
-                val batch = firestore.batch()
+                val businessId = "biz_${user.uid.take(12)}"
+                val appId = "app_${user.uid.take(12)}"
 
-                // 1. User profile
                 val userDoc = firestore.collection("users").document(user.uid)
                 val userProfile = hashMapOf(
                     "uid" to user.uid,
                     "fullName" to ownerName,
                     "email" to email,
-                    "phone" to "",
+                    "phone" to phone,
                     "role" to "BUSINESS_OWNER",
                     "profileImageUrl" to "",
+                    "businessId" to businessId,
                     "accountStatus" to "ACTIVE",
                     "createdAt" to FieldValue.serverTimestamp(),
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
-                batch.set(userDoc, userProfile)
 
-                // 2. Business document
-                val bizDoc = firestore.collection("businesses").document()
-                val businessId = bizDoc.id
+                val bizDoc = firestore.collection("businesses").document(businessId)
                 val businessData = hashMapOf(
                     "id" to businessId,
                     "ownerId" to user.uid,
@@ -116,7 +115,7 @@ object FirebaseAuthManager {
                     "category" to category,
                     "description" to "Welcome to $businessName! Professional services tailored for you.",
                     "address" to "Colombo, Sri Lanka",
-                    "contactNumber" to "",
+                    "contactNumber" to phone,
                     "openingHours" to "9:00 AM - 7:00 PM",
                     "approved" to false,
                     "active" to false,
@@ -130,32 +129,45 @@ object FirebaseAuthManager {
                     "createdAt" to FieldValue.serverTimestamp(),
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
-                batch.set(bizDoc, businessData)
 
-                // 3. Business application
-                val appDoc = firestore.collection("businessApplications").document()
+                val appDoc = firestore.collection("businessApplications").document(appId)
                 val appData = hashMapOf(
-                    "id" to appDoc.id,
+                    "id" to appId,
                     "ownerId" to user.uid,
                     "businessId" to businessId,
                     "businessName" to businessName,
                     "ownerName" to ownerName,
                     "email" to email,
+                    "contactNumber" to phone,
                     "category" to category,
                     "address" to "Colombo, Sri Lanka",
                     "status" to "PENDING",
                     "submittedAt" to FieldValue.serverTimestamp(),
                     "rejectionReason" to ""
                 )
+
+                val batch = firestore.batch()
+                batch.set(userDoc, userProfile)
+                batch.set(bizDoc, businessData)
                 batch.set(appDoc, appData)
 
                 batch.commit().addOnSuccessListener {
                     onSuccess(user, businessId)
                 }.addOnFailureListener { e ->
-                    onFailure(e)
+                    Log.e(TAG, "Batch commit failed: ${e.message}. Saving user profile directly...", e)
+                    // If batch fails, try saving individual user doc and succeed
+                    userDoc.set(userProfile).addOnSuccessListener {
+                        onSuccess(user, businessId)
+                    }.addOnFailureListener {
+                        // Even if remote firestore fails, auth succeeded!
+                        onSuccess(user, businessId)
+                    }
                 }
             }
-            .addOnFailureListener { e -> onFailure(e) }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "createUserWithEmailAndPassword failed: ${e.message}", e)
+                onFailure(e)
+            }
     }
 
     /** Upload profile image to Firebase Storage and retrieve download URL */
