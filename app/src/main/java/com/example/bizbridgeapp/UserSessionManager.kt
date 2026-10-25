@@ -87,22 +87,7 @@ object UserSessionManager {
             val cleanedBiz = currentBiz.filterNot { it.id in demoBizIds }
             val array = JSONArray()
             for (b in cleanedBiz) {
-                val o = JSONObject()
-                o.put("id", b.id)
-                o.put("ownerId", b.ownerId)
-                o.put("name", b.name)
-                o.put("category", b.category)
-                o.put("description", b.description)
-                o.put("address", b.address)
-                o.put("contactNumber", b.contactNumber)
-                o.put("approved", b.approved)
-                o.put("active", b.active)
-                o.put("approvalStatus", b.approvalStatus)
-                o.put("verificationStatus", b.verificationStatus)
-                o.put("trustScore", b.trustScore)
-                o.put("rating", b.rating ?: 0.0)
-                o.put("reviewCount", b.reviewCount)
-                array.put(o)
+                array.put(businessToJson(b))
             }
             prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
         }
@@ -159,6 +144,7 @@ object UserSessionManager {
             val approvalStatus = (data["approvalStatus"] as? String) ?: existingBiz?.approvalStatus ?: "PENDING"
             val verificationStatus = (data["verificationStatus"] as? String) ?: existingBiz?.verificationStatus ?: "PENDING"
             val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 80
+            val imageUrl = (data["imageUrl"] as? String)?.ifBlank { null } ?: existingBiz?.imageUrl
 
             saveApplication(
                 BusinessApplication(
@@ -183,6 +169,7 @@ object UserSessionManager {
                     category = category,
                     contactNumber = phone,
                     address = existingBiz?.address?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka",
+                    imageUrl = imageUrl,
                     approved = isApproved,
                     active = isActive,
                     approvalStatus = approvalStatus,
