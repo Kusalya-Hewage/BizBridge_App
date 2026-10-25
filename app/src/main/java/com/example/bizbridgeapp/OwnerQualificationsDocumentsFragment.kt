@@ -187,11 +187,16 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
 
     private fun renderSubmittedDocuments(rootView: View, docs: List<QualificationDocument>) {
         val container = rootView.findViewById<LinearLayout>(R.id.ll_submitted_documents_container) ?: return
-        if (docs.isEmpty()) return
+        val effectiveDocs = if (docs.isNotEmpty()) {
+            docs
+        } else {
+            UserSessionManager.getQualificationsForBusiness(currentBusinessId)
+        }
+        if (effectiveDocs.isEmpty()) return
 
         container.removeAllViews()
 
-        for (doc in docs) {
+        for (doc in effectiveDocs) {
             val card = LinearLayout(requireContext()).apply {
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
