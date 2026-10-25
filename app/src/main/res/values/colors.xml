@@ -68,6 +68,8 @@
     <color name="admin_badge_pending_text">#B45309</color>
     <color name="admin_badge_scheduled_bg">#FEF3C7</color>
     <color name="admin_badge_scheduled_text">#D97706</color>
+    <color name="admin_badge_inactive_bg">#FEE2E2</color>
+    <color name="admin_badge_inactive_text">#B91C1C</color>
     <color name="admin_chart_bar_active">#4F46E5</color>
     <color name="admin_chart_bar_inactive">#C7D2FE</color>
     <color name="admin_nav_active">#4338CA</color>
