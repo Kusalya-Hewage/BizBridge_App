@@ -38,6 +38,15 @@ class OwnerDashboardFragment : Fragment() {
  
         val mainActivity = activity as? MainActivity
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
+
+        // Pre-populate business name & category immediately from session
+        val profile = UserSessionManager.getProfile()
+        val sessionBizName = (profile?.get("businessName") as? String)?.ifBlank { null }
+        val sessionCategory = (profile?.get("category") as? String)?.ifBlank { null } ?: "Hair salon"
+        if (!sessionBizName.isNullOrBlank()) {
+            view.findViewById<TextView>(R.id.tv_owner_business_name)?.text = sessionBizName
+            view.findViewById<TextView>(R.id.tv_owner_subtitle)?.text = "$sessionBizName · $sessionCategory"
+        }
  
         // Notifications
         view.findViewById<View>(R.id.iv_owner_notifications)?.setOnClickListener {
