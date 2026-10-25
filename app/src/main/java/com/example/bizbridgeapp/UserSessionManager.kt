@@ -5,7 +5,9 @@ import android.content.SharedPreferences
 import com.example.bizbridgeapp.model.AdminAuditLog
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
+import com.example.bizbridgeapp.model.Promotion
 import com.example.bizbridgeapp.model.QualificationDocument
+import com.example.bizbridgeapp.model.Service
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -21,6 +23,8 @@ object UserSessionManager {
     private const val KEY_BUSINESSES = "local_businesses"
     private const val KEY_QUALIFICATIONS = "local_qualifications"
     private const val KEY_AUDIT_LOGS = "local_admin_audit_logs"
+    private const val KEY_SERVICES = "local_services"
+    private const val KEY_PROMOTIONS = "local_promotions"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
