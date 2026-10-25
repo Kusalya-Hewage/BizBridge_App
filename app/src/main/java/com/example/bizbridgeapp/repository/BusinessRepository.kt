@@ -103,16 +103,63 @@ object BusinessRepository {
             onSuccess(null)
             return
         }
+
+        val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+            .firstOrNull { it.id == businessId || it.name.equals(businessId, ignoreCase = true) }
+
         db.collection(COLLECTION).document(businessId).get()
             .addOnSuccessListener { snap ->
                 if (snap.exists()) {
                     val bus = snap.toObject(Business::class.java)?.copy(id = snap.id)
                     onSuccess(bus)
+                } else if (localBiz != null) {
+                    onSuccess(localBiz)
+                } else {
+                    // Try looking up by name in Firestore
+                    db.collection(COLLECTION).whereEqualTo("name", businessId).limit(1).get()
+                        .addOnSuccessListener { nameSnap ->
+                            if (!nameSnap.isEmpty) {
+                                val doc = nameSnap.documents.first()
+                                onSuccess(doc.toObject(Business::class.java)?.copy(id = doc.id))
+                            } else {
+                                val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
+                                val savedBizId = sessionProfile?.get("businessId") as? String
+                                val savedName = sessionProfile?.get("businessName") as? String
+                                if (!savedName.isNullOrBlank() && (savedBizId == businessId || businessId.startsWith("biz_"))) {
+                                    onSuccess(
+                                        Business(
+                                            id = businessId,
+                                            ownerId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                                            name = savedName,
+                                            category = (sessionProfile["category"] as? String) ?: "Hair salon",
+                                            contactNumber = (sessionProfile["phone"] as? String) ?: "",
+                                            description = (sessionProfile["description"] as? String) ?: "Welcome to $savedName!",
+                                            address = (sessionProfile["address"] as? String) ?: "Colombo, Sri Lanka",
+                                            imageUrl = (sessionProfile["imageUrl"] as? String),
+                                            approvalStatus = (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
+                                            verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
+                                            approved = (sessionProfile["approved"] as? Boolean) ?: false,
+                                            active = (sessionProfile["active"] as? Boolean) ?: false,
+                                            trustScore = 80
+                                        )
+                                    )
+                                } else {
+                                    onSuccess(null)
+                                }
+                            }
+                        }
+                        .addOnFailureListener {
+                            onSuccess(localBiz)
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                if (localBiz != null) {
+                    onSuccess(localBiz)
                 } else {
                     val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
-                    val savedBizId = sessionProfile?.get("businessId") as? String
                     val savedName = sessionProfile?.get("businessName") as? String
-                    if (!savedName.isNullOrBlank() && (savedBizId == businessId || businessId.startsWith("biz_"))) {
+                    if (!savedName.isNullOrBlank()) {
                         onSuccess(
                             Business(
                                 id = businessId,
@@ -120,34 +167,12 @@ object BusinessRepository {
                                 name = savedName,
                                 category = (sessionProfile["category"] as? String) ?: "Hair salon",
                                 contactNumber = (sessionProfile["phone"] as? String) ?: "",
-                                description = "Welcome to $savedName!",
-                                approvalStatus = (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
-                                verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
-                                approved = (sessionProfile["approved"] as? Boolean) ?: false,
-                                active = (sessionProfile["active"] as? Boolean) ?: false,
-                                trustScore = 80
+                                imageUrl = (sessionProfile["imageUrl"] as? String)
                             )
                         )
                     } else {
                         onSuccess(null)
                     }
-                }
-            }
-            .addOnFailureListener { e ->
-                val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
-                val savedName = sessionProfile?.get("businessName") as? String
-                if (!savedName.isNullOrBlank()) {
-                    onSuccess(
-                        Business(
-                            id = businessId,
-                            ownerId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "",
-                            name = savedName,
-                            category = (sessionProfile["category"] as? String) ?: "Hair salon",
-                            contactNumber = (sessionProfile["phone"] as? String) ?: ""
-                        )
-                    )
-                } else {
-                    onSuccess(null)
                 }
             }
     }
