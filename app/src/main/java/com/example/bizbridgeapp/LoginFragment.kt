@@ -205,6 +205,46 @@ class LoginFragment : Fragment() {
                             "accountStatus" to "ACTIVE"
                         )
                         UserSessionManager.saveRegisteredAccount(email, password, hairloftProfile)
+
+                        // Also persist to Firestore so Admin sees it in real-time
+                        val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        val bizData = hashMapOf(
+                            "id" to "biz_hairloft",
+                            "ownerId" to "owner_hairloft",
+                            "name" to "Hair Loft",
+                            "category" to "Hair salon",
+                            "description" to "Welcome to Hair Loft! Premium hair salon experience.",
+                            "address" to "Colombo, Sri Lanka",
+                            "contactNumber" to "0771234567",
+                            "approved" to false,
+                            "active" to false,
+                            "approvalStatus" to "PENDING",
+                            "verificationStatus" to "PENDING",
+                            "trustScore" to 80,
+                            "rating" to 0.0,
+                            "reviewCount" to 0,
+                            "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                        )
+                        firestore.collection("businesses").document("biz_hairloft")
+                            .set(bizData, com.google.firebase.firestore.SetOptions.merge())
+
+                        val appData = hashMapOf(
+                            "id" to "app_hairloft",
+                            "ownerId" to "owner_hairloft",
+                            "businessId" to "biz_hairloft",
+                            "businessName" to "Hair Loft",
+                            "ownerName" to "Hair Loft Owner",
+                            "email" to email,
+                            "contactNumber" to "0771234567",
+                            "category" to "Hair salon",
+                            "address" to "Colombo, Sri Lanka",
+                            "status" to "PENDING",
+                            "submittedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
+                            "rejectionReason" to ""
+                        )
+                        firestore.collection("businessApplications").document("app_hairloft")
+                            .set(appData, com.google.firebase.firestore.SetOptions.merge())
+
                         activity?.runOnUiThread {
                             btnLogin.isEnabled = true
                             routeUser("BUSINESS_OWNER", hairloftProfile)
