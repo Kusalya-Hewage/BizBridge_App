@@ -286,16 +286,5 @@ object QualificationRepository {
             onSuccess()
         }
     }
-                        title = "Document Rejected",
-                        message = "Your document '${doc.title}' could not be verified: $reason",
-                        category = "SYSTEM",
-                        relatedBusinessId = doc.businessId
-                    ),
-                    onSuccess = {},
-                    onFailure = {}
-                )
-                onSuccess()
-            }.addOnFailureListener { onFailure(it) }
-        }.addOnFailureListener { onFailure(it) }
-    }
 }
+
