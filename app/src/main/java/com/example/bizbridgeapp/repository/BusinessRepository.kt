@@ -70,16 +70,9 @@ object BusinessRepository {
         )
     )
 
-    /** Seed initial demo businesses to Firestore if collection is empty */
+    /** Seed initial demo businesses - disabled so real data is used */
     fun seedDefaultBusinessesIfEmpty(onComplete: (List<Business>) -> Unit = {}) {
-        val batch = db.batch()
-        for (biz in defaultDemoBusinesses) {
-            val docRef = db.collection(COLLECTION).document(biz.id)
-            batch.set(docRef, biz.toMap())
-        }
-        batch.commit()
-            .addOnSuccessListener { onComplete(defaultDemoBusinesses) }
-            .addOnFailureListener { onComplete(defaultDemoBusinesses) }
+        onComplete(emptyList())
     }
 
     /** Fetch all approved and active businesses from Firestore */
@@ -87,27 +80,18 @@ object BusinessRepository {
         onSuccess: (List<Business>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection(COLLECTION).get()
+        db.collection(COLLECTION)
+            .whereEqualTo("approved", true)
+            .whereEqualTo("active", true)
+            .get()
             .addOnSuccessListener { snapshot ->
-                if (snapshot.isEmpty) {
-                    seedDefaultBusinessesIfEmpty { seeded ->
-                        onSuccess(seeded)
-                    }
-                } else {
-                    val list = snapshot.documents.mapNotNull { doc ->
-                        doc.toObject(Business::class.java)?.copy(id = doc.id)
-                    }
-                    val visible = if (list.any { it.approved && it.active }) {
-                        list.filter { it.approved && it.active }
-                    } else {
-                        list
-                    }
-                    onSuccess(visible)
+                val list = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Business::class.java)?.copy(id = doc.id)
                 }
+                onSuccess(list)
             }
             .addOnFailureListener { e ->
-                // Provide fallback demonstration businesses so UI remains interactive
-                onSuccess(defaultDemoBusinesses)
+                onSuccess(emptyList())
             }
     }
 
@@ -130,7 +114,7 @@ object BusinessRepository {
                 }
             },
             onFailure = {
-                onSuccess(defaultDemoBusinesses)
+                onSuccess(emptyList())
             }
         )
     }
@@ -157,7 +141,7 @@ object BusinessRepository {
                 }
             },
             onFailure = {
-                onSuccess(defaultDemoBusinesses)
+                onSuccess(emptyList())
             }
         )
     }
@@ -386,11 +370,11 @@ object BusinessRepository {
             .whereEqualTo("active", true)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) {
-                    onUpdate(defaultDemoBusinesses)
+                    onUpdate(emptyList())
                     return@addSnapshotListener
                 }
                 val list = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
-                onUpdate(if (list.isNotEmpty()) list else defaultDemoBusinesses)
+                onUpdate(list)
             }
     }
 }

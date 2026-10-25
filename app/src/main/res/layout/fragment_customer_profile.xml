@@ -48,7 +48,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · DEMONSTRATION DATA"
+                    android:text="BIZBRIDGE · CUSTOMER PROFILE"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
@@ -96,21 +96,41 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-                <!-- Avatar Circle MC -->
+                <!-- Avatar Circle with Camera badge -->
                 <FrameLayout
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:background="@drawable/bg_score_badge">
+                    android:id="@+id/btn_edit_avatar"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:background="@drawable/bg_score_badge"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:id="@+id/iv_profile_photo"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone" />
 
                     <TextView
+                        android:id="@+id/tv_avatar_initials"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:fontFamily="@font/inter_variable"
                         android:text="MC"
                         android:textColor="@color/white"
-                        android:textSize="20sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_circle_white"
+                        android:padding="3dp"
+                        android:src="@drawable/ic_camera"
+                        app:tint="@color/primary" />
                 </FrameLayout>
 
                 <TextView
