@@ -17,7 +17,7 @@ class OwnerCustomerReviewsFragment : Fragment() {
 
     private var reviewsListener: ListenerRegistration? = null
     private var allReviews: List<Review> = emptyList()
-    private var currentBusinessId: String = "biz_juniper_studio"
+    private var currentBusinessId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +42,11 @@ class OwnerCustomerReviewsFragment : Fragment() {
 
         val cardMaya = view.findViewById<View>(R.id.card_review_maya)
         val cardJordan = view.findViewById<View>(R.id.card_review_jordan)
+
+        if (currentBusinessId != "biz_juniper_studio") {
+            cardMaya?.visibility = View.GONE
+            cardJordan?.visibility = View.GONE
+        }
 
         // Reply actions
         view.findViewById<View>(R.id.btn_reply_maya)?.setOnClickListener {
