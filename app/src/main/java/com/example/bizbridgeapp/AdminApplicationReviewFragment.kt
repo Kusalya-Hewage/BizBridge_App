@@ -188,5 +188,128 @@ class AdminApplicationReviewFragment : Fragment() {
 
         rootView.findViewById<TextView>(R.id.tv_review_description)?.text =
             "“Registration submitted for ${app.businessName}. Services in ${app.category} category located at ${app.address}.”"
+
+        // Load submitted qualification documents for this business/owner
+        val docsContainer = rootView.findViewById<android.widget.LinearLayout>(R.id.ll_admin_submitted_docs_container)
+        if (docsContainer != null) {
+            com.example.bizbridgeapp.repository.QualificationRepository.getDocumentsForBusiness(
+                businessId = app.businessId,
+                ownerId = app.ownerId,
+                onSuccess = { docs ->
+                    if (!isAdded || docs.isEmpty()) return@getDocumentsForBusiness
+                    docsContainer.removeAllViews()
+
+                    for (doc in docs) {
+                        val docCard = android.widget.LinearLayout(requireContext()).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                bottomMargin = (10 * resources.displayMetrics.density).toInt()
+                            }
+                            orientation = android.widget.LinearLayout.HORIZONTAL
+                            gravity = android.view.Gravity.CENTER_VERTICAL
+                            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_admin_card)
+                            elevation = (1 * resources.displayMetrics.density)
+                            val pad = (14 * resources.displayMetrics.density).toInt()
+                            setPadding(pad, pad, pad, pad)
+                        }
+
+                        val icon = android.widget.ImageView(requireContext()).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                (24 * resources.displayMetrics.density).toInt(),
+                                (24 * resources.displayMetrics.density).toInt()
+                            ).apply {
+                                marginEnd = (12 * resources.displayMetrics.density).toInt()
+                            }
+                            setImageResource(R.drawable.ic_admin_certificate_seal)
+                            setColorFilter(ContextCompat.getColor(requireContext(), R.color.admin_primary))
+                        }
+
+                        val textLayout = android.widget.LinearLayout(requireContext()).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                0,
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            orientation = android.widget.LinearLayout.VERTICAL
+                        }
+
+                        val titleView = TextView(requireContext()).apply {
+                            text = doc.title
+                            textSize = 14f
+                            setTypeface(typeface, android.graphics.Typeface.BOLD)
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.admin_text_title))
+                        }
+
+                        val subtitleView = TextView(requireContext()).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                topMargin = (2 * resources.displayMetrics.density).toInt()
+                            }
+                            val org = if (doc.issuingOrg.isNotBlank()) doc.issuingOrg else "Professional Credential"
+                            text = "$org · Status: ${doc.verificationStatus}"
+                            textSize = 12f
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.admin_text_muted))
+                        }
+
+                        textLayout.addView(titleView)
+                        textLayout.addView(subtitleView)
+
+                        val actionBtn = TextView(requireContext()).apply {
+                            layoutParams = android.widget.LinearLayout.LayoutParams(
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+                            )
+                            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_admin_pill_button)
+                            val padH = (12 * resources.displayMetrics.density).toInt()
+                            val padV = (6 * resources.displayMetrics.density).toInt()
+                            setPadding(padH, padV, padH, padV)
+                            textSize = 12f
+                            setTypeface(typeface, android.graphics.Typeface.BOLD)
+                            isClickable = true
+                            isFocusable = true
+
+                            when (doc.verificationStatus.uppercase()) {
+                                "VERIFIED" -> {
+                                    text = "Verified ✓"
+                                    setTextColor(ContextCompat.getColor(requireContext(), R.color.secondary_dark))
+                                }
+                                "REJECTED" -> {
+                                    text = "Rejected ✗"
+                                    setTextColor(ContextCompat.getColor(requireContext(), R.color.error_text))
+                                }
+                                else -> {
+                                    text = "Review"
+                                    setTextColor(ContextCompat.getColor(requireContext(), R.color.admin_primary))
+                                }
+                            }
+
+                            setOnClickListener {
+                                (activity as? MainActivity)?.navigateTo(
+                                    AdminVerifyQualificationFragment.newInstance(doc.id),
+                                    addToBackStack = true
+                                )
+                            }
+                        }
+
+                        docCard.addView(icon)
+                        docCard.addView(textLayout)
+                        docCard.addView(actionBtn)
+
+                        docCard.setOnClickListener {
+                            (activity as? MainActivity)?.navigateTo(
+                                AdminVerifyQualificationFragment.newInstance(doc.id),
+                                addToBackStack = true
+                            )
+                        }
+
+                        docsContainer.addView(docCard)
+                    }
+                }
+            )
+        }
     }
 }
