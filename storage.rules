@@ -7,37 +7,10 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    // Profile Images: User can upload their own profile photo (max 5MB)
-    match /profile_images/{userId}.jpg {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated()
-                   && request.resource.size < 5 * 1024 * 1024;
-    }
-
-    // Business Covers & Logos (max 10MB)
-    match /business_covers/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated()
-                   && request.resource.size < 10 * 1024 * 1024;
-    }
-
-    match /business_images/{businessId}/{imageName} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated()
-                   && request.resource.size < 10 * 1024 * 1024;
-    }
-
-    // Qualification Documents (PDF or Images, max 15MB)
-    match /qualification_docs/{businessId}/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated()
-                   && request.resource.size < 15 * 1024 * 1024;
-    }
-
-    match /qualification_docs/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated()
-                   && request.resource.size < 15 * 1024 * 1024;
+    // Public read for images and documents, authenticated write with 20MB limit
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.resource.size < 20 * 1024 * 1024;
     }
   }
 }
