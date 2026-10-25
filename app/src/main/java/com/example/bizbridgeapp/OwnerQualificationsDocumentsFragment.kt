@@ -18,35 +18,6 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
 
     private var docsListener: ListenerRegistration? = null
     private var currentBusinessId: String = "biz_juniper_studio"
-    private lateinit var imagePickerHelper: ImagePickerHelper
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        imagePickerHelper = ImagePickerHelper(this) { uri ->
-            val ownerId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "owner_elena"
-            val newDoc = QualificationDocument(
-                businessId = currentBusinessId,
-                ownerId = ownerId,
-                title = "Professional Qualification Certificate",
-                documentType = "PROFESSIONAL_CERT",
-                verificationStatus = "PENDING"
-            )
-
-            QualificationRepository.submitDocument(
-                doc = newDoc,
-                onSuccess = {
-                    if (isAdded) {
-                        Toast.makeText(requireContext(), "Certificate photo captured! Submitted to Admin for verification.", Toast.LENGTH_LONG).show()
-                    }
-                },
-                onFailure = { e ->
-                    if (isAdded) {
-                        Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to upload document.", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -69,14 +40,24 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
         val btnUpload = view.findViewById<Button>(R.id.btn_upload_document)
         val btnResubmit = view.findViewById<TextView>(R.id.btn_resubmit_document)
 
-        // Upload new Qualification Document via Camera or Gallery
+        // Upload new Qualification Document to Firestore
         btnUpload?.setOnClickListener {
-            imagePickerHelper.showImageSourceDialog("Upload Certificate / Qualification")
-        }
+            btnUpload.isEnabled = false
+            btnUpload.text = "Submitting to Firestore…"
 
-        btnResubmit?.setOnClickListener {
-            imagePickerHelper.showImageSourceDialog("Resubmit Certificate")
-        }
+            val newDoc = QualificationDocument(
+                businessId = currentBusinessId,
+                ownerId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "owner_elena",
+                title = "Advanced Stylist Master Certification",
+                documentType = "PROFESSIONAL_CERT",
+                verificationStatus = "PENDING"
+            )
+
+            QualificationRepository.submitDocument(
+                doc = newDoc,
+                onSuccess = {
+                    if (isAdded) {
+                        btnUpload.isEnabled = true
                         btnUpload.text = "Upload document"
                         Toast.makeText(requireContext(), "Document submitted to Admin for verification.", Toast.LENGTH_SHORT).show()
                     }
