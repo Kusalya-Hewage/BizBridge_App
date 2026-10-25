@@ -147,7 +147,11 @@ class CustomerProfileFragment : Fragment() {
                     .show()
             }
         }
-        view.findViewById<LinearLayout>(R.id.row_admin_workspace)?.setOnClickListener {
+        val sessionRole = UserSessionManager.getProfile()?.get("role") as? String
+        val isAdminUser = sessionRole.equals("ADMIN", ignoreCase = true)
+        val adminRow = view.findViewById<LinearLayout>(R.id.row_admin_workspace)
+        adminRow?.visibility = if (isAdminUser) View.VISIBLE else View.GONE
+        adminRow?.setOnClickListener {
             (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
         }
         view.findViewById<LinearLayout>(R.id.row_privacy_policy)?.setOnClickListener {
