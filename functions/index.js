@@ -96,8 +96,8 @@ exports.setAdminClaim = functions.https.onCall(async (data, context) => {
   const callerEmail = context.auth.token.email;
   const targetEmail = data.email;
 
-  // Only alex@bizbridge.example or existing admin can grant admin claim
-  if (callerEmail !== "alex@bizbridge.example") {
+  // Only platform admin can grant admin claim
+  if (callerEmail !== "alex@bizbridge.example" && callerEmail !== "admin@bizbridge.com") {
     throw new functions.https.HttpsError("permission-denied", "Unauthorized caller.");
   }
 

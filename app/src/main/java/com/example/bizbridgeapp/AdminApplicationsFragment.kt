@@ -1,11 +1,16 @@
 package com.example.bizbridgeapp
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.bizbridgeapp.model.BusinessApplication
 import com.example.bizbridgeapp.repository.AdminRepository
@@ -15,6 +20,20 @@ class AdminApplicationsFragment : Fragment() {
 
     private var appsListener: ListenerRegistration? = null
     private var allApplications: List<BusinessApplication> = emptyList()
+    private var currentFilterStatus: String = "PENDING" // "PENDING", "APPROVED", "REJECTED", "ALL"
+    private var selectedCategory: String = "All"
+    private var searchQuery: String = ""
+
+    private val categories = arrayOf(
+        "All",
+        "Hair salon",
+        "Beauty & Spa",
+        "Fitness",
+        "Repair & Maintenance",
+        "Wellness",
+        "Education",
+        "Other"
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,57 +55,149 @@ class AdminApplicationsFragment : Fragment() {
             mainActivity?.navigateTo(AdminAnnouncementsFragment(), addToBackStack = true)
         }
 
-        val card1 = view.findViewById<View>(R.id.card_willow_wellness)
-        val card2 = view.findViewById<View>(R.id.card_linden_beauty)
-        val card3 = view.findViewById<View>(R.id.card_fixwell_repairs)
+        val tabPending = view.findViewById<TextView>(R.id.tab_pending)
+        val tabApproved = view.findViewById<TextView>(R.id.tab_approved)
+        val tabRejected = view.findViewById<TextView>(R.id.tab_rejected)
+        val btnCategory = view.findViewById<View>(R.id.btn_category_dropdown)
+        val etSearch = view.findViewById<EditText>(R.id.et_search_apps)
 
-        // Listen to live business applications from Firestore
+        fun updateTabStyles() {
+            val activeBg = R.drawable.bg_admin_tab_active
+            val inactiveBg = R.drawable.bg_admin_tab_inactive
+            val activeColor = ContextCompat.getColor(requireContext(), R.color.white)
+            val inactiveColor = ContextCompat.getColor(requireContext(), R.color.admin_text_body)
+
+            tabPending?.setBackgroundResource(if (currentFilterStatus == "PENDING") activeBg else inactiveBg)
+            tabPending?.setTextColor(if (currentFilterStatus == "PENDING") activeColor else inactiveColor)
+
+            tabApproved?.setBackgroundResource(if (currentFilterStatus == "APPROVED") activeBg else inactiveBg)
+            tabApproved?.setTextColor(if (currentFilterStatus == "APPROVED") activeColor else inactiveColor)
+
+            tabRejected?.setBackgroundResource(if (currentFilterStatus == "REJECTED") activeBg else inactiveBg)
+            tabRejected?.setTextColor(if (currentFilterStatus == "REJECTED") activeColor else inactiveColor)
+        }
+
+        tabPending?.setOnClickListener {
+            currentFilterStatus = "PENDING"
+            updateTabStyles()
+            renderList(view)
+        }
+
+        tabApproved?.setOnClickListener {
+            currentFilterStatus = "APPROVED"
+            updateTabStyles()
+            renderList(view)
+        }
+
+        tabRejected?.setOnClickListener {
+            currentFilterStatus = "REJECTED"
+            updateTabStyles()
+            renderList(view)
+        }
+
+        btnCategory?.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Filter by Category")
+                .setItems(categories) { _, which ->
+                    selectedCategory = categories[which]
+                    renderList(view)
+                }
+                .show()
+        }
+
+        etSearch?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchQuery = s?.toString()?.trim().orEmpty()
+                renderList(view)
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        // Listen to live business applications
         appsListener = AdminRepository.listenToApplications { list ->
             if (!isAdded) return@listenToApplications
             allApplications = list
-            val pendingCount = list.count { it.status == "PENDING" }
-            view.findViewById<TextView>(R.id.tab_pending)?.text = "Pending  $pendingCount"
+            val pendingCount = list.count { it.status.equals("PENDING", ignoreCase = true) }
+            tabPending?.text = "Pending  $pendingCount"
 
-            val app0 = list.getOrNull(0)
-            val app1 = list.getOrNull(1)
-            val app2 = list.getOrNull(2)
+            renderList(view)
+        }
+    }
 
-            if (app0 != null) {
-                card1?.visibility = View.VISIBLE
-                view.findViewById<TextView>(R.id.tv_willow_name)?.text = app0.businessName
-                view.findViewById<TextView>(R.id.tv_willow_owner)?.text = app0.ownerName
-                view.findViewById<TextView>(R.id.tv_willow_category)?.text = "${app0.category} · ${app0.address}"
-                view.findViewById<TextView>(R.id.badge_willow_status)?.text = app0.status
-                val openApp0 = View.OnClickListener {
-                    mainActivity?.navigateTo(AdminApplicationReviewFragment.newInstance(app0.id), addToBackStack = true)
-                }
-                card1?.setOnClickListener(openApp0)
-                view.findViewById<View>(R.id.btn_open_app_willow)?.setOnClickListener(openApp0)
+    private fun renderList(rootView: View) {
+        val container = rootView.findViewById<LinearLayout>(R.id.ll_applications_container) ?: return
+        val emptyView = rootView.findViewById<View>(R.id.ll_empty_applications)
+
+        val filtered = allApplications.filter { app ->
+            val matchStatus = when (currentFilterStatus) {
+                "PENDING" -> app.status.equals("PENDING", ignoreCase = true)
+                "APPROVED" -> app.status.equals("APPROVED", ignoreCase = true)
+                "REJECTED" -> app.status.equals("REJECTED", ignoreCase = true)
+                else -> true
+            }
+            val matchCategory = if (selectedCategory.equals("All", ignoreCase = true)) {
+                true
             } else {
-                card1?.visibility = View.GONE
+                app.category.contains(selectedCategory, ignoreCase = true)
+            }
+            val matchSearch = if (searchQuery.isEmpty()) {
+                true
+            } else {
+                app.businessName.contains(searchQuery, ignoreCase = true) ||
+                app.ownerName.contains(searchQuery, ignoreCase = true)
+            }
+            matchStatus && matchCategory && matchSearch
+        }
+
+        container.removeAllViews()
+
+        if (filtered.isEmpty()) {
+            emptyView?.visibility = View.VISIBLE
+            return
+        }
+        emptyView?.visibility = View.GONE
+
+        val inflater = LayoutInflater.from(requireContext())
+        val mainActivity = activity as? MainActivity
+
+        for (app in filtered) {
+            val itemView = inflater.inflate(R.layout.item_admin_application_card, container, false)
+            val tvName = itemView.findViewById<TextView>(R.id.tv_app_business_name)
+            val badgeStatus = itemView.findViewById<TextView>(R.id.badge_app_status)
+            val tvOwner = itemView.findViewById<TextView>(R.id.tv_app_owner_name)
+            val tvCategory = itemView.findViewById<TextView>(R.id.tv_app_category_location)
+            val btnOpen = itemView.findViewById<View>(R.id.btn_open_application)
+
+            tvName?.text = app.businessName
+            tvOwner?.text = app.ownerName.ifEmpty { "Business Owner" }
+            tvCategory?.text = "${app.category} · ${app.address}"
+
+            when (app.status.uppercase()) {
+                "APPROVED" -> {
+                    badgeStatus?.text = "Approved"
+                    badgeStatus?.setBackgroundResource(R.drawable.bg_admin_badge_active)
+                    badgeStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.admin_badge_active_text))
+                }
+                "REJECTED" -> {
+                    badgeStatus?.text = "Rejected"
+                    badgeStatus?.setBackgroundResource(R.drawable.bg_badge_cancelled)
+                    badgeStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.badge_cancelled_text))
+                }
+                else -> {
+                    badgeStatus?.text = "Pending"
+                    badgeStatus?.setBackgroundResource(R.drawable.bg_admin_badge_pending)
+                    badgeStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.admin_badge_pending_text))
+                }
             }
 
-            if (app1 != null) {
-                card2?.visibility = View.VISIBLE
-                val openApp1 = View.OnClickListener {
-                    mainActivity?.navigateTo(AdminApplicationReviewFragment.newInstance(app1.id), addToBackStack = true)
-                }
-                card2?.setOnClickListener(openApp1)
-                view.findViewById<View>(R.id.btn_open_app_linden)?.setOnClickListener(openApp1)
-            } else {
-                card2?.visibility = View.GONE
+            val openAction = View.OnClickListener {
+                mainActivity?.navigateTo(AdminApplicationReviewFragment.newInstance(app.id), addToBackStack = true)
             }
+            itemView.setOnClickListener(openAction)
+            btnOpen?.setOnClickListener(openAction)
 
-            if (app2 != null) {
-                card3?.visibility = View.VISIBLE
-                val openApp2 = View.OnClickListener {
-                    mainActivity?.navigateTo(AdminApplicationReviewFragment.newInstance(app2.id), addToBackStack = true)
-                }
-                card3?.setOnClickListener(openApp2)
-                view.findViewById<View>(R.id.btn_open_app_fixwell)?.setOnClickListener(openApp2)
-            } else {
-                card3?.visibility = View.GONE
-            }
+            container.addView(itemView)
         }
     }
 

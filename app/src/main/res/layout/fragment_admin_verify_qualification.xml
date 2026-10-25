@@ -20,7 +20,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="32dp">
 
-            <!-- Top Demonstration Badge -->
+            <!-- Top Badge -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -33,7 +33,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN · DEMONSTRATION DATA"
+                    android:text="ADMIN CONSOLE · VERIFICATION"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -87,41 +87,45 @@
                     app:tint="@color/admin_primary" />
 
                 <TextView
+                    android:id="@+id/tv_verify_cert_issuer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="CALIFORNIA WELLNESS INSTITUTE"
+                    android:text="ISSUING AUTHORITY"
                     android:textColor="@color/admin_text_title"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_verify_cert_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Massage Therapy Certificate"
+                    android:text="Qualification Certificate"
                     android:textColor="@color/admin_text_title"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_verify_cert_owner_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Nora Ahmed · Issued June 2020"
+                    android:text="Business Owner · Credential"
                     android:textColor="@color/admin_text_body"
                     android:textSize="13sp" />
 
                 <TextView
+                    android:id="@+id/tv_verify_cert_credential_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.04"
-                    android:text="CERT-CWI-418724 · NOT A REAL CREDENTIAL"
+                    android:text="VERIFICATION PENDING"
                     android:textColor="@color/admin_text_muted"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -129,10 +133,11 @@
 
             <!-- Certificate Metadata Details -->
             <TextView
+                android:id="@+id/tv_verify_cert_metadata"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/inter_variable"
-                android:text="Willow Wellness · Nora Ahmed · Uploaded Oct 22 (cert-therapy.pdf)"
+                android:text="Official Submitted Document"
                 android:textColor="@color/admin_text_muted"
                 android:textSize="11sp" />
 

@@ -419,13 +419,22 @@ object FirebaseAuthManager {
             .addOnSuccessListener { snap ->
                 if (snap.exists() && snap.data != null) {
                     val data = snap.data!!.toMutableMap()
-                    val bizId = data["businessId"] as? String
-                    if (!bizId.isNullOrBlank() && (data["businessName"] == null || (data["businessName"] as? String).isNullOrBlank())) {
+                    val role = data["role"] as? String ?: ""
+                    val bizId = (data["businessId"] as? String)?.ifBlank { null } ?: if (role.equals("BUSINESS_OWNER", ignoreCase = true)) "biz_${uid.take(12)}" else null
+
+                    if (!bizId.isNullOrBlank()) {
+                        data["businessId"] = bizId
                         firestore.collection("businesses").document(bizId).get()
                             .addOnSuccessListener { bSnap ->
                                 if (bSnap.exists()) {
-                                    data["businessName"] = bSnap.getString("name") ?: ""
-                                    data["category"] = bSnap.getString("category") ?: "Hair salon"
+                                    val bName = bSnap.getString("name") ?: ""
+                                    val cat = bSnap.getString("category") ?: "Hair salon"
+                                    if (bName.isNotBlank()) data["businessName"] = bName
+                                    if (cat.isNotBlank()) data["category"] = cat
+                                    data["approvalStatus"] = bSnap.getString("approvalStatus") ?: "PENDING"
+                                    data["verificationStatus"] = bSnap.getString("verificationStatus") ?: "PENDING"
+                                    data["approved"] = bSnap.getBoolean("approved") ?: false
+                                    data["active"] = bSnap.getBoolean("active") ?: false
                                 }
                                 onSuccess(data)
                             }
@@ -445,6 +454,8 @@ object FirebaseAuthManager {
                                     "businessId" to bDoc.id,
                                     "businessName" to (bDoc.getString("name") ?: "My Business"),
                                     "category" to (bDoc.getString("category") ?: "Hair salon"),
+                                    "approvalStatus" to (bDoc.getString("approvalStatus") ?: "PENDING"),
+                                    "verificationStatus" to (bDoc.getString("verificationStatus") ?: "PENDING"),
                                     "accountStatus" to "ACTIVE"
                                 )
                                 onSuccess(recovered)

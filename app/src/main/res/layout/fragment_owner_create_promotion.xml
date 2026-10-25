@@ -265,7 +265,7 @@
                     android:layout_marginStart="10dp"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="2dp"
-                    android:text="Publishing makes this sample offer visible on your demonstration listing. No discounts or payments are processed."
+                    android:text="Publishing makes this special offer visible to customers browsing your business listing."
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>

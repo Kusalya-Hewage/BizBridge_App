@@ -21,7 +21,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <!-- Top Demonstration Badge -->
+            <!-- Top Console Badge -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN · BUSINESS DIRECTORY"
+                    android:text="ADMIN CONSOLE · DIRECTORY"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -134,14 +134,20 @@
 
                     <!-- All categories dropdown -->
                     <LinearLayout
+                        android:id="@+id/btn_category_dropdown"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/bg_admin_tab_active"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="6dp">
 
                         <TextView
+                            android:id="@+id/tv_category_filter"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
@@ -159,212 +165,100 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tab_active_listings"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/bg_admin_tab_inactive"
                         android:fontFamily="@font/inter_variable"
+                        android:paddingStart="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="6dp"
                         android:text="Active"
                         android:textColor="@color/admin_text_body"
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tab_inactive_listings"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_admin_tab_inactive"
                         android:fontFamily="@font/inter_variable"
+                        android:paddingStart="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="6dp"
                         android:text="Inactive"
                         android:textColor="@color/admin_text_body"
                         android:textSize="13sp" />
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <!-- 86 Listings Counter -->
+            <!-- Listings Counter -->
             <TextView
+                android:id="@+id/tv_stat_businesses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:fontFamily="@font/inter_variable"
-                android:text="86 listings"
+                android:text="0 listings"
                 android:textColor="@color/admin_text_title"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Card 1: Juniper Studio -->
+            <!-- Empty State -->
             <LinearLayout
+                android:id="@+id/ll_empty_listings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp"
                 android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
+                android:gravity="center"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="32dp"
+                android:visibility="gone">
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Juniper Studio"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_admin_badge_active"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Active"
-                        android:textColor="@color/admin_badge_active_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="12dp"
+                    android:src="@drawable/ic_storefront"
+                    app:tint="@color/admin_text_muted" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Hair salon · Sofia Ramos"
+                    android:text="No businesses found"
+                    android:textColor="@color/admin_text_title"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/inter_variable"
+                    android:gravity="center"
+                    android:text="Registered and approved businesses will appear in this directory."
                     android:textColor="@color/admin_text_muted"
                     android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_juniper"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="View details · Deactivate listing"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Card 2: Bloom Beauty Bar -->
+            <!-- Dynamic Listings Container -->
             <LinearLayout
+                android:id="@+id/ll_listings_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Bloom Beauty Bar"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_admin_badge_active"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Active"
-                        android:textColor="@color/admin_badge_active_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Beauty · Grace Kim"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_bloom"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="View details · Deactivate listing"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- Card 3: Forma Wellness -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="18dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Forma Wellness"
-                        android:textColor="@color/admin_text_title"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@drawable/bg_admin_badge_active"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Active"
-                        android:textColor="@color/admin_badge_active_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Wellness · Grace Kim"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_forma"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="View details · Deactivate listing"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                android:orientation="vertical" />
 
             <!-- Moderation Notice Footer -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_admin_cert_preview"
                 android:orientation="vertical"
                 android:padding="14dp">
@@ -373,7 +267,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Moderation reason"
+                    android:text="Administrative moderation"
                     android:textColor="@color/admin_text_title"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -392,7 +286,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="An audit entry records the actor, reason and decision in this demo workflow."
+                    android:text="Actions and status changes are recorded in official platform audit logs."
                     android:textColor="@color/admin_text_muted"
                     android:textSize="11sp" />
             </LinearLayout>

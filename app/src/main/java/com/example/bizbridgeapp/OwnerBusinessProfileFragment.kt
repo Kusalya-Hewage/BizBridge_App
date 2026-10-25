@@ -62,6 +62,12 @@ class OwnerBusinessProfileFragment : Fragment() {
         }
 
         // Load current business from Firestore
+        val currentEmail = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.email
+            ?: (com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("email") as? String ?: "")
+        if (currentEmail.isNotBlank()) {
+            etEmail?.setText(currentEmail)
+        }
+
         BusinessRepository.getBusinessById(
             businessId = currentBusinessId,
             onSuccess = { biz ->
@@ -73,6 +79,7 @@ class OwnerBusinessProfileFragment : Fragment() {
                     etDesc?.setText(biz.description)
                     etAddress?.setText(biz.address)
                     if (biz.contactNumber.isNotBlank()) etPhone?.setText(biz.contactNumber)
+                    if (currentEmail.isNotBlank()) etEmail?.setText(currentEmail)
                 }
             },
             onFailure = {}

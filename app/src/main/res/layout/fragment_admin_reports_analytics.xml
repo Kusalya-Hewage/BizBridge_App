@@ -21,7 +21,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <!-- Top Demonstration Badge -->
+            <!-- Top Badge -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN · DEMONSTRATION DATA"
+                    android:text="ADMIN CONSOLE · ANALYTICS"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -394,7 +394,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Demonstration monthly trends · No live analytics"
+                    android:text="Monthly activity and platform engagement overview"
                     android:textColor="@color/admin_text_muted"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -549,7 +549,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:fontFamily="@font/inter_variable"
-                android:text="Static demonstration data · Export is not connected."
+                android:text="Platform analytics update periodically based on verified interactions."
                 android:textColor="@color/admin_text_muted"
                 android:textSize="11sp" />
 

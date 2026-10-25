@@ -21,7 +21,7 @@
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
-            <!-- Top Demonstration Badge -->
+            <!-- Top Badge -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN · USER ACCOUNTS"
+                    android:text="ADMIN CONSOLE · USERS"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -121,6 +121,10 @@
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/bg_admin_tab_active"
                         android:fontFamily="@font/inter_variable"
+                        android:paddingStart="14dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="6dp"
                         android:text="All"
                         android:textColor="@color/white"
                         android:textSize="13sp"
@@ -133,6 +137,10 @@
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/bg_admin_tab_inactive"
                         android:fontFamily="@font/inter_variable"
+                        android:paddingStart="14dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="6dp"
                         android:text="Customer"
                         android:textColor="@color/admin_text_body"
                         android:textSize="13sp" />
@@ -144,6 +152,10 @@
                         android:layout_marginEnd="8dp"
                         android:background="@drawable/bg_admin_tab_inactive"
                         android:fontFamily="@font/inter_variable"
+                        android:paddingStart="14dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="6dp"
                         android:text="Owner"
                         android:textColor="@color/admin_text_body"
                         android:textSize="13sp" />
@@ -154,337 +166,51 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_admin_tab_inactive"
                         android:fontFamily="@font/inter_variable"
+                        android:paddingStart="14dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="14dp"
+                        android:paddingBottom="6dp"
                         android:text="Admin"
                         android:textColor="@color/admin_text_body"
                         android:textSize="13sp" />
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <!-- User 1: Maya Chen -->
+            <!-- Dynamic Users Container -->
             <LinearLayout
+                android:id="@+id/ll_users_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical" />
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_admin_tab_active">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:fontFamily="@font/inter_variable"
-                                android:text="MC"
-                                android:textColor="@color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Maya Chen"
-                            android:textColor="@color/admin_text_title"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="@drawable/bg_admin_badge_active"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Active"
-                        android:textColor="@color/admin_badge_active_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="maya.chen@example.com · Customer"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_user_maya"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="View details · Suspend"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- User 2: Elena Rivera -->
+            <!-- Empty State -->
             <LinearLayout
+                android:id="@+id/ll_empty_users"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
+                android:gravity="center"
                 android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_admin_tab_active">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:fontFamily="@font/inter_variable"
-                                android:text="ER"
-                                android:textColor="@color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Elena Rivera"
-                            android:textColor="@color/admin_text_title"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="@drawable/bg_admin_badge_active"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Active"
-                        android:textColor="@color/admin_badge_active_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
+                android:padding="32dp"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
-                    android:text="elena@juniper.example · Business Owner"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_user_elena"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="View details · Suspend"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="12sp"
+                    android:text="No registered users found"
+                    android:textColor="@color/admin_text_title"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- User 3: Jamie Lewis -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_admin_tab_active">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:fontFamily="@font/inter_variable"
-                                android:text="JL"
-                                android:textColor="@color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Jamie Lewis"
-                            android:textColor="@color/admin_text_title"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="@drawable/bg_admin_tab_inactive"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Customer"
-                        android:textColor="@color/admin_text_muted"
-                        android:textSize="11sp" />
-                </RelativeLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="jamie.lewis@example.com · Customer"
+                    android:gravity="center"
+                    android:text="Registered customers and business owners will be listed here."
                     android:textColor="@color/admin_text_muted"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_user_jamie"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="View details · Suspend"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- User 4: Alex Morgan -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_admin_card"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <FrameLayout
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_admin_tab_active">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:fontFamily="@font/inter_variable"
-                                android:text="AM"
-                                android:textColor="@color/white"
-                                android:textSize="13sp"
-                                android:textStyle="bold" />
-                        </FrameLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="Alex Morgan"
-                            android:textColor="@color/admin_text_title"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="@drawable/bg_admin_badge_active"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Active"
-                        android:textColor="@color/admin_badge_active_text"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="alex@bizbridge.example · Admin"
-                    android:textColor="@color/admin_text_muted"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/btn_action_user_alex"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="View details · Suspend"
-                    android:textColor="@color/admin_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:textSize="13sp" />
             </LinearLayout>
 
         </LinearLayout>

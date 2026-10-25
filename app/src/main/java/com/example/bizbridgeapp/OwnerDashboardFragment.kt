@@ -121,10 +121,12 @@ class OwnerDashboardFragment : Fragment() {
             }
  
             // Rating and Review Count
-            val ratingText = if (biz.rating != null && biz.rating > 0) {
+            val ratingText = if (biz.rating != null && biz.rating > 0 && biz.reviewCount > 0) {
                 "★ ${String.format("%.1f", biz.rating)} · ${biz.reviewCount} customer reviews"
-            } else {
+            } else if (biz.reviewCount > 0) {
                 "★ 5.0 · ${biz.reviewCount} customer reviews"
+            } else {
+                "★ 0.0 · No customer reviews yet"
             }
             view.findViewById<TextView>(R.id.tv_rating_stars)?.text = ratingText
  

@@ -52,14 +52,14 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Demonstration Banner -->
+            <!-- Trust Score Info Banner -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card_lavender"
                 android:fontFamily="@font/inter_variable"
                 android:padding="14dp"
-                android:text="Demonstration score · Read only sample score, not a live assessment of the running service."
+                android:text="Trust Score · Calculated from completed appointments, authentic customer reviews, and verified business documentation."
                 android:textColor="@color/primary"
                 android:textSize="12sp" />
 
@@ -78,7 +78,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Trust Score · demonstration"
+                    android:text="Current Trust Score"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -288,7 +288,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:fontFamily="@font/inter_variable"
-                android:text="Demonstration score · Verified business status is a separate administrative status."
+                android:text="Verified business status is granted following administrative review of uploaded credentials."
                 android:textColor="@color/text_muted"
                 android:textSize="11sp" />
 

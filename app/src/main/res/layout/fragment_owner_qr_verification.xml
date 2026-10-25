@@ -52,14 +52,14 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Mockup Banner -->
+            <!-- Scanner Instructions Banner -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card_lavender"
                 android:fontFamily="@font/inter_variable"
                 android:padding="14dp"
-                android:text="Camera mockup · Static demonstration only. No camera access or QR scanning is active."
+                android:text="Align the customer's appointment QR code inside the viewfinder to verify attendance."
                 android:textColor="@color/primary"
                 android:textSize="12sp" />
 

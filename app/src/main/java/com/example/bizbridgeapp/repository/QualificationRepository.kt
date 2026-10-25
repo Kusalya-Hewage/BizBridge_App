@@ -18,61 +18,66 @@ object QualificationRepository {
         onSuccess: (id: String) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val finalOwnerId = if (doc.ownerId.isNotBlank() && doc.ownerId != "owner_elena") doc.ownerId else (currentUid ?: "owner_elena")
+        val finalBizId = if (doc.businessId.isNotBlank() && doc.businessId != "biz_juniper_studio") doc.businessId else BusinessRepository.getOwnerBusinessId()
+
         val docRef = if (doc.id.isNotEmpty()) db.collection(QUALIFICATIONS).document(doc.id) else db.collection(QUALIFICATIONS).document()
-        val toSave = doc.copy(id = docRef.id)
+        val toSave = doc.copy(
+            id = docRef.id,
+            ownerId = finalOwnerId,
+            businessId = finalBizId
+        )
         docRef.set(toSave.toMap())
             .addOnSuccessListener { onSuccess(docRef.id) }
             .addOnFailureListener { onFailure(it) }
     }
 
-    val defaultDemoQualifications = listOf(
-        QualificationDocument(
-            id = "doc_cosmetology_license",
-            businessId = "biz_juniper_studio",
-            ownerId = "owner_elena",
-            title = "State Cosmetology License",
-            documentType = "PROFESSIONAL_CERT",
-            verificationStatus = "VERIFIED"
-        ),
-        QualificationDocument(
-            id = "doc_advanced_colouring",
-            businessId = "biz_juniper_studio",
-            ownerId = "owner_elena",
-            title = "Advanced Hair Colouring Certificate",
-            documentType = "PROFESSIONAL_CERT",
-            verificationStatus = "VERIFIED"
-        ),
-        QualificationDocument(
-            id = "doc_salon_reg",
-            businessId = "biz_juniper_studio",
-            ownerId = "owner_elena",
-            title = "Salon Business Registration",
-            documentType = "BUSINESS_REGISTRATION",
-            verificationStatus = "PENDING"
-        )
-    )
-
-    fun seedDefaultQualificationsIfEmpty(businessId: String, onComplete: (List<QualificationDocument>) -> Unit = {}) {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
-        db.collection(QUALIFICATIONS).whereEqualTo("businessId", targetBizId).get().addOnSuccessListener { snap ->
-            if (snap.isEmpty) {
-                val batch = db.batch()
-                val seeded = defaultDemoQualifications.map { d ->
-                    val docRef = db.collection(QUALIFICATIONS).document(d.id)
-                    val toSave = d.copy(businessId = targetBizId)
-                    batch.set(docRef, toSave.toMap())
-                    toSave
-                }
-                batch.commit()
-                    .addOnSuccessListener { onComplete(seeded) }
-                    .addOnFailureListener { onComplete(seeded) }
-            } else {
-                val list = snap.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
-                onComplete(list)
-            }
-        }.addOnFailureListener {
-            onComplete(defaultDemoQualifications.map { it.copy(businessId = targetBizId) })
+    /** Retrieve a single qualification document by ID */
+    fun getDocumentById(
+        docId: String,
+        onSuccess: (QualificationDocument?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        if (docId.isBlank()) {
+            onSuccess(null)
+            return
         }
+        db.collection(QUALIFICATIONS).document(docId).get()
+            .addOnSuccessListener { snap ->
+                if (snap.exists()) {
+                    val doc = snap.toObject(QualificationDocument::class.java)?.copy(id = snap.id)
+                    onSuccess(doc)
+                } else {
+                    onSuccess(null)
+                }
+            }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+    /** Fetch submitted qualification documents for a business or owner */
+    fun getDocumentsForBusiness(
+        businessId: String,
+        ownerId: String = "",
+        onSuccess: (List<QualificationDocument>) -> Unit,
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        val query = if (businessId.isNotBlank() && businessId != "biz_juniper_studio") {
+            db.collection(QUALIFICATIONS).whereEqualTo("businessId", businessId)
+        } else if (ownerId.isNotBlank()) {
+            db.collection(QUALIFICATIONS).whereEqualTo("ownerId", ownerId)
+        } else {
+            db.collection(QUALIFICATIONS).whereEqualTo("businessId", businessId)
+        }
+
+        query.get()
+            .addOnSuccessListener { snapshot ->
+                val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
+                onSuccess(list)
+            }
+            .addOnFailureListener {
+                onSuccess(emptyList())
+            }
     }
 
     /** Listen to qualifications for a specific business */
@@ -80,23 +85,23 @@ object QualificationRepository {
         businessId: String,
         onUpdate: (List<QualificationDocument>) -> Unit
     ): ListenerRegistration {
-        val targetBizId = if (businessId.isBlank()) "biz_juniper_studio" else businessId
-        return db.collection(QUALIFICATIONS)
-            .whereEqualTo("businessId", targetBizId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) {
-                    onUpdate(defaultDemoQualifications.filter { it.businessId == targetBizId })
-                    return@addSnapshotListener
-                }
-                if (snapshot.isEmpty) {
-                    seedDefaultQualificationsIfEmpty(targetBizId) { seeded ->
-                        onUpdate(seeded)
-                    }
-                } else {
-                    val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
-                    onUpdate(list)
-                }
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val targetBizId = if (businessId.isNotBlank() && businessId != "biz_juniper_studio") businessId else BusinessRepository.getOwnerBusinessId()
+
+        val query = if (!currentUid.isNullOrBlank()) {
+            db.collection(QUALIFICATIONS).whereEqualTo("ownerId", currentUid)
+        } else {
+            db.collection(QUALIFICATIONS).whereEqualTo("businessId", targetBizId)
+        }
+
+        return query.addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null) {
+                onUpdate(emptyList())
+                return@addSnapshotListener
             }
+            val list = snapshot.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
+            onUpdate(list)
+        }
     }
 
     /** Listen to pending qualifications for Admin */
