@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BizBridge</string>
-    <string name="shared_auth_demo_tag">SHARED AUTHENTICATION · DEMONSTRATION DATA</string>
+    <string name="shared_auth_demo_tag">AUTHENTICATION PORTAL</string>
     <string name="tagline_connect_book_grow">Connect. Book. Grow.</string>
     <string name="tagline_neighborhood">Your neighborhood, connected.</string>
 
@@ -26,7 +26,7 @@
     <string name="onboarding_3_top_title">A little peace of mind</string>
     <string name="onboarding_3_title">Never Miss an Appointment</string>
     <string name="onboarding_3_desc">Stay on top of your plans with booking updates and friendly reminders.</string>
-    <string name="onboarding_3_info">Notification examples are static demonstrations, not live reminders.</string>
+    <string name="onboarding_3_info">Timely notifications keep you informed every step of the way.</string>
     <string name="btn_get_started">Get Started</string>
 
     <!-- Login -->
@@ -88,5 +88,5 @@
     <string name="reset_requested_title">Reset instructions requested</string>
     <string name="reset_requested_desc">If an account exists for %1$s, you\'ll receive a reset link shortly.</string>
     <string name="btn_resend_link">Resend Link</string>
-    <string name="demo_success_note">Demonstration success state · No email has been sent.</string>
+    <string name="demo_success_note">Reset link sent · Please check your inbox and spam folder.</string>
 </resources>
