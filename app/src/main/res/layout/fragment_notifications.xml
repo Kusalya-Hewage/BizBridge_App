@@ -48,10 +48,22 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp">
 
+                    <ImageView
+                        android:id="@+id/btn_back"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_arrow_back"
+                        app:tint="@color/text_primary" />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
+                        android:layout_toEndOf="@id/btn_back"
+                        android:layout_marginStart="8dp"
                         android:layout_centerVertical="true"
                         android:fontFamily="@font/inter_variable"
                         android:text="Notifications"
@@ -184,6 +196,7 @@
 
             <!-- Group 1: Today -->
             <TextView
+                android:id="@+id/tv_group_today"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
@@ -341,6 +354,7 @@
 
             <!-- Group 2: Earlier -->
             <TextView
+                android:id="@+id/tv_group_earlier"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
