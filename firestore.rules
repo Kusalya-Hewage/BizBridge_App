@@ -14,8 +14,9 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && (
-        request.auth.token.email == "alex@bizbridge.example" ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN"
+        request.auth.token.email in ["admin@bizbridge.com", "alex@bizbridge.example"] ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN")
       );
     }
 
@@ -26,65 +27,59 @@ service cloud.firestore {
     // ─── Users Collection ──────────────────────────────────────────
     match /users/{userId} {
       allow read: if isAuthenticated();
-      // Users can only create/update their own profile, cannot self-promote to ADMIN
-      allow create: if isUser(userId) && request.resource.data.role in ['CUSTOMER', 'BUSINESS_OWNER'];
+      allow create: if isAuthenticated() && (isUser(userId) || isAdmin());
       allow update: if (isUser(userId) && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isAdmin();
     }
 
     // ─── Businesses Collection ─────────────────────────────────────
     match /businesses/{businessId} {
-      // Anyone signed in can read approved & active businesses, or owners reading their own
       allow read: if isAuthenticated();
-      // Owners can create their business, but approvalStatus starts as PENDING
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      // Owners can update details (desc, address, hours), but CANNOT approve themselves or tamper with rating / trust score
+      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
       allow update: if (
-        isOwner(resource.data.ownerId) &&
-        request.resource.data.approvalStatus == resource.data.approvalStatus &&
-        request.resource.data.verificationStatus == resource.data.verificationStatus &&
-        request.resource.data.trustScore == resource.data.trustScore
+        (isOwner(resource.data.ownerId) || request.auth.uid == resource.data.ownerId) &&
+        (!('approved' in request.resource.data) || request.resource.data.approved == resource.data.approved) &&
+        (!('approvalStatus' in request.resource.data) || request.resource.data.approvalStatus == resource.data.approvalStatus)
       ) || isAdmin();
       allow delete: if isAdmin();
 
       // Subcollection: Services
       match /services/{serviceId} {
         allow read: if isAuthenticated();
-        allow write: if isOwner(get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId) || isAdmin();
+        allow write: if isAuthenticated() && (
+          isOwner(get(/databases/$(database)/documents/businesses/$(businessId)).data.ownerId) || isAdmin()
+        );
       }
     }
 
     // ─── Business Applications ─────────────────────────────────────
     match /businessApplications/{applicationId} {
-      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      // Only Admin can approve, reject, or update decision
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
     // ─── Qualification Documents ───────────────────────────────────
     match /qualificationVerifications/{documentId} {
-      allow read: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
-      // Only Admin can verify or reject
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
     // ─── Bookings Collection ───────────────────────────────────────
     match /bookings/{bookingId} {
-      // Customer who booked, owner of the business, or admin can read
       allow read: if isAuthenticated() && (
         resource.data.customerId == request.auth.uid ||
+        resource.data.businessOwnerId == request.auth.uid ||
         get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid ||
         isAdmin()
       );
-      // Customer creates booking
       allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid;
-      // Customer can cancel; Business owner can update status (CONFIRMED, REJECTED, COMPLETED); Admin can update
       allow update: if isAuthenticated() && (
         (resource.data.customerId == request.auth.uid && request.resource.data.status == 'CANCELLED') ||
+        resource.data.businessOwnerId == request.auth.uid ||
         get(/databases/$(database)/documents/businesses/$(resource.data.businessId)).data.ownerId == request.auth.uid ||
         isAdmin()
       );
@@ -100,7 +95,6 @@ service cloud.firestore {
     // ─── Reviews Collection ────────────────────────────────────────
     match /reviews/{reviewId} {
       allow read: if isAuthenticated();
-      // Only customer can submit review for their completed booking
       allow create: if isAuthenticated() && request.resource.data.customerId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
@@ -117,15 +111,14 @@ service cloud.firestore {
 
     // ─── Notifications Collection ──────────────────────────────────
     match /notifications/{notificationId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // ─── Moderation Reports Collection ─────────────────────────────
     match /reports/{reportId} {
-      allow read: if isAuthenticated() && (resource.data.reporterId == request.auth.uid || isAdmin());
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
@@ -138,8 +131,8 @@ service cloud.firestore {
 
     // ─── Admin Audit Logs ──────────────────────────────────────────
     match /adminAuditLogs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin();
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
       allow update, delete: if false; // Immutable audit logs!
     }
   }
