@@ -354,7 +354,7 @@
             </RelativeLayout>
 
             <!-- View Details Button -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_view_details"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
