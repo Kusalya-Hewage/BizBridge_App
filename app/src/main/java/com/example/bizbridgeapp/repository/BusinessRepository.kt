@@ -274,15 +274,53 @@ object BusinessRepository {
             return db.collection(COLLECTION).document(targetId)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null || snapshot == null) {
+                        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
+                        val savedName = sessionProfile?.get("businessName") as? String
+                        if (!savedName.isNullOrBlank()) {
+                            onUpdate(
+                                Business(
+                                    id = targetId,
+                                    name = savedName,
+                                    category = sessionProfile["category"] as? String ?: "Hair salon",
+                                    contactNumber = sessionProfile["phone"] as? String ?: "",
+                                    description = "Welcome to $savedName!",
+                                    approvalStatus = "PENDING",
+                                    verificationStatus = "PENDING",
+                                    approved = false,
+                                    active = false,
+                                    trustScore = 80
+                                )
+                            )
+                            return@addSnapshotListener
+                        }
                         onUpdate(defaultDemoBusinesses.firstOrNull { it.id == targetId } ?: defaultDemoBusinesses.first())
                         return@addSnapshotListener
                     }
                     if (snapshot.exists()) {
                         onUpdate(snapshot.toObject(Business::class.java)?.copy(id = snapshot.id))
                     } else {
-                        // Seed default businesses so Juniper Studio exists
-                        seedDefaultBusinessesIfEmpty { seeded ->
-                            onUpdate(seeded.firstOrNull { it.id == targetId } ?: seeded.firstOrNull())
+                        val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
+                        val savedName = sessionProfile?.get("businessName") as? String
+                        if (!savedName.isNullOrBlank()) {
+                            onUpdate(
+                                Business(
+                                    id = targetId,
+                                    name = savedName,
+                                    category = sessionProfile["category"] as? String ?: "Hair salon",
+                                    contactNumber = sessionProfile["phone"] as? String ?: "",
+                                    description = "Welcome to $savedName!",
+                                    approvalStatus = "PENDING",
+                                    verificationStatus = "PENDING",
+                                    approved = false,
+                                    active = false,
+                                    trustScore = 80
+                                )
+                            )
+                        } else {
+                            // Seed default businesses so Juniper Studio exists
+                            seedDefaultBusinessesIfEmpty { seeded ->
+                                onUpdate(seeded.firstOrNull { it.id == targetId } ?: seeded.firstOrNull())
+                            }
                         }
                     }
                 }

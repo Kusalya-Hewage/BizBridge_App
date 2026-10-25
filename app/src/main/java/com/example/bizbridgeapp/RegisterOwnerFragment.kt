@@ -111,6 +111,7 @@ class RegisterOwnerFragment : Fragment() {
             Toast.makeText(requireContext(), "Creating owner account...", Toast.LENGTH_SHORT).show()
 
             fun proceedToDashboard(ownerUid: String, bizId: String) {
+                if (!isAdded) return
                 UserSessionManager.init(requireContext())
                 UserSessionManager.saveProfile(mapOf(
                     "uid" to ownerUid,
@@ -120,6 +121,7 @@ class RegisterOwnerFragment : Fragment() {
                     "role" to "BUSINESS_OWNER",
                     "businessId" to bizId,
                     "businessName" to businessName,
+                    "category" to category,
                     "accountStatus" to "ACTIVE"
                 ))
 
@@ -133,6 +135,19 @@ class RegisterOwnerFragment : Fragment() {
                     .show()
             }
 
+            var handled = false
+            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            val timeoutRunnable = Runnable {
+                if (!handled && isAdded) {
+                    handled = true
+                    btnCreateOwnerAccount.isEnabled = true
+                    val localUid = "owner_${System.currentTimeMillis()}"
+                    val localBizId = "biz_${localUid.take(12)}"
+                    proceedToDashboard(localUid, localBizId)
+                }
+            }
+            handler.postDelayed(timeoutRunnable, 2500)
+
             FirebaseAuthManager.registerOwner(
                 ownerName = ownerName,
                 businessName = businessName,
@@ -142,17 +157,25 @@ class RegisterOwnerFragment : Fragment() {
                 password = password,
                 onSuccess = { firebaseUser, businessId ->
                     activity?.runOnUiThread {
-                        btnCreateOwnerAccount.isEnabled = true
-                        proceedToDashboard(firebaseUser.uid, businessId)
+                        if (!handled) {
+                            handled = true
+                            handler.removeCallbacks(timeoutRunnable)
+                            btnCreateOwnerAccount.isEnabled = true
+                            proceedToDashboard(firebaseUser.uid, businessId)
+                        }
                     }
                 },
                 onFailure = { e ->
                     // Even if network / DNS fails, register locally so user is never blocked!
                     activity?.runOnUiThread {
-                        btnCreateOwnerAccount.isEnabled = true
-                        val localUid = "owner_${System.currentTimeMillis()}"
-                        val localBizId = "biz_${localUid.take(12)}"
-                        proceedToDashboard(localUid, localBizId)
+                        if (!handled) {
+                            handled = true
+                            handler.removeCallbacks(timeoutRunnable)
+                            btnCreateOwnerAccount.isEnabled = true
+                            val localUid = "owner_${System.currentTimeMillis()}"
+                            val localBizId = "biz_${localUid.take(12)}"
+                            proceedToDashboard(localUid, localBizId)
+                        }
                     }
                 }
             )
