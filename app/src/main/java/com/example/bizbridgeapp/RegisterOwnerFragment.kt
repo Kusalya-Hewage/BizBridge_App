@@ -163,12 +163,19 @@ class RegisterOwnerFragment : Fragment() {
             UserSessionManager.init(requireContext())
             val localUid = "owner_${System.currentTimeMillis()}"
             val localBizId = "biz_${localUid.take(12)}"
+
+            val localOwnerPhotoPath = if (ownerPhotoUri != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), ownerPhotoUri!!, "owner_${System.currentTimeMillis()}")
+            } else null
+            val effectiveOwnerPhoto = localOwnerPhotoPath ?: ownerPhotoUri?.toString() ?: ""
+
             val initialProfile = mapOf(
                 "uid" to localUid,
                 "fullName" to ownerName,
                 "email" to email,
                 "phone" to phone,
                 "role" to "BUSINESS_OWNER",
+                "profileImageUrl" to effectiveOwnerPhoto,
                 "businessId" to localBizId,
                 "businessName" to businessName,
                 "category" to category,
@@ -177,6 +184,9 @@ class RegisterOwnerFragment : Fragment() {
             // Pre-save account locally so the user can always log in immediately
             UserSessionManager.saveRegisteredAccount(email, password, initialProfile)
             UserSessionManager.saveProfile(initialProfile)
+            if (effectiveOwnerPhoto.isNotEmpty()) {
+                UserSessionManager.updateProfileImage(effectiveOwnerPhoto)
+            }
 
             fun handleAttachedDocument(finalUid: String, finalBizId: String) {
                 val effectiveDocTitle = if (docTitleInput.isNotEmpty()) {
@@ -216,6 +226,7 @@ class RegisterOwnerFragment : Fragment() {
                     "email" to email,
                     "phone" to phone,
                     "role" to "BUSINESS_OWNER",
+                    "profileImageUrl" to effectiveOwnerPhoto,
                     "businessId" to finalBizId,
                     "businessName" to businessName,
                     "category" to category,
@@ -223,6 +234,9 @@ class RegisterOwnerFragment : Fragment() {
                 )
                 UserSessionManager.saveRegisteredAccount(email, password, finalProfile)
                 UserSessionManager.saveProfile(finalProfile)
+                if (effectiveOwnerPhoto.isNotEmpty()) {
+                    UserSessionManager.updateProfileImage(effectiveOwnerPhoto)
+                }
 
                 btnCreateOwnerAccount.isEnabled = true
                 AlertDialog.Builder(requireContext())
@@ -245,6 +259,7 @@ class RegisterOwnerFragment : Fragment() {
                 phone = phone,
                 email = email,
                 password = password,
+                profileImageUri = ownerPhotoUri,
                 onSuccess = { firebaseUser, businessId ->
                     activity?.runOnUiThread {
                         showSuccessDialog(firebaseUser.uid, businessId)
