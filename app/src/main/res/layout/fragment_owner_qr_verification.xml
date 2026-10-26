@@ -59,39 +59,108 @@
                 android:background="@drawable/bg_card_lavender"
                 android:fontFamily="@font/inter_variable"
                 android:padding="14dp"
-                android:text="Align the customer's appointment QR code inside the viewfinder to verify attendance."
+                android:text="Align the customer's appointment QR code inside the viewfinder to verify attendance in real time."
                 android:textColor="@color/primary"
                 android:textSize="12sp" />
 
-            <!-- Camera Viewfinder Box -->
-            <RelativeLayout
+            <!-- Real Barcode Scanner Camera View -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
+                android:layout_height="280dp"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_scanner_viewfinder"
-                android:elevation="2dp"
-                android:gravity="center">
+                android:background="#0F172A">
 
-                <!-- Viewfinder Corner Guide vector -->
+                <com.journeyapps.barcodescanner.DecoratedBarcodeView
+                    android:id="@+id/barcode_scanner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <!-- Torch / Flashlight Toggle Button -->
                 <ImageView
-                    android:id="@+id/iv_corner_frame"
-                    android:layout_width="140dp"
-                    android:layout_height="140dp"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/ic_qr_corner_frame" />
+                    android:id="@+id/btn_toggle_torch"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="12dp"
+                    android:background="@drawable/bg_circle_white"
+                    android:contentDescription="Toggle Flashlight"
+                    android:elevation="4dp"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_flashlight"
+                    app:tint="@color/text_primary" />
 
-                <!-- Text inside viewfinder -->
-                <TextView
+                <!-- Scan from Gallery Button -->
+                <LinearLayout
+                    android:id="@+id/btn_scan_gallery"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/iv_corner_frame"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="8dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Position the customer's code inside the frame."
-                    android:textColor="#94A3B8"
-                    android:textSize="11sp" />
-            </RelativeLayout>
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:elevation="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:src="@drawable/ic_camera"
+                        app:tint="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Choose QR from Gallery"
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Camera Permission Fallback Overlay -->
+                <LinearLayout
+                    android:id="@+id/layout_camera_permission_notice"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#E2E8F0"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_qr_corner_frame"
+                        app:tint="@color/primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/inter_variable"
+                        android:gravity="center"
+                        android:text="Camera permission is required to scan QR codes live."
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/btn_grant_camera_permission"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_button_primary"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Enable Camera"
+                        android:textColor="@color/white"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </FrameLayout>
 
             <!-- Instructions -->
             <TextView
@@ -100,7 +169,7 @@
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/inter_variable"
                 android:lineSpacingExtra="3dp"
-                android:text="Verify the business, service and appointment time before marking an arrival as valid."
+                android:text="Hold customer's QR code in the camera frame, choose from gallery, or enter the reference below."
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
@@ -108,7 +177,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_card_white"
                 android:elevation="1dp"
                 android:orientation="vertical"
@@ -133,7 +202,6 @@
                     android:hint="e.g. BB-24108"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
-                    android:text="BB-24108"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp" />
 
@@ -170,7 +238,7 @@
                         android:paddingEnd="8dp"
                         android:paddingTop="3dp"
                         android:paddingBottom="3dp"
-                        android:text="BB-23974 (Used)"
+                        android:text="BB-23914 (Used)"
                         android:textColor="@color/primary"
                         android:textSize="10sp"
                         android:textStyle="bold" />
@@ -186,7 +254,7 @@
                         android:paddingEnd="8dp"
                         android:paddingTop="3dp"
                         android:paddingBottom="3dp"
-                        android:text="BB-24120 (Wrong)"
+                        android:text="BB-99999 (Wrong)"
                         android:textColor="@color/error_text"
                         android:textSize="10sp"
                         android:textStyle="bold" />
@@ -216,7 +284,7 @@
                 android:layout_marginBottom="24dp"
                 android:fontFamily="@font/inter_variable"
                 android:gravity="center"
-                android:text="Juniper Studio only · Direct arrivals update your appointments"
+                android:text="Direct customer check-in · Automatically verifies and updates appointments"
                 android:textColor="@color/text_muted"
                 android:textSize="11sp" />
 
