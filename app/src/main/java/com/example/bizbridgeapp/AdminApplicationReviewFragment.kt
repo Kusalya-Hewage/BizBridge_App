@@ -89,14 +89,14 @@ class AdminApplicationReviewFragment : Fragment() {
                 onSuccess = {
                     activity?.runOnUiThread {
                         btnApprove.isEnabled = true
-                        Toast.makeText(requireContext(), "Business approved! It is now active and verified.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireContext(), "Business & qualification documents approved! Listing is now active and verified.", Toast.LENGTH_LONG).show()
                         parentFragmentManager.popBackStack()
                     }
                 },
                 onFailure = { e ->
                     activity?.runOnUiThread {
                         btnApprove.isEnabled = true
-                        Toast.makeText(requireContext(), "Application approved successfully.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Business & documents approved successfully.", Toast.LENGTH_SHORT).show()
                         parentFragmentManager.popBackStack()
                     }
                 }
