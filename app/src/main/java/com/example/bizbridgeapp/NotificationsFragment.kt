@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 
 import com.example.bizbridgeapp.model.NotificationItem
+import com.example.bizbridgeapp.repository.BookingRepository
 import com.example.bizbridgeapp.repository.NotificationRepository
 import com.google.firebase.auth.FirebaseAuth
 
@@ -227,6 +228,31 @@ class NotificationsFragment : Fragment() {
         notificationsListener = NotificationRepository.listenToNotificationsForUser(uid) { list ->
             if (!isAdded) return@listenToNotificationsForUser
             userNotifications = list
+            if (list.isEmpty() && uid.isNotBlank()) {
+                // If there are real customer bookings, automatically generate corresponding notifications
+                BookingRepository.getBookingsForCustomer(uid,
+                    onSuccess = { bookings ->
+                        if (!isAdded) return@getBookingsForCustomer
+                        if (bookings.isNotEmpty()) {
+                            for (b in bookings) {
+                                val statusLabel = if (b.status.equals("CANCELLED", ignoreCase = true)) "Cancelled" else "Confirmed"
+                                val notif = NotificationItem(
+                                    id = "notif_bk_${b.id}",
+                                    userId = uid,
+                                    title = "Booking $statusLabel",
+                                    message = "${b.businessNameSnapshot} • ${b.serviceNameSnapshot} on ${b.appointmentDate} at ${b.appointmentTime}",
+                                    category = "BOOKING",
+                                    relatedBookingId = b.id,
+                                    relatedBusinessId = b.businessId,
+                                    isRead = false
+                                )
+                                NotificationRepository.createNotification(notif, onSuccess = {}, onFailure = {})
+                            }
+                        }
+                    },
+                    onFailure = {}
+                )
+            }
             onLoaded()
         }
     }
