@@ -91,13 +91,53 @@ class ReviewBookingFragment : Fragment() {
         view.findViewById<TextView>(R.id.tv_service_breakdown_price)?.text = "$${String.format("%.2f", servicePrice)}"
         view.findViewById<TextView>(R.id.tv_service_total_price)?.text = "$${String.format("%.2f", servicePrice)}"
 
+        val tvAddress1 = view.findViewById<TextView>(R.id.tv_review_address_line1)
+        val tvAddress2 = view.findViewById<TextView>(R.id.tv_review_address_line2)
+        val tvClientName = view.findViewById<TextView>(R.id.tv_review_client_name)
+        val tvClientEmail = view.findViewById<TextView>(R.id.tv_review_client_email)
+
+        // Dynamic Client Details
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val profile = UserSessionManager.getProfile()
+        val clientName = currentUser?.displayName?.takeIf { it.isNotBlank() }
+            ?: (profile?.get("fullName") as? String)?.takeIf { it.isNotBlank() }
+            ?: (profile?.get("name") as? String)?.takeIf { it.isNotBlank() }
+            ?: "Customer"
+        val clientEmail = currentUser?.email?.takeIf { it.isNotBlank() }
+            ?: (profile?.get("email") as? String)?.takeIf { it.isNotBlank() }
+            ?: "customer@example.com"
+
+        tvClientName?.text = clientName
+        tvClientEmail?.text = clientEmail
+
+        var fullAddress = ""
+        // Dynamic Business Address
+        if (businessId.isNotBlank()) {
+            com.example.bizbridgeapp.repository.BusinessRepository.getBusinessById(
+                businessId = businessId,
+                onSuccess = { b ->
+                    if (b != null && isAdded) {
+                        fullAddress = b.address
+                        val addressParts = b.address.split(",", limit = 2)
+                        if (addressParts.size > 1) {
+                            tvAddress1?.text = addressParts[0].trim()
+                            tvAddress2?.text = addressParts[1].trim()
+                        } else if (b.address.isNotBlank()) {
+                            tvAddress1?.text = b.address
+                            tvAddress2?.text = b.category
+                        }
+                    }
+                },
+                onFailure = {}
+            )
+        }
+
         val etNote = view.findViewById<EditText>(R.id.et_booking_note)
         val btnConfirm = view.findViewById<Button>(R.id.btn_confirm_booking)
 
         // Confirm Booking button -> calls BookingRepository.createBooking
         btnConfirm?.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
-            val profile = UserSessionManager.getProfile()
             val currentUid = user?.uid ?: (profile?.get("uid") as? String).orEmpty()
             if (currentUid.isEmpty()) {
                 Toast.makeText(requireContext(), "Please sign in to confirm booking.", Toast.LENGTH_SHORT).show()
@@ -111,7 +151,7 @@ class ReviewBookingFragment : Fragment() {
                 customerId = currentUid,
                 businessId = businessId,
                 businessNameSnapshot = businessName,
-                businessAddressSnapshot = "",
+                businessAddressSnapshot = fullAddress.ifBlank { tvAddress1?.text?.toString().orEmpty() },
                 serviceId = serviceId,
                 serviceNameSnapshot = serviceName,
                 appointmentDate = appointmentDate,

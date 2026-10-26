@@ -281,12 +281,30 @@ object AdminRepository {
                     ownerId = finalApp.ownerId,
                     contactNumber = finalApp.contactNumber
                 )
+
+                // Also auto-verify all attached qualification documents for this business in the same approval!
+                val attachedDocs = com.example.bizbridgeapp.UserSessionManager.getQualificationsForBusiness(targetBizId, finalApp.ownerId)
+                for (doc in attachedDocs) {
+                    com.example.bizbridgeapp.UserSessionManager.updateQualificationStatus(doc.id, "VERIFIED")
+                }
                 TrustScoreRepository.recalculateTrustScore(targetBizId)
 
                 val appRef = db.collection(APPLICATIONS).document(finalApp.id)
                 val bizRef = db.collection(BUSINESSES).document(targetBizId)
 
                 val batch = db.batch()
+                for (doc in attachedDocs) {
+                    val qDocRef = db.collection("qualificationVerifications").document(doc.id)
+                    batch.set(
+                        qDocRef,
+                        mapOf(
+                            "verificationStatus" to "VERIFIED",
+                            "verifiedAt" to FieldValue.serverTimestamp(),
+                            "verifiedBy" to adminEmail
+                        ),
+                        com.google.firebase.firestore.SetOptions.merge()
+                    )
+                }
                 batch.set(
                     appRef,
                     mapOf(
