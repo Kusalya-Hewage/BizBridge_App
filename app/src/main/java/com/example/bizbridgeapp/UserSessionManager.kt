@@ -118,6 +118,29 @@ object UserSessionManager {
         return map
     }
 
+    /** Update only the profile image URL in active session and registered account cache */
+    fun updateProfileImage(imageUrl: String) {
+        if (!::prefs.isInitialized || imageUrl.isBlank()) return
+        val profile = getProfile()?.toMutableMap() ?: mutableMapOf()
+        profile["profileImageUrl"] = imageUrl
+        saveProfile(profile)
+
+        val email = profile["email"] as? String
+        if (!email.isNullOrBlank()) {
+            val normalized = email.trim().lowercase()
+            val accountsJson = prefs.getString(KEY_REGISTERED_ACCOUNTS, "{}") ?: "{}"
+            try {
+                val obj = JSONObject(accountsJson)
+                if (obj.has(normalized)) {
+                    val acc = obj.getJSONObject(normalized)
+                    acc.put("profileImageUrl", imageUrl)
+                    obj.put(normalized, acc)
+                    prefs.edit().putString(KEY_REGISTERED_ACCOUNTS, obj.toString()).apply()
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
     /** Save a registered account for reliable local authentication fallback */
     fun saveRegisteredAccount(email: String, password: String, data: Map<String, Any>) {
         if (!::prefs.isInitialized) return
