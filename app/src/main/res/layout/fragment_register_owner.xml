@@ -75,6 +75,66 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- 0. Owner Profile Photo Picker -->
+            <LinearLayout
+                android:id="@+id/layout_owner_photo_picker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingTop="6dp"
+                android:paddingBottom="10dp">
+
+                <FrameLayout
+                    android:id="@+id/container_reg_owner_avatar"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_avatar_circle"
+                    android:clipToOutline="true">
+
+                    <ImageView
+                        android:id="@+id/iv_reg_owner_photo"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_reg_owner_avatar_initials"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fontFamily="@font/inter_variable"
+                        android:gravity="center"
+                        android:text="BO"
+                        android:textColor="@color/primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tv_add_owner_profile_image"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="Add owner profile photo"
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Camera"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_camera"
+                    app:tint="@color/primary" />
+            </LinearLayout>
+
             <!-- 1. Owner name -->
             <LinearLayout
                 android:layout_width="match_parent"
