@@ -13,6 +13,7 @@ import com.example.bizbridgeapp.model.Booking
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.repository.BookingRepository
 import com.example.bizbridgeapp.repository.BusinessRepository
+import com.example.bizbridgeapp.repository.TrustScoreRepository
 import com.google.firebase.firestore.ListenerRegistration
  
 class OwnerDashboardFragment : Fragment() {
@@ -46,6 +47,17 @@ class OwnerDashboardFragment : Fragment() {
         if (!sessionBizName.isNullOrBlank()) {
             view.findViewById<TextView>(R.id.tv_owner_business_name)?.text = sessionBizName
             view.findViewById<TextView>(R.id.tv_owner_subtitle)?.text = "$sessionBizName · $sessionCategory"
+        }
+
+        // Dynamically compute and display current Trust Score immediately from local session/cache
+        val initialBreakdown = TrustScoreRepository.getLocalTrustScoreBreakdown(currentBusinessId)
+        view.findViewById<TextView>(R.id.tv_trust_score_value)?.text = "${initialBreakdown.totalScore} / 100"
+
+        // Trigger dynamic Trust Score calculation in background
+        TrustScoreRepository.recalculateTrustScore(currentBusinessId) { updatedScore ->
+            if (isAdded) {
+                view.findViewById<TextView>(R.id.tv_trust_score_value)?.text = "$updatedScore / 100"
+            }
         }
 
         // Initialize zero metric counts and hide recent request card until real data loads
