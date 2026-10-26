@@ -82,12 +82,7 @@ service cloud.firestore {
 
     // ─── Promotions Collection ─────────────────────────────────────
     match /promotions/{promotionId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && (
-        isOwner(get(/databases/$(database)/documents/businesses/$(request.resource.data.businessId)).data.ownerId) ||
-        isAdmin()
-      );
-      allow delete: if isAdmin();
+      allow read, write: if true;
     }
 
     // ─── Notifications Collection ──────────────────────────────────
