@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.example.bizbridgeapp.model.AdminAuditLog
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
+import com.example.bizbridgeapp.model.NotificationItem
 import com.example.bizbridgeapp.model.Promotion
 import com.example.bizbridgeapp.model.QualificationDocument
 import com.example.bizbridgeapp.model.Service
@@ -25,6 +26,7 @@ object UserSessionManager {
     private const val KEY_AUDIT_LOGS = "local_admin_audit_logs"
     private const val KEY_SERVICES = "local_services"
     private const val KEY_PROMOTIONS = "local_promotions"
+    private const val KEY_NOTIFICATIONS = "local_notifications"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -835,6 +837,100 @@ object UserSessionManager {
     fun getPromotionsForBusiness(businessId: String): List<Promotion> {
         val all = getAllPromotions()
         return if (businessId.isBlank()) all else all.filter { it.businessId == businessId }
+    }
+
+    /** Save or update a notification locally */
+    fun saveNotification(item: NotificationItem) {
+        if (!::prefs.isInitialized) return
+        val current = getAllNotifications().toMutableList()
+        val index = current.indexOfFirst { it.id == item.id }
+        if (index >= 0) {
+            current[index] = item
+        } else {
+            current.add(0, item)
+        }
+        val array = JSONArray()
+        for (n in current) {
+            val o = JSONObject()
+            o.put("id", n.id)
+            o.put("userId", n.userId)
+            o.put("title", n.title)
+            o.put("message", n.message)
+            o.put("category", n.category)
+            o.put("relatedBookingId", n.relatedBookingId)
+            o.put("relatedBusinessId", n.relatedBusinessId)
+            o.put("isRead", n.isRead)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_NOTIFICATIONS, array.toString()).apply()
+    }
+
+    /** Retrieve all locally stored notifications */
+    fun getAllNotifications(): List<NotificationItem> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_NOTIFICATIONS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<NotificationItem>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                NotificationItem(
+                    id = o.optString("id"),
+                    userId = o.optString("userId"),
+                    title = o.optString("title"),
+                    message = o.optString("message"),
+                    category = o.optString("category", "BOOKING"),
+                    relatedBookingId = o.optString("relatedBookingId"),
+                    relatedBusinessId = o.optString("relatedBusinessId"),
+                    isRead = o.optBoolean("isRead", false)
+                )
+            )
+        }
+        return list
+    }
+
+    /** Mark a single notification as read locally */
+    fun markNotificationRead(id: String) {
+        if (!::prefs.isInitialized) return
+        val current = getAllNotifications().map {
+            if (it.id == id) it.copy(isRead = true) else it
+        }
+        val array = JSONArray()
+        for (n in current) {
+            val o = JSONObject()
+            o.put("id", n.id)
+            o.put("userId", n.userId)
+            o.put("title", n.title)
+            o.put("message", n.message)
+            o.put("category", n.category)
+            o.put("relatedBookingId", n.relatedBookingId)
+            o.put("relatedBusinessId", n.relatedBusinessId)
+            o.put("isRead", n.isRead)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_NOTIFICATIONS, array.toString()).apply()
+    }
+
+    /** Mark all notifications for a user as read locally */
+    fun markAllNotificationsRead(userId: String) {
+        if (!::prefs.isInitialized) return
+        val current = getAllNotifications().map {
+            if (it.userId == userId) it.copy(isRead = true) else it
+        }
+        val array = JSONArray()
+        for (n in current) {
+            val o = JSONObject()
+            o.put("id", n.id)
+            o.put("userId", n.userId)
+            o.put("title", n.title)
+            o.put("message", n.message)
+            o.put("category", n.category)
+            o.put("relatedBookingId", n.relatedBookingId)
+            o.put("relatedBusinessId", n.relatedBusinessId)
+            o.put("isRead", n.isRead)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_NOTIFICATIONS, array.toString()).apply()
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */
