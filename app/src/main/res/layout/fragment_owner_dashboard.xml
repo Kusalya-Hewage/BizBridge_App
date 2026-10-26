@@ -54,17 +54,37 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/iv_owner_notifications"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
+                <LinearLayout
+                    android:id="@+id/layout_owner_header_actions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:background="@drawable/bg_circle_white"
-                    android:elevation="1dp"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_bell"
-                    app:tint="@color/text_primary" />
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/iv_owner_scan_qr"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_circle_white"
+                        android:contentDescription="Scan QR"
+                        android:elevation="1dp"
+                        android:padding="9dp"
+                        android:src="@drawable/ic_qr_corner_frame"
+                        app:tint="@color/primary" />
+
+                    <ImageView
+                        android:id="@+id/iv_owner_notifications"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/bg_circle_white"
+                        android:contentDescription="Notifications"
+                        android:elevation="1dp"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_bell"
+                        app:tint="@color/text_primary" />
+                </LinearLayout>
             </RelativeLayout>
 
             <!-- Status Badge -->
@@ -83,6 +103,63 @@
                 android:textColor="@color/secondary_dark"
                 android:textSize="11sp"
                 android:textStyle="bold" />
+
+            <!-- Scan Customer QR Action Banner -->
+            <LinearLayout
+                android:id="@+id/card_action_scan_qr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_card_lavender"
+                android:clickable="true"
+                android:elevation="1dp"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="14dp">
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_circle_white"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_qr_corner_frame"
+                    app:tint="@color/primary" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Scan Customer QR"
+                        android:textColor="@color/primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Verify appointment &amp; confirm arrival"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:rotation="180"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/primary" />
+            </LinearLayout>
 
             <!-- Metrics 2x2 Grid -->
             <LinearLayout
