@@ -87,6 +87,8 @@ class ChooseDateTimeFragment : Fragment() {
         }
 
         view.findViewById<TextView>(R.id.tv_choose_service_summary)?.text =
+            "$serviceName • $serviceDuration min • $${servicePrice.toInt()}"
+
         // Generate upcoming 10 days starting from today
         generateUpcomingDates()
         setupDatePicker(view)
