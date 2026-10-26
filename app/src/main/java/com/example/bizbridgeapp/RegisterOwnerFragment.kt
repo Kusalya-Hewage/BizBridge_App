@@ -179,6 +179,8 @@ class RegisterOwnerFragment : Fragment() {
                 "businessId" to localBizId,
                 "businessName" to businessName,
                 "category" to category,
+                "latitude" to 6.9271,
+                "longitude" to 79.8612,
                 "accountStatus" to "ACTIVE"
             )
             // Pre-save account locally so the user can always log in immediately
@@ -230,6 +232,8 @@ class RegisterOwnerFragment : Fragment() {
                     "businessId" to finalBizId,
                     "businessName" to businessName,
                     "category" to category,
+                    "latitude" to 6.9271,
+                    "longitude" to 79.8612,
                     "accountStatus" to "ACTIVE"
                 )
                 UserSessionManager.saveRegisteredAccount(email, password, finalProfile)
