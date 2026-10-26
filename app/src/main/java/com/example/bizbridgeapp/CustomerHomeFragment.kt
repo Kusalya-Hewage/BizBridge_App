@@ -203,6 +203,7 @@ class CustomerHomeFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_nearby_category)?.text = b0.category
             view.findViewById<TextView>(R.id.tv_nearby_rating)?.text = String.format(java.util.Locale.US, "%.1f", b0.rating ?: 5.0)
             view.findViewById<TextView>(R.id.tv_nearby_reviews)?.text = "(${b0.reviewCount} reviews)"
+            view.findViewById<TextView>(R.id.tv_nearby_trust_score)?.text = "Trust: ${b0.trustScore}/100"
             view.findViewById<TextView>(R.id.tv_nearby_distance)?.text = if (b0.address.isNotBlank()) b0.address else "Nearby"
             view.findViewById<TextView>(R.id.tv_nearby_price)?.text = if (!b0.price.isNullOrBlank()) b0.price else "Explore"
             
