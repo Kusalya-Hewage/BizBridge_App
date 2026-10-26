@@ -7,14 +7,19 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.fragment.app.Fragment
-import com.example.bizbridgeapp.repository.BusinessRepository
+import android.widget.RelativeLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.model.Service
+import com.example.bizbridgeapp.repository.BusinessRepository
+import com.example.bizbridgeapp.repository.ServiceRepository
 
 class BusinessDetailsFragment : Fragment() {
 
     private var currentBusinessId: String? = null
     private var currentBusinessName: String? = null
+    private var currentBusinessAddress: String? = null
 
     companion object {
         fun newInstance(businessId: String): BusinessDetailsFragment {
@@ -51,22 +56,6 @@ class BusinessDetailsFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
 
-        // Service items click -> also opens SelectServiceFragment
-        view.findViewById<LinearLayout>(R.id.item_service_1)?.setOnClickListener {
-            val frag = SelectServiceFragment.newInstance(
-                businessId = currentBusinessId.orEmpty(),
-                businessName = currentBusinessName.orEmpty()
-            )
-            (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
-        }
-        view.findViewById<LinearLayout>(R.id.item_service_2)?.setOnClickListener {
-            val frag = SelectServiceFragment.newInstance(
-                businessId = currentBusinessId.orEmpty(),
-                businessName = currentBusinessName.orEmpty()
-            )
-            (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
-        }
-
         // Load business details
         val bId = arguments?.getString("businessId")
         if (!bId.isNullOrBlank()) {
@@ -91,6 +80,7 @@ class BusinessDetailsFragment : Fragment() {
                 business?.let {
                     if (!isAdded) return@let
                     currentBusinessName = it.name
+                    currentBusinessAddress = it.address
                     view?.findViewById<TextView>(R.id.txt_business_name)?.text = it.name
                     view?.findViewById<TextView>(R.id.txt_business_name_main)?.text = it.name
                     view?.findViewById<TextView>(R.id.txt_category)?.text = it.category
@@ -104,6 +94,9 @@ class BusinessDetailsFragment : Fragment() {
                     if (imgView != null) {
                         com.example.bizbridgeapp.utils.ImageLoader.loadImage(imgView, it.imageUrl, R.drawable.img_salon_interior)
                     }
+
+                    // Dynamically load services for this business
+                    loadServices(businessId, it.name)
                 } ?: run {
                     if (isAdded) {
                         android.widget.Toast.makeText(requireContext(), "Business not found or not accessible", android.widget.Toast.LENGTH_SHORT).show()
@@ -115,6 +108,123 @@ class BusinessDetailsFragment : Fragment() {
                     android.widget.Toast.makeText(requireContext(), "Error loading business: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
+        )
+    }
+
+    private fun loadServices(businessId: String, businessName: String) {
+        ServiceRepository.getServicesForBusiness(businessId,
+            onSuccess = { services ->
+                if (!isAdded) return@getServicesForBusiness
+                val container = view?.findViewById<LinearLayout>(R.id.ll_business_services_container) ?: return@getServicesForBusiness
+                val tvNoServices = view?.findViewById<TextView>(R.id.tv_no_services_found)
+
+                container.removeAllViews()
+
+                if (services.isEmpty()) {
+                    tvNoServices?.visibility = View.VISIBLE
+                    return@getServicesForBusiness
+                }
+                tvNoServices?.visibility = View.GONE
+
+                val density = resources.displayMetrics.density
+
+                for (service in services) {
+                    val card = LinearLayout(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            bottomMargin = (10 * density).toInt()
+                        }
+                        orientation = LinearLayout.VERTICAL
+                        background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_card_white)
+                        elevation = (1 * density)
+                        val pad = (16 * density).toInt()
+                        setPadding(pad, pad, pad, pad)
+                        isClickable = true
+                        isFocusable = true
+                    }
+
+                    val rowTop = RelativeLayout(requireContext()).apply {
+                        layoutParams = RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.MATCH_PARENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT
+                        )
+                    }
+
+                    val tvTitle = TextView(requireContext()).apply {
+                        layoutParams = RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.WRAP_CONTENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            addRule(RelativeLayout.ALIGN_PARENT_START)
+                        }
+                        text = service.name
+                        textSize = 15f
+                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                    }
+
+                    val tvPrice = TextView(requireContext()).apply {
+                        layoutParams = RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.WRAP_CONTENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            addRule(RelativeLayout.ALIGN_PARENT_END)
+                        }
+                        text = "$${service.price.toInt()}"
+                        textSize = 15f
+                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.primary))
+                    }
+
+                    rowTop.addView(tvTitle)
+                    rowTop.addView(tvPrice)
+
+                    val tvDesc = TextView(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            topMargin = (4 * density).toInt()
+                        }
+                        text = if (service.description.isNotBlank()) service.description else "Professional service delivered with care."
+                        textSize = 13f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+                    }
+
+                    val tvDuration = TextView(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            topMargin = (6 * density).toInt()
+                        }
+                        text = "${service.durationMinutes} min"
+                        textSize = 12f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
+                    }
+
+                    card.addView(rowTop)
+                    card.addView(tvDesc)
+                    card.addView(tvDuration)
+
+                    card.setOnClickListener {
+                        val frag = ChooseDateTimeFragment.newInstance(
+                            businessId = businessId,
+                            businessName = businessName,
+                            serviceId = service.id,
+                            serviceName = service.name,
+                            servicePrice = service.price,
+                            serviceDuration = service.durationMinutes
+                        )
+                        (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
+                    }
+
+                    container.addView(card)
+                }
+            },
+            onFailure = {}
         )
     }
 }
