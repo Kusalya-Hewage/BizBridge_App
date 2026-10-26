@@ -31,16 +31,34 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <ImageView
-                android:id="@+id/btn_filter_bookings"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="6dp"
-                android:src="@drawable/ic_filter"
-                app:tint="@color/text_primary" />
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/btn_scan_qr_header"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Scan QR"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_qr_corner_frame"
+                    app:tint="@color/primary" />
+
+                <ImageView
+                    android:id="@+id/btn_filter_bookings"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Filter Bookings"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_filter"
+                    app:tint="@color/text_primary" />
+            </LinearLayout>
         </RelativeLayout>
 
         <androidx.core.widget.NestedScrollView
