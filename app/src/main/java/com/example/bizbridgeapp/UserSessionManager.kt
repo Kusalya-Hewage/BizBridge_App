@@ -3,6 +3,7 @@ package com.example.bizbridgeapp
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.bizbridgeapp.model.AdminAuditLog
+import com.example.bizbridgeapp.model.Booking
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
 import com.example.bizbridgeapp.model.NotificationItem
@@ -27,6 +28,7 @@ object UserSessionManager {
     private const val KEY_SERVICES = "local_services"
     private const val KEY_PROMOTIONS = "local_promotions"
     private const val KEY_NOTIFICATIONS = "local_notifications"
+    private const val KEY_BOOKINGS = "local_bookings"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -931,6 +933,101 @@ object UserSessionManager {
             array.put(o)
         }
         prefs.edit().putString(KEY_NOTIFICATIONS, array.toString()).apply()
+    }
+
+    /** Save or update a booking in local cache */
+    fun saveBooking(booking: Booking) {
+        if (!::prefs.isInitialized) return
+        val current = getAllBookings().toMutableList()
+        val index = current.indexOfFirst { it.id == booking.id || (it.qrReference.isNotBlank() && it.qrReference == booking.qrReference) }
+        if (index >= 0) {
+            current[index] = booking
+        } else {
+            current.add(0, booking)
+        }
+        val array = JSONArray()
+        for (b in current) {
+            val o = JSONObject()
+            o.put("id", b.id)
+            o.put("customerId", b.customerId)
+            o.put("businessId", b.businessId)
+            o.put("businessNameSnapshot", b.businessNameSnapshot)
+            o.put("businessAddressSnapshot", b.businessAddressSnapshot)
+            o.put("serviceId", b.serviceId)
+            o.put("serviceNameSnapshot", b.serviceNameSnapshot)
+            o.put("appointmentDate", b.appointmentDate)
+            o.put("appointmentTime", b.appointmentTime)
+            o.put("priceAtBooking", b.priceAtBooking)
+            o.put("durationMinutes", b.durationMinutes)
+            o.put("status", b.status)
+            o.put("customerNotes", b.customerNotes)
+            o.put("qrReference", b.qrReference)
+            o.put("cancellationReason", b.cancellationReason)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_BOOKINGS, array.toString()).apply()
+    }
+
+    /** Retrieve all stored bookings */
+    fun getAllBookings(): List<Booking> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_BOOKINGS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<Booking>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                Booking(
+                    id = o.optString("id"),
+                    customerId = o.optString("customerId"),
+                    businessId = o.optString("businessId"),
+                    businessNameSnapshot = o.optString("businessNameSnapshot"),
+                    businessAddressSnapshot = o.optString("businessAddressSnapshot"),
+                    serviceId = o.optString("serviceId"),
+                    serviceNameSnapshot = o.optString("serviceNameSnapshot"),
+                    appointmentDate = o.optString("appointmentDate"),
+                    appointmentTime = o.optString("appointmentTime"),
+                    priceAtBooking = o.optDouble("priceAtBooking", 0.0),
+                    durationMinutes = o.optInt("durationMinutes", 30),
+                    status = o.optString("status", "PENDING"),
+                    customerNotes = o.optString("customerNotes"),
+                    qrReference = o.optString("qrReference"),
+                    cancellationReason = o.optString("cancellationReason")
+                )
+            )
+        }
+        return list
+    }
+
+    /** Update booking status locally */
+    fun updateBookingStatus(bookingIdOrRef: String, newStatus: String, reason: String = "") {
+        if (!::prefs.isInitialized) return
+        val current = getAllBookings().toMutableList()
+        val index = current.indexOfFirst { it.id == bookingIdOrRef || it.qrReference.equals(bookingIdOrRef, ignoreCase = true) }
+        if (index >= 0) {
+            current[index] = current[index].copy(status = newStatus, cancellationReason = reason)
+            val array = JSONArray()
+            for (b in current) {
+                val o = JSONObject()
+                o.put("id", b.id)
+                o.put("customerId", b.customerId)
+                o.put("businessId", b.businessId)
+                o.put("businessNameSnapshot", b.businessNameSnapshot)
+                o.put("businessAddressSnapshot", b.businessAddressSnapshot)
+                o.put("serviceId", b.serviceId)
+                o.put("serviceNameSnapshot", b.serviceNameSnapshot)
+                o.put("appointmentDate", b.appointmentDate)
+                o.put("appointmentTime", b.appointmentTime)
+                o.put("priceAtBooking", b.priceAtBooking)
+                o.put("durationMinutes", b.durationMinutes)
+                o.put("status", b.status)
+                o.put("customerNotes", b.customerNotes)
+                o.put("qrReference", b.qrReference)
+                o.put("cancellationReason", b.cancellationReason)
+                array.put(o)
+            }
+            prefs.edit().putString(KEY_BOOKINGS, array.toString()).apply()
+        }
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */
