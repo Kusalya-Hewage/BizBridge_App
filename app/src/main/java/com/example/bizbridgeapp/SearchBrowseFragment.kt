@@ -231,6 +231,7 @@ class SearchBrowseFragment : Fragment() {
 
             val ratingVal = biz.rating ?: 4.8
             tvRating?.text = String.format("%.1f (%d)", ratingVal, biz.reviewCount)
+            cardView.findViewById<TextView>(R.id.tv_business_trust_score)?.text = "Trust: ${biz.trustScore}/100"
             tvPrice?.text = biz.price ?: "From $25"
 
             // Set business image (real imageUrl or category fallback)
