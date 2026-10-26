@@ -40,6 +40,9 @@ class CustomerHomeFragment : Fragment() {
         UserSessionManager.init(requireContext())
         val profile = UserSessionManager.getProfile()
         val fullName = (profile?.get("fullName") as? String).orEmpty()
+        val ivHomeAvatar = view.findViewById<ImageView>(R.id.iv_home_avatar)
+        val tvHomeInitials = view.findViewById<TextView>(R.id.tv_avatar_initials)
+
         if (fullName.isNotEmpty()) {
             val firstName = fullName.split(" ").firstOrNull() ?: fullName
             view.findViewById<TextView>(R.id.tv_greeting)?.text = "Good day, $firstName ☀️"
@@ -49,7 +52,23 @@ class CustomerHomeFragment : Fragment() {
             } else {
                 fullName.take(2).uppercase()
             }
-            view.findViewById<TextView>(R.id.tv_avatar_initials)?.text = initials
+            tvHomeInitials?.text = initials
+        }
+
+        val homeImageUrl = (profile?.get("profileImageUrl") as? String)?.ifBlank { null }
+        if (!homeImageUrl.isNullOrBlank()) {
+            ivHomeAvatar?.visibility = View.VISIBLE
+            tvHomeInitials?.visibility = View.GONE
+            if (ivHomeAvatar != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivHomeAvatar, homeImageUrl, R.drawable.bg_avatar_circle)
+            }
+        } else {
+            ivHomeAvatar?.visibility = View.GONE
+            tvHomeInitials?.visibility = View.VISIBLE
+        }
+
+        view.findViewById<View>(R.id.btn_home_profile_avatar)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateTo(CustomerProfileFragment(), addToBackStack = true)
         }
 
         // ─── Notification Dot Check ────────────────────────────────────
