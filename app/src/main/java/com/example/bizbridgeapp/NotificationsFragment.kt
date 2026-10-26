@@ -54,22 +54,9 @@ class NotificationsFragment : Fragment() {
                         Toast.makeText(requireContext(), "All notifications marked as read", Toast.LENGTH_SHORT).show()
                         btnMarkAll.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
                         btnMarkAll.isEnabled = false
-                        loadNotifications(targetUid)
-                    }
-                },
-                onFailure = {
-                    if (isAdded) {
-                        Toast.makeText(requireContext(), "All notifications marked as read", Toast.LENGTH_SHORT).show()
-                        btnMarkAll.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
-                        btnMarkAll.isEnabled = false
-                    }
-                }
-            )
-        }
-
-        if (uid.isNotEmpty()) {
-            loadNotifications(uid)
-        }
+                        loadNotifications(targetUid) {
+                            renderNotifications()
+                        }
 
         // Active tab state
         var currentTab = "ALL"
