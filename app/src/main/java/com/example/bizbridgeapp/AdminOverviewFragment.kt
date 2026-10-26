@@ -71,41 +71,13 @@ class AdminOverviewFragment : Fragment() {
             mainActivity?.navigateTo(AdminAnnouncementsFragment(), addToBackStack = true)
         }
 
+        // Immediately render local overview stats on frame 0 to eliminate mock/flash delay
+        renderOverviewStats(AdminRepository.getLocalOverviewStats(), view)
+
         // Real-time Overview Statistics
         statsListener = AdminRepository.listenToOverviewStats { stats ->
             if (!isAdded) return@listenToOverviewStats
-            val formatter = NumberFormat.getNumberInstance(Locale.US)
-            view.findViewById<TextView>(R.id.tv_stat_users)?.text = formatter.format(stats.totalUsers)
-            view.findViewById<TextView>(R.id.tv_stat_businesses)?.text = formatter.format(stats.totalBusinesses)
-            view.findViewById<TextView>(R.id.tv_stat_pending)?.text = formatter.format(stats.pendingApplications)
-            view.findViewById<TextView>(R.id.tv_stat_verified)?.text = formatter.format(stats.verifiedBusinesses)
-
-            // Action Queue 1: Pending applications & documents
-            val totalPending = stats.pendingApplications + stats.pendingDocuments
-            if (totalPending > 0) {
-                view.findViewById<TextView>(R.id.tv_action_docs_title)?.text = "$totalPending documents awaiting review"
-                view.findViewById<TextView>(R.id.tv_action_docs_subtitle)?.text =
-                    "${stats.pendingApplications} applications · ${stats.pendingDocuments} qualifications"
-            } else {
-                view.findViewById<TextView>(R.id.tv_action_docs_title)?.text = "All documents reviewed"
-                view.findViewById<TextView>(R.id.tv_action_docs_subtitle)?.text = "No pending submissions in queue"
-            }
-
-            // Action Queue 2: Open reports
-            if (stats.openReports > 0) {
-                view.findViewById<TextView>(R.id.tv_action_reports_title)?.text = "${stats.openReports} open reports"
-                view.findViewById<TextView>(R.id.tv_action_reports_subtitle)?.text =
-                    "${stats.reviewReportsCount} reviews · ${stats.listingReportsCount} listings"
-            } else {
-                view.findViewById<TextView>(R.id.tv_action_reports_title)?.text = "0 open reports"
-                view.findViewById<TextView>(R.id.tv_action_reports_subtitle)?.text = "Platform moderation is clear"
-            }
-
-            // Bookings this month summary
-            view.findViewById<TextView>(R.id.tv_bookings_month_title)?.text =
-                "${formatter.format(stats.totalBookings)} bookings this month"
-            view.findViewById<TextView>(R.id.tv_bookings_month_breakdown)?.text =
-                "${stats.pendingBookings} Pending · ${stats.confirmedBookings} Confirmed · ${stats.completedBookings} Completed · ${stats.cancelledBookings} Cancelled"
+            renderOverviewStats(stats, view)
         }
 
         // Real-time Recent Admin Actions
