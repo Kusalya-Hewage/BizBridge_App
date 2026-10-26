@@ -1,5 +1,6 @@
 package com.example.bizbridgeapp
 
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.util.Patterns
@@ -12,11 +13,17 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.model.QualificationDocument
+import com.example.bizbridgeapp.repository.QualificationRepository
 
 class RegisterOwnerFragment : Fragment() {
 
     private var isPasswordVisible = false
+    private var attachedDocUri: Uri? = null
+    private lateinit var imagePickerHelper: ImagePickerHelper
+
     private val categories = arrayOf(
         "Hair salon",
         "Beauty & Spa",
@@ -26,6 +33,18 @@ class RegisterOwnerFragment : Fragment() {
         "Education",
         "Other"
     )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        imagePickerHelper = ImagePickerHelper(this) { uri ->
+            attachedDocUri = uri
+            view?.findViewById<TextView>(R.id.tv_reg_attached_doc_status)?.apply {
+                text = "✓ Document photo attached"
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.secondary_dark))
+            }
+            Toast.makeText(requireContext(), "Document attached for application!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,9 +68,18 @@ class RegisterOwnerFragment : Fragment() {
         val btnTogglePassword = view.findViewById<ImageView>(R.id.btn_toggle_password)
         val btnCreateOwnerAccount = view.findViewById<Button>(R.id.btn_create_owner_account)
 
+        val etDocTitle = view.findViewById<EditText>(R.id.et_reg_doc_title)
+        val etDocIssuer = view.findViewById<EditText>(R.id.et_reg_doc_issuer)
+        val btnAttachDoc = view.findViewById<Button>(R.id.btn_reg_attach_doc)
+
         // Back button
         btnBack?.setOnClickListener {
             parentFragmentManager.popBackStack()
+        }
+
+        // Attach document / photo
+        btnAttachDoc?.setOnClickListener {
+            imagePickerHelper.showImageSourceDialog("Attach Qualification / Certificate")
         }
 
         // Category dropdown dialog
@@ -84,6 +112,8 @@ class RegisterOwnerFragment : Fragment() {
             val email = etBusinessEmail?.text?.toString()?.trim().orEmpty()
             val phone = etPhone?.text?.toString()?.trim().orEmpty()
             val password = etPassword?.text?.toString().orEmpty()
+            val docTitleInput = etDocTitle?.text?.toString()?.trim().orEmpty()
+            val docIssuerInput = etDocIssuer?.text?.toString()?.trim().orEmpty()
 
             if (ownerName.isEmpty()) {
                 Toast.makeText(requireContext(), "Please enter the owner name", Toast.LENGTH_SHORT).show()
@@ -108,7 +138,7 @@ class RegisterOwnerFragment : Fragment() {
             val category = tvCategory?.text?.toString()?.ifBlank { "Hair salon" } ?: "Hair salon"
 
             btnCreateOwnerAccount.isEnabled = false
-            Toast.makeText(requireContext(), "Creating owner account...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Creating owner account and application...", Toast.LENGTH_SHORT).show()
 
             UserSessionManager.init(requireContext())
             val localUid = "owner_${System.currentTimeMillis()}"
@@ -128,8 +158,38 @@ class RegisterOwnerFragment : Fragment() {
             UserSessionManager.saveRegisteredAccount(email, password, initialProfile)
             UserSessionManager.saveProfile(initialProfile)
 
+            fun handleAttachedDocument(finalUid: String, finalBizId: String) {
+                val effectiveDocTitle = if (docTitleInput.isNotEmpty()) {
+                    docTitleInput
+                } else if (attachedDocUri != null) {
+                    "$businessName Certification Document"
+                } else {
+                    ""
+                }
+
+                if (effectiveDocTitle.isNotEmpty()) {
+                    val docId = "doc_${System.currentTimeMillis()}"
+                    val qualDoc = QualificationDocument(
+                        id = docId,
+                        businessId = finalBizId,
+                        ownerId = finalUid,
+                        businessName = businessName,
+                        title = effectiveDocTitle,
+                        issuingOrg = if (docIssuerInput.isNotBlank()) docIssuerInput else "Professional Qualification Authority",
+                        experience = "Professional",
+                        documentType = "CERTIFICATE",
+                        storagePath = "qualification_docs/$finalBizId/$docId.jpg",
+                        fileUrl = attachedDocUri?.toString() ?: "",
+                        verificationStatus = "PENDING"
+                    )
+                    QualificationRepository.submitDocument(qualDoc, onSuccess = {}, onFailure = {})
+                }
+            }
+
             fun showSuccessDialog(finalUid: String, finalBizId: String) {
                 if (!isAdded) return
+                handleAttachedDocument(finalUid, finalBizId)
+
                 val finalProfile = mapOf(
                     "uid" to finalUid,
                     "fullName" to ownerName,
@@ -146,8 +206,8 @@ class RegisterOwnerFragment : Fragment() {
 
                 btnCreateOwnerAccount.isEnabled = true
                 AlertDialog.Builder(requireContext())
-                    .setTitle("Account Created Successfully")
-                    .setMessage("Welcome to BizBridge, $ownerName!\n\nYour business \"$businessName\" ($category) is registered. You can now log in or open your dashboard.")
+                    .setTitle("Account & Application Submitted")
+                    .setMessage("Welcome to BizBridge, $ownerName!\n\nYour business \"$businessName\" ($category) and all qualification documents were submitted as a single application to the administrator for verification.")
                     .setPositiveButton("Log In") { _, _ ->
                         (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = false)
                     }
