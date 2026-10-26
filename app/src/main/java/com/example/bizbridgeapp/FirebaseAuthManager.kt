@@ -371,20 +371,49 @@ object FirebaseAuthManager {
         onSuccess: (downloadUrl: String) -> Unit,
         onFailure: (exception: Exception) -> Unit
     ) {
-        val ref = storage.reference.child("profile_images/$uid.jpg")
-        ref.putFile(uri)
-            .continueWithTask { task ->
-                if (!task.isSuccessful) {
-                    task.exception?.let { throw it }
+        val uriStr = uri.toString()
+        if (uriStr.startsWith("http://") || uriStr.startsWith("https://")) {
+            onSuccess(uriStr)
+            return
+        }
+
+        try {
+            val fileUri = if (uri.scheme == null) android.net.Uri.fromFile(java.io.File(uri.path ?: uriStr)) else uri
+            val ref = storage.reference.child("profile_images/$uid.jpg")
+            ref.putFile(fileUri)
+                .continueWithTask { task ->
+                    if (!task.isSuccessful) {
+                        task.exception?.let { throw it }
+                    }
+                    ref.downloadUrl
                 }
-                ref.downloadUrl
-            }
-            .addOnSuccessListener { uriResult ->
-                onSuccess(uriResult.toString())
-            }
-            .addOnFailureListener { e ->
-                onFailure(e)
-            }
+                .addOnSuccessListener { uriResult ->
+                    onSuccess(uriResult.toString())
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Firebase Storage upload failed: ${e.message}. Using fallback URI.", e)
+                    onFailure(e)
+                }
+        } catch (e: Exception) {
+            onFailure(e)
+        }
+    }
+
+    /** Update user profile image URL in Firestore */
+    fun updateUserProfileImage(
+        uid: String,
+        imageUrl: String,
+        onSuccess: () -> Unit = {},
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        if (uid.isBlank() || imageUrl.isBlank()) return
+        firestore.collection("users").document(uid)
+            .set(mapOf(
+                "profileImageUrl" to imageUrl,
+                "updatedAt" to FieldValue.serverTimestamp()
+            ), com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it) }
     }
 
     /** Sign in existing user */
