@@ -159,18 +159,34 @@
                         android:layout_width="12dp"
                         android:layout_height="1dp" />
 
-                    <!-- MD Avatar circle -->
-                    <TextView
-                        android:id="@+id/tv_avatar_initials"
+                    <!-- Customer Avatar circle -->
+                    <FrameLayout
+                        android:id="@+id/btn_home_profile_avatar"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:background="@drawable/bg_avatar_circle"
-                        android:fontFamily="@font/inter_variable"
-                        android:gravity="center"
-                        android:text="MD"
-                        android:textColor="@color/primary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+                        android:clipToOutline="true"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:id="@+id/iv_home_avatar"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tv_avatar_initials"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="MD"
+                            android:textColor="@color/primary"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </FrameLayout>
 
                 </LinearLayout>
 
