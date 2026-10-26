@@ -102,6 +102,7 @@
                     android:layout_width="72dp"
                     android:layout_height="72dp"
                     android:background="@drawable/bg_score_badge"
+                    android:clipToOutline="true"
                     android:clickable="true"
                     android:focusable="true">
 
