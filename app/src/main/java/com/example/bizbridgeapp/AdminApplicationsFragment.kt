@@ -173,6 +173,16 @@ class AdminApplicationsFragment : Fragment() {
             tvOwner?.text = app.ownerName.ifEmpty { "Business Owner" }
             tvCategory?.text = "${app.category} · ${app.address}"
 
+            val tvDocsInfo = itemView.findViewById<TextView>(R.id.tv_app_documents_info)
+            val attachedDocs = com.example.bizbridgeapp.UserSessionManager.getQualificationsForBusiness(app.businessId, app.ownerId)
+            if (attachedDocs.isNotEmpty()) {
+                val docSummary = attachedDocs.joinToString(", ") { it.title }
+                val pendingDocCount = attachedDocs.count { it.verificationStatus.equals("PENDING", ignoreCase = true) }
+                tvDocsInfo?.text = "${attachedDocs.size} Document(s) attached: $docSummary (${if (pendingDocCount > 0) "$pendingDocCount pending verification" else "Verified"})"
+            } else {
+                tvDocsInfo?.text = "No qualification documents attached yet"
+            }
+
             when (app.status.uppercase()) {
                 "APPROVED" -> {
                     badgeStatus?.text = "Approved"

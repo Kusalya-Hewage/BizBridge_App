@@ -261,20 +261,22 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/tv_review_address_line1"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="142 Valencia Street"
+                            android:text="Business Address"
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_review_address_line2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Mission District, San Francisco"
+                            android:text="Colombo, Sri Lanka"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -317,20 +319,22 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/tv_review_client_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Maya Chen"
+                            android:text="Customer Name"
                             android:textColor="@color/text_primary"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_review_client_email"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="mayachen@example.com"
+                            android:text="customer@bizbridge.example"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -372,9 +376,10 @@
                     android:background="@drawable/bg_input_field"
                     android:fontFamily="@font/inter_variable"
                     android:gravity="top|start"
+                    android:hint="Any special requests or instructions for the business..."
+                    android:textColorHint="@color/text_muted"
                     android:minLines="2"
                     android:padding="12dp"
-                    android:text="A shoulder-length cut with soft layers, please."
                     android:textColor="@color/text_primary"
                     android:textSize="13sp" />
             </LinearLayout>

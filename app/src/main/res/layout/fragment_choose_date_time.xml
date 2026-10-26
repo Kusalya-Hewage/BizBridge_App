@@ -144,19 +144,21 @@
             </LinearLayout>
 
             <!-- Service Subtitle -->
+            <!-- Service Subtitle -->
             <TextView
+                android:id="@+id/tv_choose_service_summary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/inter_variable"
-                android:text="Signature haircut • 45 min • $45"
+                android:text="Service • 45 min • $45"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <!-- Calendar Card -->
+            <!-- Dynamic Date Picker Card -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -168,143 +170,29 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Calendar Header: Month + Nav -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                <TextView
+                    android:id="@+id/tv_calendar_month"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="Select Date"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="October 2026"
-                        android:textColor="@color/text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                <!-- Horizontal scrollable row of upcoming days -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:scrollbars="none">
 
                     <LinearLayout
+                        android:id="@+id/ll_dates_container"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:padding="4dp"
-                            android:src="@drawable/ic_arrow_back"
-                            app:tint="@color/text_secondary" />
-
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:layout_marginStart="12dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:padding="4dp"
-                            android:rotation="180"
-                            android:src="@drawable/ic_arrow_back"
-                            app:tint="@color/text_secondary" />
-
-                    </LinearLayout>
-                </RelativeLayout>
-
-                <!-- Days of Week Header -->
-                <GridLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:columnCount="7">
-
-                    <!-- M, T, W, T, F, S, S -->
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="M" android:textColor="@color/text_muted" android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="T" android:textColor="@color/text_muted" android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="W" android:textColor="@color/text_muted" android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="T" android:textColor="@color/text_muted" android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="F" android:textColor="@color/text_muted" android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="S" android:textColor="@color/text_muted" android:textSize="12sp" android:textStyle="bold" />
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="S" android:textColor="@color/text_muted" android:textSize="12sp" android:textStyle="bold" />
-
-                </GridLayout>
-
-                <!-- Calendar Days Grid (Sample Dates matching Figma October 2026) -->
-                <!-- Week 1: (empty Mon-Wed), 1, 2, 3, 4 -->
-                <GridLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:columnCount="7">
-
-                    <!-- Empty slots -->
-                    <View android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" />
-                    <View android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" />
-                    <View android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" />
-
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="1" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="2" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="3" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="4" android:textColor="@color/text_primary" android:textSize="13sp" />
-
-                    <!-- Week 2: 5 to 11 -->
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="5" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="6" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="7" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="8" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="9" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="10" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="11" android:textColor="@color/text_primary" android:textSize="13sp" />
-
-                    <!-- Week 3: 12 to 18 -->
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="12" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="13" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="14" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="15" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="16" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="17" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="18" android:textColor="@color/text_primary" android:textSize="13sp" />
-
-                    <!-- Week 4: 19 to 25 (24 is selected!) -->
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="19" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="20" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="21" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="22" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="23" android:textColor="@color/text_primary" android:textSize="13sp" />
-
-                    <!-- Selected Day 24 -->
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_columnWeight="1">
-                        <View
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/bg_calendar_day_selected" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="24"
-                            android:textColor="@color/white"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                    </FrameLayout>
-
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="25" android:textColor="@color/text_primary" android:textSize="13sp" />
-
-                    <!-- Week 5: 26 to 31 -->
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="26" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="27" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="28" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="29" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="30" android:textColor="@color/text_primary" android:textSize="13sp" />
-                    <TextView android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:gravity="center" android:fontFamily="@font/inter_variable" android:text="31" android:textColor="@color/text_primary" android:textSize="13sp" />
-
-                </GridLayout>
-
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
             </LinearLayout>
 
             <!-- Time Slots Section -->
@@ -321,142 +209,36 @@
                     android:layout_height="wrap_content">
 
                     <TextView
+                        android:id="@+id/tv_selected_date_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Saturday, October 24"
+                        android:text="Available Slots"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_business_hours_hint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Pacific Time"
+                        android:text="Business Hours"
                         android:textColor="@color/primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
                 </RelativeLayout>
 
-                <!-- Morning Row -->
+                <!-- Dynamic slots container (generated from business hours & service duration) -->
                 <LinearLayout
+                    android:id="@+id/ll_dynamic_slots_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
-
-                    <!-- Slot 9:00 AM -->
-                    <TextView
-                        android:id="@+id/slot_9am"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:background="@drawable/bg_time_slot_default"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="9:00 AM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <!-- Slot 10:00 AM (Selected) -->
-                    <TextView
-                        android:id="@+id/slot_10am"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_time_slot_selected"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="10:00 AM"
-                        android:textColor="@color/white"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <!-- Slot 11:00 AM -->
-                    <TextView
-                        android:id="@+id/slot_11am"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_time_slot_default"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="11:00 AM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                </LinearLayout>
-
-                <!-- Afternoon Row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/slot_130pm"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:background="@drawable/bg_time_slot_default"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="1:30 PM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/slot_230pm"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_time_slot_default"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="2:30 PM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/slot_330pm"
-                        android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:layout_marginStart="10dp"
-                        android:background="@drawable/bg_time_slot_default"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="3:30 PM"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp" />
-
-                </LinearLayout>
+                    android:orientation="vertical" />
 
                 <!-- Selected Confirmation Pill -->
                 <LinearLayout

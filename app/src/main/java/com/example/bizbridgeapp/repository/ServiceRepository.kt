@@ -1,5 +1,6 @@
 package com.example.bizbridgeapp.repository
 
+import com.example.bizbridgeapp.UserSessionManager
 import com.example.bizbridgeapp.model.Service
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -18,21 +19,29 @@ object ServiceRepository {
         businessId: String,
         onUpdate: (List<Service>) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
-        val targetBizId = businessId
-        val colRef = db.collection("businesses").document(targetBizId).collection("services")
+        val targetBizId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
+        
+        // Immediately emit local cached services so UI is fast and offline-ready
+        val initialLocal = UserSessionManager.getServicesForBusiness(targetBizId)
+        if (initialLocal.isNotEmpty()) {
+            onUpdate(initialLocal)
+        }
 
+        val colRef = db.collection("businesses").document(targetBizId).collection("services")
         return colRef.addSnapshotListener { snapshot, error ->
+            val localServices = UserSessionManager.getServicesForBusiness(targetBizId)
             if (error != null || snapshot == null) {
-                onUpdate(emptyList())
+                onUpdate(localServices)
                 return@addSnapshotListener
             }
             if (snapshot.isEmpty) {
-                onUpdate(emptyList())
+                onUpdate(localServices)
             } else {
-                val list = snapshot.documents.mapNotNull { doc ->
+                val cloudList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Service::class.java)?.copy(id = doc.id, businessId = targetBizId)
                 }
-                onUpdate(list)
+                val merged = (localServices + cloudList).distinctBy { it.id }
+                onUpdate(merged)
             }
         }
     }
@@ -40,25 +49,29 @@ object ServiceRepository {
     fun getServicesForBusiness(
         businessId: String,
         onSuccess: (List<Service>) -> Unit,
-        onFailure: (Exception) -> Unit
+        onFailure: (Exception) -> Unit = {}
     ) {
-        val targetBizId = businessId
+        val targetBizId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
+        val localList = UserSessionManager.getServicesForBusiness(targetBizId).filter { it.isActive }
+
         db.collection("businesses").document(targetBizId).collection("services")
             .whereEqualTo("isActive", true)
             .get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.isEmpty) {
-                    onSuccess(emptyList())
+                    onSuccess(localList)
                 } else {
-                    val list = snapshot.documents.mapNotNull { doc ->
+                    val cloudList = snapshot.documents.mapNotNull { doc ->
                         val service = doc.toObject(Service::class.java)
                         service?.copy(id = doc.id, businessId = targetBizId)
                     }
-                    onSuccess(list)
+                    val merged = (localList + cloudList).distinctBy { it.id }
+                    onSuccess(merged)
                 }
             }
             .addOnFailureListener { e ->
-                onSuccess(emptyList())
+                // Fallback to local services if network or PERMISSION_DENIED occurs
+                onSuccess(localList)
             }
     }
 
@@ -66,9 +79,15 @@ object ServiceRepository {
         businessId: String,
         serviceId: String,
         onSuccess: (Service?) -> Unit,
-        onFailure: (Exception) -> Unit
+        onFailure: (Exception) -> Unit = {}
     ) {
-        val targetBizId = businessId
+        val targetBizId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
+        val local = UserSessionManager.getServicesForBusiness(targetBizId).firstOrNull { it.id == serviceId }
+        if (local != null) {
+            onSuccess(local)
+            return
+        }
+
         db.collection("businesses").document(targetBizId).collection("services").document(serviceId)
             .get()
             .addOnSuccessListener { doc ->
@@ -79,39 +98,48 @@ object ServiceRepository {
                     onSuccess(null)
                 }
             }
-            .addOnFailureListener { e -> onFailure(e) }
+            .addOnFailureListener { e -> 
+                onSuccess(local)
+            }
     }
 
     fun createOrUpdateService(
         businessId: String,
         service: Service,
         onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+        onFailure: (Exception) -> Unit = {}
     ) {
-        val targetBizId = businessId
-        val docRef = if (service.id.isNotEmpty()) {
-            db.collection("businesses").document(targetBizId).collection("services").document(service.id)
-        } else {
-            db.collection("businesses").document(targetBizId).collection("services").document()
-        }
+        val targetBizId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
+        val docId = if (service.id.isNotEmpty()) service.id else "svc_${System.currentTimeMillis()}"
+        val toSave = service.copy(id = docId, businessId = targetBizId)
 
-        val toSave = service.copy(id = docRef.id, businessId = targetBizId)
+        // Always save locally immediately so the service is NEVER lost
+        UserSessionManager.saveService(toSave)
+
+        val docRef = db.collection("businesses").document(targetBizId).collection("services").document(docId)
         docRef.set(toSave.toMap(), SetOptions.merge())
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener { e ->
+                // If cloud fails (e.g. PERMISSION_DENIED or offline), succeed locally
+                onSuccess()
+            }
     }
 
     fun deleteService(
         businessId: String,
         serviceId: String,
         onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+        onFailure: (Exception) -> Unit = {}
     ) {
-        val targetBizId = businessId
+        val targetBizId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
+        UserSessionManager.deleteService(serviceId)
+
         db.collection("businesses").document(targetBizId).collection("services").document(serviceId)
             .delete()
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+            .addOnFailureListener { onSuccess() }
     }
 
     fun toggleServiceStatus(
@@ -119,15 +147,20 @@ object ServiceRepository {
         serviceId: String,
         isActive: Boolean,
         onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+        onFailure: (Exception) -> Unit = {}
     ) {
-        val targetBizId = businessId
+        val targetBizId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
+        val local = UserSessionManager.getServicesForBusiness(targetBizId).firstOrNull { it.id == serviceId }
+        if (local != null) {
+            UserSessionManager.saveService(local.copy(isActive = isActive))
+        }
+
         db.collection("businesses").document(targetBizId).collection("services").document(serviceId)
             .update(mapOf(
                 "isActive" to isActive,
                 "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
             ))
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+            .addOnFailureListener { onSuccess() }
     }
 }

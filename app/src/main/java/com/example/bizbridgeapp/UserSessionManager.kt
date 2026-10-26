@@ -5,7 +5,9 @@ import android.content.SharedPreferences
 import com.example.bizbridgeapp.model.AdminAuditLog
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
+import com.example.bizbridgeapp.model.Promotion
 import com.example.bizbridgeapp.model.QualificationDocument
+import com.example.bizbridgeapp.model.Service
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -21,6 +23,8 @@ object UserSessionManager {
     private const val KEY_BUSINESSES = "local_businesses"
     private const val KEY_QUALIFICATIONS = "local_qualifications"
     private const val KEY_AUDIT_LOGS = "local_admin_audit_logs"
+    private const val KEY_SERVICES = "local_services"
+    private const val KEY_PROMOTIONS = "local_promotions"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -663,6 +667,135 @@ object UserSessionManager {
             )
         }
         return list
+    }
+
+    /** Save or update a service locally */
+    fun saveService(service: Service) {
+        if (!::prefs.isInitialized) return
+        val current = getAllServices().toMutableList()
+        val index = current.indexOfFirst { it.id == service.id }
+        if (index >= 0) {
+            current[index] = service
+        } else {
+            current.add(0, service)
+        }
+        val array = JSONArray()
+        for (s in current) {
+            val o = JSONObject()
+            o.put("id", s.id)
+            o.put("businessId", s.businessId)
+            o.put("name", s.name)
+            o.put("description", s.description)
+            o.put("price", s.price)
+            o.put("durationMinutes", s.durationMinutes)
+            o.put("isActive", s.isActive)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_SERVICES, array.toString()).apply()
+    }
+
+    /** Retrieve all locally stored services */
+    fun getAllServices(): List<Service> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_SERVICES, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<Service>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                Service(
+                    id = o.optString("id"),
+                    businessId = o.optString("businessId"),
+                    name = o.optString("name"),
+                    description = o.optString("description"),
+                    price = o.optDouble("price", 0.0),
+                    durationMinutes = o.optInt("durationMinutes", 30),
+                    isActive = o.optBoolean("isActive", true)
+                )
+            )
+        }
+        return list
+    }
+
+    /** Retrieve services for a specific business */
+    fun getServicesForBusiness(businessId: String): List<Service> {
+        val all = getAllServices()
+        return if (businessId.isBlank()) all else all.filter { it.businessId == businessId }
+    }
+
+    /** Delete a service locally */
+    fun deleteService(serviceId: String) {
+        if (!::prefs.isInitialized) return
+        val current = getAllServices().filter { it.id != serviceId }
+        val array = JSONArray()
+        for (s in current) {
+            val o = JSONObject()
+            o.put("id", s.id)
+            o.put("businessId", s.businessId)
+            o.put("name", s.name)
+            o.put("description", s.description)
+            o.put("price", s.price)
+            o.put("durationMinutes", s.durationMinutes)
+            o.put("isActive", s.isActive)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_SERVICES, array.toString()).apply()
+    }
+
+    /** Save or update a promotion locally */
+    fun savePromotion(promo: Promotion) {
+        if (!::prefs.isInitialized) return
+        val current = getAllPromotions().toMutableList()
+        val index = current.indexOfFirst { it.id == promo.id }
+        if (index >= 0) {
+            current[index] = promo
+        } else {
+            current.add(0, promo)
+        }
+        val array = JSONArray()
+        for (p in current) {
+            val o = JSONObject()
+            o.put("id", p.id)
+            o.put("businessId", p.businessId)
+            o.put("businessName", p.businessName)
+            o.put("title", p.title)
+            o.put("description", p.description)
+            o.put("discountText", p.discountText)
+            o.put("imageUrl", p.imageUrl)
+            o.put("status", p.status)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_PROMOTIONS, array.toString()).apply()
+    }
+
+    /** Retrieve all locally stored promotions */
+    fun getAllPromotions(): List<Promotion> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_PROMOTIONS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<Promotion>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                Promotion(
+                    id = o.optString("id"),
+                    businessId = o.optString("businessId"),
+                    businessName = o.optString("businessName"),
+                    title = o.optString("title"),
+                    description = o.optString("description"),
+                    discountText = o.optString("discountText"),
+                    imageUrl = o.optString("imageUrl"),
+                    status = o.optString("status", "ACTIVE")
+                )
+            )
+        }
+        return list
+    }
+
+    /** Retrieve promotions for a specific business */
+    fun getPromotionsForBusiness(businessId: String): List<Promotion> {
+        val all = getAllPromotions()
+        return if (businessId.isBlank()) all else all.filter { it.businessId == businessId }
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */
