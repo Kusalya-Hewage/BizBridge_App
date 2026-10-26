@@ -195,7 +195,7 @@ object BusinessRepository {
                                             verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
                                             approved = (sessionProfile["approved"] as? Boolean) ?: false,
                                             active = (sessionProfile["active"] as? Boolean) ?: false,
-                                            trustScore = (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(bizId).totalScore
+                                            trustScore = (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(businessId).totalScore
                                         )
                                     )
                                 } else {
