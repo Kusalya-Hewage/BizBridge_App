@@ -59,6 +59,13 @@ class OwnerDashboardFragment : Fragment() {
         view.findViewById<View>(R.id.iv_owner_notifications)?.setOnClickListener {
             mainActivity?.navigateTo(NotificationsFragment(), addToBackStack = true)
         }
+
+        // QR Scanner actions
+        val openQrScanner = View.OnClickListener {
+            mainActivity?.navigateTo(OwnerQrVerificationFragment.newInstance(), addToBackStack = true)
+        }
+        view.findViewById<View>(R.id.iv_owner_scan_qr)?.setOnClickListener(openQrScanner)
+        view.findViewById<View>(R.id.card_action_scan_qr)?.setOnClickListener(openQrScanner)
  
         // Manage all requests link -> Manage Bookings
         view.findViewById<TextView>(R.id.tv_manage_all_requests)?.setOnClickListener {
