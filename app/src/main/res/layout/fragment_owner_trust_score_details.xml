@@ -345,11 +345,12 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_qualifications_hint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Qualification points: 24 of 30"
+                        android:text="Qualification points: 0 of 30"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -440,11 +441,12 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_reviews_hint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Recent reviews keep your score up to 10 points."
+                        android:text="Recent reviews contribute up to 15 points."
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
                 </LinearLayout>
