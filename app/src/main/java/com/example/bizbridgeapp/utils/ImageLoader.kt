@@ -210,4 +210,24 @@ object ImageLoader {
             null
         }
     }
+
+    /**
+     * Copies a picked profile image Uri into app's persistent internal storage and returns the local file path.
+     */
+    fun saveProfileImageLocally(context: Context, sourceUri: Uri, uid: String): String? {
+        return try {
+            val dir = File(context.filesDir, "profile_images")
+            if (!dir.exists()) dir.mkdirs()
+            val safeId = uid.replace("[^a-zA-Z0-9_-]".toRegex(), "_")
+            val targetFile = File(dir, "${safeId}_profile.jpg")
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                targetFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            targetFile.absolutePath
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
