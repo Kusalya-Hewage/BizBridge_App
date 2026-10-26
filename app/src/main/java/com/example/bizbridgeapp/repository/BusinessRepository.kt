@@ -195,7 +195,7 @@ object BusinessRepository {
                                             verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
                                             approved = (sessionProfile["approved"] as? Boolean) ?: false,
                                             active = (sessionProfile["active"] as? Boolean) ?: false,
-                                            trustScore = 80
+                                            trustScore = (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(bizId).totalScore
                                         )
                                     )
                                 } else {
@@ -372,7 +372,7 @@ object BusinessRepository {
                                     verificationStatus = "PENDING",
                                     approved = false,
                                     active = false,
-                                    trustScore = 80
+                                    trustScore = TrustScoreRepository.getLocalTrustScoreBreakdown(effectiveBizId).totalScore
                                 )
                                 db.collection(COLLECTION).document(effectiveBizId).set(newBiz.toMap(), SetOptions.merge())
                                 onUpdate(newBiz)
@@ -418,7 +418,7 @@ object BusinessRepository {
                             active = (sessionProfile["active"] as? Boolean) ?: false,
                             approvalStatus = (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
                             verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
-                            trustScore = (sessionProfile["trustScore"] as? Int) ?: 80
+                            trustScore = (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(effectiveBizId).totalScore
                         )
                         onUpdate(constructed)
                     } else {
@@ -488,7 +488,7 @@ object BusinessRepository {
             active = existingBiz?.active ?: (sessionProfile["active"] as? Boolean) ?: false,
             approvalStatus = existingBiz?.approvalStatus ?: (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
             verificationStatus = existingBiz?.verificationStatus ?: (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
-            trustScore = existingBiz?.trustScore ?: (sessionProfile["trustScore"] as? Int) ?: 80,
+            trustScore = existingBiz?.trustScore ?: (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(targetId).totalScore,
             rating = existingBiz?.rating ?: 0.0,
             reviewCount = existingBiz?.reviewCount ?: 0,
             latitude = defaultLat,
