@@ -265,7 +265,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="84 / 100"
+                            android:text="— / 100"
                             android:textColor="@color/text_primary"
                             android:textSize="28sp"
                             android:textStyle="bold" />
@@ -281,11 +281,12 @@
                 </RelativeLayout>
 
                 <TextView
+                    android:id="@+id/txt_trust_score_caption"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Read-only sample score. Not a verified badge."
+                    android:text="Verified platform trust rating"
                     android:textColor="@color/text_muted"
                     android:textSize="12sp" />
 
@@ -308,11 +309,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_qualifications"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="24/25"
+                        android:text="0/30"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -327,15 +329,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="In-biz experience"
+                        android:text="Industry experience"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_experience"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="19/20"
+                        android:text="0/25"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -354,11 +357,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_profile"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="15/15"
+                        android:text="0/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -377,11 +381,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_documents"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="14/15"
+                        android:text="0/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -400,11 +405,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_reviews"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="12/25"
+                        android:text="0/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
