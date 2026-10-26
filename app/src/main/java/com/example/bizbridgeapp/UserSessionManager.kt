@@ -382,7 +382,7 @@ object UserSessionManager {
             active = o.optBoolean("active", false),
             approvalStatus = o.optString("approvalStatus", "PENDING"),
             verificationStatus = o.optString("verificationStatus", "PENDING"),
-            trustScore = o.optInt("trustScore", 80),
+            trustScore = o.optInt("trustScore", 0),
             rating = o.optDouble("rating", 0.0),
             reviewCount = o.optInt("reviewCount", 0),
             price = if (o.has("price") && !o.isNull("price")) o.optString("price").ifBlank { null } else null,
