@@ -154,6 +154,12 @@ class RegisterCustomerFragment : Fragment() {
             // Disable button to prevent double clicks
             btnCreateAccount.isEnabled = false
 
+            // Save image locally if picked
+            val localImgPath = if (selectedImageUri != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), selectedImageUri!!, "cust_${System.currentTimeMillis()}")
+            } else null
+            val effectiveImg = localImgPath ?: selectedImageUri?.toString() ?: ""
+
             // Call Firebase to register and store profile
             com.example.bizbridgeapp.FirebaseAuthManager.registerCustomer(
                 fullName = name,
@@ -170,10 +176,14 @@ class RegisterCustomerFragment : Fragment() {
                             "email" to email,
                             "phone" to phone,
                             "role" to "CUSTOMER",
+                            "profileImageUrl" to effectiveImg,
                             "accountStatus" to "ACTIVE"
                         )
                         UserSessionManager.saveRegisteredAccount(email, password, custProfile)
                         UserSessionManager.saveProfile(custProfile)
+                        if (effectiveImg.isNotEmpty()) {
+                            UserSessionManager.updateProfileImage(effectiveImg)
+                        }
                         btnCreateAccount.isEnabled = true
                         AlertDialog.Builder(requireContext())
                             .setTitle("Account Created")
