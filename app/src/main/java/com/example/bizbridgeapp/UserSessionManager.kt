@@ -188,6 +188,10 @@ object UserSessionManager {
                 )
             )
 
+            val hash = Math.abs(bizId.hashCode())
+            val defaultLat = existingBiz?.latitude ?: (6.9271 + ((hash % 100) - 50) * 0.0003)
+            val defaultLng = existingBiz?.longitude ?: (79.8612 + (((hash / 100) % 100) - 50) * 0.0003)
+
             saveBusiness(
                 Business(
                     id = bizId,
@@ -202,8 +206,10 @@ object UserSessionManager {
                     approvalStatus = approvalStatus,
                     verificationStatus = verificationStatus,
                     trustScore = trustScore,
-                    rating = existingBiz?.rating ?: 0.0,
-                    reviewCount = existingBiz?.reviewCount ?: 0
+                    rating = existingBiz?.rating ?: 5.0,
+                    reviewCount = existingBiz?.reviewCount ?: 0,
+                    latitude = defaultLat,
+                    longitude = defaultLng
                 )
             )
         }
@@ -428,6 +434,9 @@ object UserSessionManager {
         val currentList = getAllBusinesses().toMutableList()
         val index = currentList.indexOfFirst { it.id == businessId }
         if (index >= 0) {
+            val hash = Math.abs(businessId.hashCode())
+            val defaultLat = currentList[index].latitude ?: (6.9271 + ((hash % 100) - 50) * 0.0003)
+            val defaultLng = currentList[index].longitude ?: (79.8612 + (((hash / 100) % 100) - 50) * 0.0003)
             currentList[index] = currentList[index].copy(
                 approved = approved,
                 active = active,
@@ -437,9 +446,14 @@ object UserSessionManager {
                 category = if (category.isNotBlank()) category else currentList[index].category,
                 address = if (address.isNotBlank()) address else currentList[index].address,
                 ownerId = if (ownerId.isNotBlank()) ownerId else currentList[index].ownerId,
-                contactNumber = if (contactNumber.isNotBlank()) contactNumber else currentList[index].contactNumber
+                contactNumber = if (contactNumber.isNotBlank()) contactNumber else currentList[index].contactNumber,
+                latitude = defaultLat,
+                longitude = defaultLng
             )
         } else {
+            val hash = Math.abs(businessId.hashCode())
+            val defaultLat = 6.9271 + ((hash % 100) - 50) * 0.0003
+            val defaultLng = 79.8612 + (((hash / 100) % 100) - 50) * 0.0003
             currentList.add(
                 0,
                 Business(
@@ -455,7 +469,9 @@ object UserSessionManager {
                     verificationStatus = verificationStatus,
                     trustScore = 85,
                     rating = 5.0,
-                    reviewCount = 0
+                    reviewCount = 0,
+                    latitude = defaultLat,
+                    longitude = defaultLng
                 )
             )
         }
