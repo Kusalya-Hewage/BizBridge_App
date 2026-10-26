@@ -39,6 +39,11 @@ class OwnerManageBookingsFragment : Fragment() {
 
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
 
+        // Scan QR button in header
+        view.findViewById<View>(R.id.btn_scan_qr_header)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateTo(OwnerQrVerificationFragment.newInstance(), addToBackStack = true)
+        }
+
         // Tabs
         val tabPending = view.findViewById<TextView>(R.id.tab_pending)
         val tabConfirmed = view.findViewById<TextView>(R.id.tab_confirmed)
