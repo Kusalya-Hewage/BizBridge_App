@@ -76,6 +76,7 @@ object OwnerDialogHelper {
         primaryButtonText: String,
         secondaryButtonText: String = "Back to Scanner",
         badgeText: String = "Verified Appointment Reference",
+        onSecondaryAction: (() -> Unit)? = null,
         onPrimaryAction: () -> Unit
     ) {
         val dialog = Dialog(context)
@@ -104,6 +105,11 @@ object OwnerDialogHelper {
 
         btnSecondary.setOnClickListener {
             dialog.dismiss()
+            onSecondaryAction?.invoke()
+        }
+
+        dialog.setOnCancelListener {
+            onSecondaryAction?.invoke()
         }
 
         dialog.setContentView(dialogView)
