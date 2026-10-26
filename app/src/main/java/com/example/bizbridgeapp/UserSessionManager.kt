@@ -174,7 +174,7 @@ object UserSessionManager {
             val isActive = (data["active"] as? Boolean) ?: existingBiz?.active ?: false
             val approvalStatus = (data["approvalStatus"] as? String) ?: existingBiz?.approvalStatus ?: "PENDING"
             val verificationStatus = (data["verificationStatus"] as? String) ?: existingBiz?.verificationStatus ?: "PENDING"
-            val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 80
+            val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 0
             val imageUrl = (data["imageUrl"] as? String)?.ifBlank { null } ?: existingBiz?.imageUrl
 
             saveApplication(
