@@ -244,7 +244,8 @@
             android:elevation="10dp"
             android:focusable="true"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:visibility="gone">
 
             <RelativeLayout
                 android:layout_width="match_parent"
