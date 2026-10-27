@@ -192,6 +192,24 @@ object ImageLoader {
     }
 
     /**
+     * Converts a picked image Uri into a compact Base64 data string (max 600px, 75% quality JPEG).
+     * This string can be stored directly in Firestore or SharedPreferences without losing permissions.
+     */
+    fun uriToBase64(context: Context, sourceUri: Uri, maxDim: Int = 600): String? {
+        return try {
+            val bitmap = context.contentResolver.openInputStream(sourceUri)?.use { stream ->
+                decodeSampledBitmap(stream, maxDim)
+            } ?: return null
+            val baos = java.io.ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 75, baos)
+            val bytes = baos.toByteArray()
+            "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
      * Copies a picked image Uri into app's persistent internal storage and returns the local file path.
      */
     fun saveImageLocally(context: Context, sourceUri: Uri, businessId: String): String? {
