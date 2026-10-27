@@ -168,7 +168,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Signature haircut • $45 • 45 min"
+                    android:text="Signature haircut • Rs. 45 • 45 min"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
