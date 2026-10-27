@@ -18,14 +18,40 @@ object BusinessRepository {
         onComplete(emptyList())
     }
 
-    /** Deduplicate businesses by normalized name and ID, favoring authoritative remote entries */
+    /** Deduplicate businesses by normalized name and ID, preserving local images/details when remote fields are blank */
     fun deduplicateBusinesses(local: List<Business>, remote: List<Business>): List<Business> {
-        val combined = (remote + local) // remote takes precedence
         val distinctList = mutableListOf<Business>()
         val seenNames = mutableSetOf<String>()
         val seenIds = mutableSetOf<String>()
+        val localMap = local.associateBy { it.id }
 
-        for (biz in combined) {
+        // Process remote businesses first, enriching with local images/fields if remote is missing them
+        for (biz in remote) {
+            val normName = biz.name.trim().lowercase()
+            val id = biz.id.trim()
+            val matchingLocal = localMap[id] ?: local.firstOrNull { it.name.trim().equals(biz.name.trim(), ignoreCase = true) }
+
+            val effectiveImg = if (!biz.imageUrl.isNullOrBlank()) biz.imageUrl else matchingLocal?.imageUrl
+            val effectiveAddress = if (biz.address.isNotBlank()) biz.address else (matchingLocal?.address ?: "")
+            val effectivePhone = if (biz.contactNumber.isNotBlank()) biz.contactNumber else (matchingLocal?.contactNumber ?: "")
+            val effectiveDesc = if (biz.description.isNotBlank()) biz.description else (matchingLocal?.description ?: "")
+
+            val mergedBiz = biz.copy(
+                imageUrl = effectiveImg,
+                address = effectiveAddress,
+                contactNumber = effectivePhone,
+                description = effectiveDesc
+            )
+
+            if (normName.isNotEmpty() && !seenNames.contains(normName) && !seenIds.contains(id)) {
+                seenNames.add(normName)
+                seenIds.add(id)
+                distinctList.add(mergedBiz)
+            }
+        }
+
+        // Add remaining local-only businesses
+        for (biz in local) {
             val normName = biz.name.trim().lowercase()
             val id = biz.id.trim()
             if (normName.isNotEmpty() && !seenNames.contains(normName) && !seenIds.contains(id)) {
