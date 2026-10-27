@@ -84,12 +84,12 @@ class ReviewBookingFragment : Fragment() {
 
         // Bind dynamic values
         view.findViewById<TextView>(R.id.tv_business_name)?.text = businessName
-        view.findViewById<TextView>(R.id.tv_service_header)?.text = "$serviceName • $${servicePrice.toInt()}"
+        view.findViewById<TextView>(R.id.tv_service_header)?.text = "$serviceName • Rs. ${servicePrice.toInt()}"
         view.findViewById<TextView>(R.id.tv_appointment_date)?.text = appointmentDate
         view.findViewById<TextView>(R.id.tv_appointment_time_duration)?.text = "$appointmentTime • $serviceDuration minutes"
         view.findViewById<TextView>(R.id.tv_service_breakdown_name)?.text = serviceName
-        view.findViewById<TextView>(R.id.tv_service_breakdown_price)?.text = "$${String.format("%.2f", servicePrice)}"
-        view.findViewById<TextView>(R.id.tv_service_total_price)?.text = "$${String.format("%.2f", servicePrice)}"
+        view.findViewById<TextView>(R.id.tv_service_breakdown_price)?.text = "Rs. ${String.format("%.2f", servicePrice)}"
+        view.findViewById<TextView>(R.id.tv_service_total_price)?.text = "Rs. ${String.format("%.2f", servicePrice)}"
 
         val tvAddress1 = view.findViewById<TextView>(R.id.tv_review_address_line1)
         val tvAddress2 = view.findViewById<TextView>(R.id.tv_review_address_line2)
