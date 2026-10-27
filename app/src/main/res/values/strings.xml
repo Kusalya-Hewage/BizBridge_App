@@ -23,10 +23,14 @@
     <string name="onboarding_2_info">Clear prices and appointment details. No payment processing in BizBridge.</string>
     <string name="btn_back">Back</string>
 
+    <string name="customer_demo_tag">CUSTOMER · DEMONSTRATION DATA</string>
+    <string name="owner_demo_tag">BUSINESS OWNER · DEMONSTRATION DATA</string>
+    <string name="admin_demo_tag">ADMIN · DEMONSTRATION DATA</string>
+
     <string name="onboarding_3_top_title">A little peace of mind</string>
     <string name="onboarding_3_title">Never Miss an Appointment</string>
     <string name="onboarding_3_desc">Stay on top of your plans with booking updates and friendly reminders.</string>
-    <string name="onboarding_3_info">Timely notifications keep you informed every step of the way.</string>
+    <string name="onboarding_3_info">Notification examples are static demonstrations, not live reminders.</string>
     <string name="btn_get_started">Get Started</string>
 
     <!-- Login -->
