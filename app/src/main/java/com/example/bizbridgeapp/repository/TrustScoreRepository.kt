@@ -183,7 +183,7 @@ object TrustScoreRepository {
                     val remoteDocs = docSnap.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
                     val combinedDocs = (localDocs + remoteDocs).distinctBy { it.id }
 
-                    if (combinedDocs.isEmpty() && !currentUid.isNullOrBlank()) {
+                    if (combinedDocs.isEmpty() && targetId.isBlank() && !currentUid.isNullOrBlank()) {
                         db.collection("qualificationVerifications")
                             .whereEqualTo("ownerId", currentUid)
                             .get()
