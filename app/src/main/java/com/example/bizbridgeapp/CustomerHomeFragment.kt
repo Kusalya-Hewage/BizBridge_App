@@ -242,7 +242,15 @@ class CustomerHomeFragment : Fragment() {
                     }
                     cardPromo?.setOnClickListener {
                         if (activePromo.businessId.isNotBlank()) {
-                            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(activePromo.businessId), addToBackStack = true)
+                            (activity as? MainActivity)?.navigateTo(
+                                BusinessDetailsFragment.newInstance(
+                                    businessId = activePromo.businessId,
+                                    businessName = activePromo.businessName,
+                                    imageUrl = activePromo.imageUrl,
+                                    description = activePromo.description
+                                ),
+                                addToBackStack = true
+                            )
                         }
                     }
                 } else {
@@ -306,7 +314,20 @@ class CustomerHomeFragment : Fragment() {
             }
 
             cardNearby?.setOnClickListener {
-                (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
+                (activity as? MainActivity)?.navigateTo(
+                    BusinessDetailsFragment.newInstance(
+                        businessId = b0.id,
+                        businessName = b0.name,
+                        category = b0.category,
+                        address = b0.address,
+                        imageUrl = b0.imageUrl,
+                        rating = b0.rating,
+                        reviewCount = b0.reviewCount,
+                        trustScore = b0.trustScore,
+                        description = b0.description
+                    ),
+                    addToBackStack = true
+                )
             }
 
             // Bind Popular cards dynamically
@@ -338,7 +359,20 @@ class CustomerHomeFragment : Fragment() {
                 tvReviews?.text = "(${biz.reviewCount})"
 
                 cardView.setOnClickListener {
-                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(biz.id), addToBackStack = true)
+                    (activity as? MainActivity)?.navigateTo(
+                        BusinessDetailsFragment.newInstance(
+                            businessId = biz.id,
+                            businessName = biz.name,
+                            category = biz.category,
+                            address = biz.address,
+                            imageUrl = biz.imageUrl,
+                            rating = biz.rating,
+                            reviewCount = biz.reviewCount,
+                            trustScore = biz.trustScore,
+                            description = biz.description
+                        ),
+                        addToBackStack = true
+                    )
                 }
             }
 
