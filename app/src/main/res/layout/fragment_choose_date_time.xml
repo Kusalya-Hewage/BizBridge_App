@@ -3,6 +3,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
@@ -165,7 +166,7 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/inter_variable"
-                android:text="Signature haircut · 45 min · $45"
+                tools:text="Service · 45 min · Rs. 4500"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
