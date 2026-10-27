@@ -126,7 +126,7 @@ class SelectServiceFragment : Fragment() {
             }
             tvSummary?.text = "1 service selected • ${service.durationMinutes} minutes"
             btnContinue?.isEnabled = true
-            btnContinue?.text = "Continue - $${service.price.toInt()}"
+            btnContinue?.text = "Continue - Rs. ${service.price.toInt()}"
         }
 
         for ((index, s) in servicesList.withIndex()) {
@@ -181,7 +181,7 @@ class SelectServiceFragment : Fragment() {
                 ).apply {
                     topMargin = (8 * density).toInt()
                 }
-                text = "$${s.price.toInt()} • ${s.durationMinutes} min"
+                text = "Rs. ${s.price.toInt()} • ${s.durationMinutes} min"
                 textSize = 13f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
                 setTextColor(ContextCompat.getColor(requireContext(), R.color.primary))
