@@ -142,7 +142,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Mission District, San Francisco"
+                        android:text="Detecting location..."
                         android:textColor="@color/text_primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
