@@ -216,7 +216,7 @@ object BusinessRepository {
                                 val sessionProfile = com.example.bizbridgeapp.UserSessionManager.getProfile()
                                 val savedBizId = sessionProfile?.get("businessId") as? String
                                 val savedName = sessionProfile?.get("businessName") as? String
-                                if (!savedName.isNullOrBlank() && (savedBizId == businessId || businessId.startsWith("biz_"))) {
+                                if (!savedName.isNullOrBlank() && savedBizId == businessId) {
                                     onSuccess(
                                         Business(
                                             id = businessId,
@@ -639,16 +639,10 @@ object BusinessRepository {
         val sessionBizId = getOwnerBusinessId()
 
         val initialLocal = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
-            .filter { (it.approved && it.active) || (sessionBizId.isNotBlank() && it.id == sessionBizId) || (currentUid != null && it.ownerId == currentUid) }
+            .filter { it.approved && it.active }
             .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
-        val fallbackLocal = if (initialLocal.isNotEmpty()) {
-            initialLocal
-        } else {
-            com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
-                .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
-        }
-        if (fallbackLocal.isNotEmpty()) {
-            onUpdate(fallbackLocal)
+        if (initialLocal.isNotEmpty()) {
+            onUpdate(initialLocal)
         }
 
         return db.collection(COLLECTION)
