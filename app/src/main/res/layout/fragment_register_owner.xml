@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="BIZBRIDGE · PARTNER ONBOARDING"
+        android:text="@string/shared_auth_demo_tag"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -42,6 +42,7 @@
             android:src="@drawable/ic_arrow_back" />
 
         <TextView
+            android:id="@+id/tv_owner_title"
             style="@style/TextAppearance.BizBridge.Title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -75,66 +76,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 0. Owner Profile Photo Picker -->
-            <LinearLayout
-                android:id="@+id/layout_owner_photo_picker"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingTop="6dp"
-                android:paddingBottom="10dp">
-
-                <FrameLayout
-                    android:id="@+id/container_reg_owner_avatar"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@drawable/bg_avatar_circle"
-                    android:clipToOutline="true">
-
-                    <ImageView
-                        android:id="@+id/iv_reg_owner_photo"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:visibility="gone" />
-
-                    <TextView
-                        android:id="@+id/tv_reg_owner_avatar_initials"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:fontFamily="@font/inter_variable"
-                        android:gravity="center"
-                        android:text="BO"
-                        android:textColor="@color/primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/tv_add_owner_profile_image"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Add owner profile photo"
-                    android:textColor="@color/primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Camera"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_camera"
-                    app:tint="@color/primary" />
-            </LinearLayout>
-
             <!-- 1. Owner name -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -160,9 +101,9 @@
                     android:layout_marginTop="2dp"
                     android:background="@null"
                     android:fontFamily="@font/inter_variable"
+                    android:hint="Elena Rivera"
                     android:imeOptions="actionNext"
                     android:inputType="textPersonName"
-                    android:hint="Owner full name"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
                     android:textSize="@dimen/text_input" />
@@ -193,9 +134,9 @@
                     android:layout_marginTop="2dp"
                     android:background="@null"
                     android:fontFamily="@font/inter_variable"
+                    android:hint="Juniper Studio"
                     android:imeOptions="actionNext"
                     android:inputType="textCapWords"
-                    android:hint="Business name"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
                     android:textSize="@dimen/text_input" />
@@ -208,6 +149,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_input_field"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="16dp"
@@ -270,9 +213,9 @@
                     android:layout_marginTop="2dp"
                     android:background="@null"
                     android:fontFamily="@font/inter_variable"
+                    android:hint="elena@juniper.example"
                     android:imeOptions="actionNext"
                     android:inputType="textEmailAddress"
-                    android:hint="Business email address"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
                     android:textSize="@dimen/text_input" />
@@ -303,9 +246,9 @@
                     android:layout_marginTop="2dp"
                     android:background="@null"
                     android:fontFamily="@font/inter_variable"
+                    android:hint="+1 (415) 555-0188"
                     android:imeOptions="actionNext"
                     android:inputType="phone"
-                    android:hint="07X XXX XXXX"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_secondary"
                     android:textSize="@dimen/text_input" />
@@ -342,9 +285,9 @@
                         android:layout_marginTop="2dp"
                         android:background="@null"
                         android:fontFamily="@font/inter_variable"
+                        android:hint="••••••••••••"
                         android:imeOptions="actionDone"
                         android:inputType="textPassword"
-                        android:hint="Password (min 6 characters)"
                         android:textColor="@color/text_primary"
                         android:textColorHint="@color/text_secondary"
                         android:textSize="@dimen/text_input" />
@@ -361,173 +304,32 @@
                     android:src="@drawable/ic_eye_off" />
             </LinearLayout>
 
-            <!-- 7. Qualification / Certification Document (Unified Application) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="14dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_admin_certificate_seal"
-                        app:tint="@color/primary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Qualification Document (Recommended)"
-                        android:textColor="@color/text_primary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Attach your certificate so Admin can verify your business and qualifications together in one application."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
-
-                <!-- Document Title -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_input_field"
-                    android:orientation="vertical"
-                    android:paddingStart="12dp"
-                    android:paddingTop="6dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="6dp">
-
-                    <TextView
-                        style="@style/TextAppearance.BizBridge.Label"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Qualification / Certificate Title" />
-
-                    <EditText
-                        android:id="@+id/et_reg_doc_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:background="@null"
-                        android:fontFamily="@font/inter_variable"
-                        android:hint="e.g. NVQ Level 4 Stylist, Salon License"
-                        android:imeOptions="actionNext"
-                        android:inputType="textCapWords"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_secondary"
-                        android:textSize="@dimen/text_input" />
-                </LinearLayout>
-
-                <!-- Issuing Org -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_input_field"
-                    android:orientation="vertical"
-                    android:paddingStart="12dp"
-                    android:paddingTop="6dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="6dp">
-
-                    <TextView
-                        style="@style/TextAppearance.BizBridge.Label"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Issuing Body / Institution" />
-
-                    <EditText
-                        android:id="@+id/et_reg_doc_issuer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:background="@null"
-                        android:fontFamily="@font/inter_variable"
-                        android:hint="e.g. City &amp; Guilds, NAITA"
-                        android:imeOptions="actionDone"
-                        android:inputType="textCapWords"
-                        android:textColor="@color/text_primary"
-                        android:textColorHint="@color/text_secondary"
-                        android:textSize="@dimen/text_input" />
-                </LinearLayout>
-
-                <!-- Attach Document Button -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_reg_attach_doc"
-                        android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:background="@drawable/bg_button_secondary"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="📷 Attach File"
-                        android:textAllCaps="false"
-                        android:textColor="@color/primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_reg_attached_doc_status"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_weight="1"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="No file attached (optional)"
-                        android:textColor="@color/text_muted"
-                        android:textSize="11sp" />
-                </LinearLayout>
-            </LinearLayout>
-
             <!-- Bottom Info Box -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_card_lavender"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:padding="14dp">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:contentDescription="Info"
-                    android:src="@drawable/ic_info_clock" />
+                    android:src="@drawable/ic_info_circle"
+                    app:tint="@color/primary" />
 
                 <TextView
                     style="@style/TextAppearance.BizBridge.Body"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
                     android:text="@string/owner_verification_info"
                     android:textColor="@color/primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
