@@ -17,13 +17,28 @@ import com.example.bizbridgeapp.repository.PromotionRepository
 class OwnerCreatePromotionFragment : Fragment() {
 
     private var isEditMode: Boolean = false
+    private var promoId: String = ""
+    private var initialTitle: String = ""
+    private var initialDesc: String = ""
+    private var initialOffer: String = ""
     private var currentBusinessId: String = ""
 
     companion object {
-        fun newInstance(isEditMode: Boolean = false): OwnerCreatePromotionFragment {
+        fun newInstance(
+            isEditMode: Boolean = false,
+            promoId: String = "",
+            title: String = "",
+            description: String = "",
+            offer: String = ""
+        ): OwnerCreatePromotionFragment {
             val fragment = OwnerCreatePromotionFragment()
-            val args = Bundle()
-            args.putBoolean("isEditMode", isEditMode)
+            val args = Bundle().apply {
+                putBoolean("isEditMode", isEditMode)
+                putString("promoId", promoId)
+                putString("title", title)
+                putString("description", description)
+                putString("offer", offer)
+            }
             fragment.arguments = args
             return fragment
         }
@@ -32,6 +47,10 @@ class OwnerCreatePromotionFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         isEditMode = arguments?.getBoolean("isEditMode", false) ?: false
+        promoId = arguments?.getString("promoId").orEmpty()
+        initialTitle = arguments?.getString("title").orEmpty()
+        initialDesc = arguments?.getString("description").orEmpty()
+        initialOffer = arguments?.getString("offer").orEmpty()
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
     }
 
@@ -65,7 +84,11 @@ class OwnerCreatePromotionFragment : Fragment() {
         val btnPublish = view.findViewById<Button>(R.id.btn_publish_promotion)
         val btnDraft = view.findViewById<Button>(R.id.btn_save_promo_draft)
 
-        if (!isEditMode) {
+        if (isEditMode) {
+            etTitle?.setText(initialTitle)
+            etDesc?.setText(initialDesc)
+            etOffer?.setText(initialOffer)
+        } else {
             etTitle?.setText("")
             etDesc?.setText("")
             etOffer?.setText("")
@@ -84,10 +107,13 @@ class OwnerCreatePromotionFragment : Fragment() {
             btnPublish?.isEnabled = false
             btnPublish?.text = if (status == "ACTIVE") "Publishing…" else "Saving Draft…"
 
+            val businessName = BusinessRepository.getOwnerBusiness()?.name?.ifEmpty { "My Business" } ?: "My Business"
+            val targetId = if (isEditMode && promoId.isNotBlank()) promoId else "promo_${System.currentTimeMillis()}"
+
             val promotion = Promotion(
-                id = if (isEditMode) "promo_season_finish" else "",
+                id = targetId,
                 businessId = currentBusinessId,
-                businessName = "Juniper Studio",
+                businessName = businessName,
                 title = title,
                 description = desc,
                 discountText = offer.ifEmpty { "Limited offer" },
@@ -98,7 +124,7 @@ class OwnerCreatePromotionFragment : Fragment() {
                 promotion = promotion,
                 onSuccess = {
                     if (isAdded) {
-                        Toast.makeText(requireContext(), "Promotion $status in Firestore.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Promotion $status successfully.", Toast.LENGTH_SHORT).show()
                         parentFragmentManager.popBackStack()
                     }
                 },
