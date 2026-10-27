@@ -99,9 +99,22 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
 
         // View Details button & card click
         val openDetails = View.OnClickListener {
-            val bizId = selectedBusiness?.id
-            if (!bizId.isNullOrBlank()) {
-                (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(bizId), addToBackStack = true)
+            val biz = selectedBusiness
+            if (biz != null && biz.id.isNotBlank()) {
+                (activity as? MainActivity)?.navigateTo(
+                    BusinessDetailsFragment.newInstance(
+                        businessId = biz.id,
+                        businessName = biz.name,
+                        category = biz.category,
+                        address = biz.address,
+                        imageUrl = biz.imageUrl,
+                        rating = biz.rating,
+                        reviewCount = biz.reviewCount,
+                        trustScore = biz.trustScore,
+                        description = biz.description
+                    ),
+                    addToBackStack = true
+                )
             }
         }
         view.findViewById<Button>(R.id.btn_view_details)?.setOnClickListener(openDetails)
