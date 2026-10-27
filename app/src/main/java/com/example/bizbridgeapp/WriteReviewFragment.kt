@@ -14,13 +14,15 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 
 import com.example.bizbridgeapp.model.Review
+import com.example.bizbridgeapp.model.Booking
+import com.example.bizbridgeapp.repository.BookingRepository
 import com.example.bizbridgeapp.repository.ReviewRepository
 import com.example.bizbridgeapp.UserSessionManager
 import com.google.firebase.auth.FirebaseAuth
 
 class WriteReviewFragment : Fragment() {
 
-    private var currentRating = 4
+    private var currentRating = 5
     private var bookingId: String = ""
     private var businessId: String = ""
     private var businessName: String = ""
@@ -56,6 +58,67 @@ class WriteReviewFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
+        // ─── Bind Real Business & Booking Details ──────────────────────
+        val tvBusinessName = view.findViewById<TextView>(R.id.tv_business_name)
+        val tvBusinessInitials = view.findViewById<TextView>(R.id.tv_business_initials)
+        val tvServiceDateTime = view.findViewById<TextView>(R.id.tv_service_datetime)
+        val tvBookingRef = view.findViewById<TextView>(R.id.tv_booking_ref)
+        val tvBookingStatus = view.findViewById<TextView>(R.id.tv_booking_status)
+
+        fun updateBusinessUI(name: String, serviceDateTime: String, ref: String, status: String) {
+            if (name.isNotBlank()) {
+                tvBusinessName?.text = name
+                val words = name.trim().split(" ").filter { it.isNotBlank() }
+                tvBusinessInitials?.text = if (words.size >= 2) {
+                    "${words[0].take(1)}${words[1].take(1)}".uppercase()
+                } else {
+                    name.take(2).uppercase()
+                }
+            }
+            if (serviceDateTime.isNotBlank()) tvServiceDateTime?.text = serviceDateTime
+            if (ref.isNotBlank()) tvBookingRef?.text = ref
+            if (status.isNotBlank()) tvBookingStatus?.text = status
+        }
+
+        if (businessName.isNotBlank()) {
+            updateBusinessUI(businessName, "", bookingId, "Completed")
+        }
+
+        if (bookingId.isNotBlank()) {
+            BookingRepository.getBookingById(bookingId,
+                onSuccess = { b ->
+                    if (!isAdded || b == null) return@getBookingById
+                    businessId = b.businessId.ifEmpty { businessId }
+                    businessName = b.businessNameSnapshot.ifEmpty { businessName }
+                    val dt = "${b.serviceNameSnapshot} • ${b.appointmentDate}"
+                    val ref = b.qrReference.ifEmpty { b.id }
+                    updateBusinessUI(b.businessNameSnapshot, dt, ref, b.status)
+                },
+                onFailure = {}
+            )
+        } else {
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val uid = currentUser?.uid.orEmpty()
+            if (uid.isNotEmpty()) {
+                BookingRepository.getBookingsForCustomer(uid,
+                    onSuccess = { list ->
+                        if (!isAdded) return@getBookingsForCustomer
+                        val latest = list.firstOrNull { it.status == "COMPLETED" } ?: list.firstOrNull()
+                        if (latest != null) {
+                            bookingId = latest.id
+                            businessId = latest.businessId
+                            businessName = latest.businessNameSnapshot
+                            val dt = "${latest.serviceNameSnapshot} • ${latest.appointmentDate}"
+                            val ref = latest.qrReference.ifEmpty { latest.id }
+                            updateBusinessUI(latest.businessNameSnapshot, dt, ref, latest.status)
+                        }
+                    },
+                    onFailure = {}
+                )
+            }
+        }
+
+        // ─── Star Rating Setup ─────────────────────────────────────────
         val star1 = view.findViewById<ImageView>(R.id.star_1)
         val star2 = view.findViewById<ImageView>(R.id.star_2)
         val star3 = view.findViewById<ImageView>(R.id.star_3)
@@ -81,10 +144,14 @@ class WriteReviewFragment : Fragment() {
             tvRatingLabel?.text = labels.getOrElse(rating - 1) { "$rating out of 5" }
         }
 
+        updateRating(currentRating)
+
         stars.forEachIndexed { index, star ->
             star?.setOnClickListener { updateRating(index + 1) }
         }
 
+        // ─── Character Counter Setup ───────────────────────────────────
+        tvCharCount?.text = "${etReview?.text?.length ?: 0} / 500 characters"
         etReview?.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -93,7 +160,7 @@ class WriteReviewFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Submit Review button
+        // ─── Submit Review Button ──────────────────────────────────────
         btnSubmit?.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
             if (user == null) {
@@ -114,7 +181,7 @@ class WriteReviewFragment : Fragment() {
 
             val review = Review(
                 bookingId = if (bookingId.isNotEmpty()) bookingId else "booking_${System.currentTimeMillis()}",
-                businessId = if (businessId.isNotEmpty()) businessId else "business_juniper",
+                businessId = if (businessId.isNotEmpty()) businessId else "business_general",
                 customerId = user.uid,
                 customerName = customerName,
                 rating = currentRating,
