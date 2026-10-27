@@ -186,7 +186,7 @@
                         android:fontFamily="@font/inter_variable"
                         android:paddingStart="14dp"
                         android:paddingEnd="14dp"
-                        android:text="Oct 28, 2026"
+                        android:text="Oct 30, 2026"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
@@ -265,7 +265,7 @@
                     android:layout_marginStart="10dp"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="2dp"
-                    android:text="Publishing makes this special offer visible to customers browsing your business listing."
+                    android:text="Publishing makes this special offer visible on your demonstration listing. No discounts or payments are processed."
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
