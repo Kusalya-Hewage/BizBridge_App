@@ -195,7 +195,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="$45 · 45 min"
+                            android:text="Rs. 45 · 45 min"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -293,7 +293,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="$65 · 50 min"
+                            android:text="Rs. 65 · 50 min"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -391,7 +391,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="$35 · 30 min"
+                            android:text="Rs. 35 · 30 min"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />

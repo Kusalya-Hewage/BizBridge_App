@@ -41,12 +41,23 @@ class SplashFragment : Fragment() {
         val currentUser = FirebaseAuthManager.getCurrentUser()
         if (currentUser != null) {
             UserSessionManager.init(requireContext())
+            val email = currentUser.email.orEmpty().trim().lowercase()
+            val localAcc = UserSessionManager.getRegisteredAccount(email)
             val savedProfile = UserSessionManager.getProfile()
-            val role = savedProfile?.get("role") as? String ?: ""
+
+            // Resolve authoritative role from registered accounts, session profile, or business ownership
+            val role = (localAcc?.get("role") as? String)?.ifBlank { null }
+                ?: (savedProfile?.get("role") as? String)?.ifBlank { null }
+                ?: if (UserSessionManager.getAllBusinesses().any { it.ownerId == currentUser.uid || (email.isNotEmpty() && it.id.contains("aura", ignoreCase = true)) }) "BUSINESS_OWNER" else ""
+
+            if (localAcc != null && (savedProfile == null || (savedProfile["email"] as? String)?.lowercase() != email)) {
+                UserSessionManager.saveProfile(localAcc)
+            }
+
             when {
                 role.equals("ADMIN", ignoreCase = true) ||
-                currentUser.email.equals("alex@bizbridge.example", ignoreCase = true) ||
-                currentUser.email.equals("admin@bizbridge.com", ignoreCase = true) -> {
+                email.equals("alex@bizbridge.example", ignoreCase = true) ||
+                email.equals("admin@bizbridge.com", ignoreCase = true) -> {
                     (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = false)
                 }
                 role.equals("BUSINESS_OWNER", ignoreCase = true) || role.equals("OWNER", ignoreCase = true) -> {

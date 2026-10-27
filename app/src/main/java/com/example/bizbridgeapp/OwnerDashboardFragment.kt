@@ -110,7 +110,7 @@ class OwnerDashboardFragment : Fragment() {
                     OwnerBookingDetailsFragment.newInstance(
                         bookingId = booking.id,
                         customerName = "Customer (${booking.customerId.take(6)})",
-                        serviceName = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
+                        serviceName = "${booking.serviceNameSnapshot} · Rs. ${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
                         dateTime = "${booking.appointmentDate} · ${booking.appointmentTime}",
                         customerNote = booking.customerNotes.ifEmpty { "No special notes provided." }
                     ),
