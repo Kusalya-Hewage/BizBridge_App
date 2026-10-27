@@ -265,7 +265,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_button_primary"
             android:fontFamily="@font/inter_variable"
-            android:text="Continue - $45"
+            android:text="Continue - Rs. 45"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="15sp"
