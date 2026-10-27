@@ -46,7 +46,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="BIZBRIDGE · EXPLORE &amp; BOOK"
+                    android:text="CUSTOMER · DEMONSTRATION DATA"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
