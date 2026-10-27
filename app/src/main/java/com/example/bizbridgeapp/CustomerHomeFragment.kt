@@ -1,5 +1,11 @@
 package com.example.bizbridgeapp
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +14,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 
 import com.example.bizbridgeapp.model.Business
@@ -15,13 +24,31 @@ import com.example.bizbridgeapp.model.Booking
 import com.example.bizbridgeapp.repository.BusinessRepository
 import com.example.bizbridgeapp.repository.BookingRepository
 import com.example.bizbridgeapp.repository.NotificationRepository
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.firebase.auth.FirebaseAuth
+import java.util.Locale
 
 class CustomerHomeFragment : Fragment() {
 
     private var activeBusinesses: List<Business> = emptyList()
     private var upcomingBooking: Booking? = null
     private var businessesListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var currentDeviceLocation: Location? = null
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        if (fineGranted || coarseGranted) {
+            fetchRealLocation()
+        } else {
+            onLocationFallback()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -33,6 +60,8 @@ class CustomerHomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         val user = FirebaseAuth.getInstance().currentUser
         val uid = user?.uid.orEmpty()
@@ -72,6 +101,14 @@ class CustomerHomeFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(CustomerProfileFragment(), addToBackStack = true)
         }
 
+        // ─── Real Device Location Setup ────────────────────────────────
+        val tvLocation = view.findViewById<TextView>(R.id.tv_location)
+        val cachedLocName = UserSessionManager.getLastKnownLocationName()
+        if (!cachedLocName.isNullOrBlank()) {
+            tvLocation?.text = cachedLocName
+        }
+        checkLocationPermissionAndFetch()
+
         // ─── Notification Dot Check ────────────────────────────────────
         if (uid.isNotEmpty()) {
             NotificationRepository.getUnreadCount(uid,
@@ -97,8 +134,24 @@ class CustomerHomeFragment : Fragment() {
 
         // ─── Location row click ────────────────────────────────────────
         val locationRow = view.findViewById<LinearLayout>(R.id.location_row)
-        locationRow?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(ExploreNearbyFragment(), addToBackStack = true)
+        locationRow?.setOnClickListener { v ->
+            val popup = PopupMenu(requireContext(), v)
+            popup.menu.add(0, 1, 0, "📍 Update Current Location")
+            popup.menu.add(0, 2, 1, "🗺️ Explore on Map")
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> {
+                        checkLocationPermissionAndFetch(showFeedbackToast = true)
+                        true
+                    }
+                    2 -> {
+                        (activity as? MainActivity)?.navigateTo(ExploreNearbyFragment(), addToBackStack = true)
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
         }
 
         // ─── Category chips ────────────────────────────────────────────
@@ -204,8 +257,13 @@ class CustomerHomeFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_nearby_rating)?.text = String.format(java.util.Locale.US, "%.1f", b0.rating ?: 5.0)
             view.findViewById<TextView>(R.id.tv_nearby_reviews)?.text = "(${b0.reviewCount} reviews)"
             view.findViewById<TextView>(R.id.tv_nearby_trust_score)?.text = "Trust: ${b0.trustScore}/100"
-            view.findViewById<TextView>(R.id.tv_nearby_distance)?.text = if (b0.address.isNotBlank()) b0.address else "Nearby"
             view.findViewById<TextView>(R.id.tv_nearby_price)?.text = if (!b0.price.isNullOrBlank()) b0.price else "Explore"
+            
+            if (currentDeviceLocation != null) {
+                updateNearbyDistanceDisplay(currentDeviceLocation!)
+            } else {
+                view.findViewById<TextView>(R.id.tv_nearby_distance)?.text = if (b0.address.isNotBlank()) b0.address else "Nearby"
+            }
             
             val ivNearby = view.findViewById<android.widget.ImageView>(R.id.img_nearby_business)
             if (ivNearby != null) {
@@ -281,6 +339,190 @@ class CustomerHomeFragment : Fragment() {
         }
         navProfile?.setOnClickListener {
             (activity as? MainActivity)?.navigateTo(CustomerProfileFragment(), addToBackStack = true)
+        }
+    }
+
+    private fun checkLocationPermissionAndFetch(showFeedbackToast: Boolean = false) {
+        val context = context ?: return
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFine || hasCoarse) {
+            if (showFeedbackToast) {
+                Toast.makeText(context, "Detecting real location...", Toast.LENGTH_SHORT).show()
+            }
+            fetchRealLocation()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    private fun fetchRealLocation() {
+        val context = context ?: return
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!hasFine && !hasCoarse) return
+
+        try {
+            fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                if (!isAdded) return@addOnSuccessListener
+                if (loc != null) {
+                    onLocationRetrieved(loc)
+                } else {
+                    requestFreshLocation()
+                }
+            }.addOnFailureListener {
+                if (isAdded) requestFreshLocation()
+            }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            onLocationFallback()
+        }
+    }
+
+    private fun requestFreshLocation() {
+        val context = context ?: return
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!hasFine && !hasCoarse) return
+
+        try {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+                .addOnSuccessListener { loc ->
+                    if (!isAdded) return@addOnSuccessListener
+                    if (loc != null) {
+                        onLocationRetrieved(loc)
+                    } else {
+                        onLocationFallback()
+                    }
+                }.addOnFailureListener {
+                    if (isAdded) onLocationFallback()
+                }
+        } catch (e: SecurityException) {
+            onLocationFallback()
+        }
+    }
+
+    private fun onLocationRetrieved(location: Location) {
+        currentDeviceLocation = location
+        resolveAddressName(location.latitude, location.longitude) { addressName ->
+            if (!isAdded) return@resolveAddressName
+            view?.findViewById<TextView>(R.id.tv_location)?.text = addressName
+            UserSessionManager.saveLastKnownLocation(addressName, location.latitude, location.longitude)
+        }
+        updateNearbyDistanceDisplay(location)
+    }
+
+    private fun onLocationFallback() {
+        val cached = UserSessionManager.getLastKnownLocationName()
+        if (!cached.isNullOrBlank()) {
+            view?.findViewById<TextView>(R.id.tv_location)?.text = cached
+        } else {
+            view?.findViewById<TextView>(R.id.tv_location)?.text = "Colombo, Sri Lanka"
+        }
+    }
+
+    private fun resolveAddressName(latitude: Double, longitude: Double, onResult: (String) -> Unit) {
+        val context = context ?: return
+        Thread {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    geocoder.getFromLocation(latitude, longitude, 1) { addresses ->
+                        val formatted = formatAddress(addresses.firstOrNull(), latitude, longitude)
+                        activity?.runOnUiThread {
+                            onResult(formatted)
+                        }
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                    val formatted = formatAddress(addresses?.firstOrNull(), latitude, longitude)
+                    activity?.runOnUiThread {
+                        onResult(formatted)
+                    }
+                }
+            } catch (e: Exception) {
+                val fallback = formatFallbackCoordinates(latitude, longitude)
+                activity?.runOnUiThread {
+                    onResult(fallback)
+                }
+            }
+        }.start()
+    }
+
+    private fun formatAddress(address: Address?, latitude: Double, longitude: Double): String {
+        if (address == null) return formatFallbackCoordinates(latitude, longitude)
+
+        val subLocality = address.subLocality ?: address.thoroughfare
+        val locality = address.locality ?: address.subAdminArea ?: address.adminArea
+
+        return when {
+            !subLocality.isNullOrBlank() && !locality.isNullOrBlank() && !subLocality.equals(locality, ignoreCase = true) -> {
+                "$subLocality, $locality"
+            }
+            !locality.isNullOrBlank() -> {
+                locality
+            }
+            !subLocality.isNullOrBlank() -> {
+                subLocality
+            }
+            !address.adminArea.isNullOrBlank() -> {
+                address.adminArea
+            }
+            else -> {
+                address.featureName ?: formatFallbackCoordinates(latitude, longitude)
+            }
+        }
+    }
+
+    private fun formatFallbackCoordinates(latitude: Double, longitude: Double): String {
+        val knownCities = listOf(
+            "Colombo" to (6.9271 to 79.8612),
+            "Galle" to (6.0535 to 80.2210),
+            "Kandy" to (7.2906 to 80.6337),
+            "Negombo" to (7.2008 to 79.8736),
+            "Matara" to (5.9549 to 80.5550),
+            "Jaffna" to (9.6615 to 80.0255),
+            "Gampaha" to (7.0840 to 79.9925),
+            "Kurunegala" to (7.4863 to 80.3623)
+        )
+        for ((cityName, coords) in knownCities) {
+            val dLat = latitude - coords.first
+            val dLng = longitude - coords.second
+            if (dLat * dLat + dLng * dLng < 0.05) {
+                return cityName
+            }
+        }
+        return String.format(Locale.US, "%.2f, %.2f", latitude, longitude)
+    }
+
+    private fun updateNearbyDistanceDisplay(location: Location) {
+        if (activeBusinesses.isEmpty()) return
+        val b0 = activeBusinesses[0]
+        val tvNearbyDistance = view?.findViewById<TextView>(R.id.tv_nearby_distance) ?: return
+
+        val lat = b0.latitude
+        val lng = b0.longitude
+        if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
+            val bizLoc = Location("").apply {
+                latitude = lat
+                longitude = lng
+            }
+            val meters = location.distanceTo(bizLoc)
+            val distStr = if (meters < 1000) {
+                "${meters.toInt()}m away"
+            } else {
+                String.format(Locale.US, "%.1f km away", meters / 1000f)
+            }
+            tvNearbyDistance.text = if (b0.address.isNotBlank()) "${b0.address} · $distStr" else distStr
+        } else if (b0.address.isNotBlank()) {
+            tvNearbyDistance.text = b0.address
         }
     }
 
