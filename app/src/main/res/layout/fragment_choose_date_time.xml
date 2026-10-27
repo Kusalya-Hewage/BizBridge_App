@@ -358,7 +358,7 @@
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Saturday, October 24"
+                        tools:text="Saturday, October 24"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -370,7 +370,7 @@
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Pacific Time"
+                        android:text="Local Time"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -420,7 +420,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Selected: Sat, Oct 24 · 10:00–10:45 AM"
+                        tools:text="Selected: Sat, Oct 24 · 10:00–10:45 AM"
                         android:textColor="#166534"
                         android:textSize="13sp"
                         android:textStyle="bold" />
