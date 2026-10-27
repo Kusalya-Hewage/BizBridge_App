@@ -52,30 +52,27 @@ object TrustScoreRepository {
         val qualScore = when {
             verifiedCertCount >= 2 -> 30
             verifiedCertCount == 1 -> 15
-            pendingCertCount >= 1 -> 10 // 1 doc submitted, pending admin review
+            pendingCertCount >= 1 -> 5 // 1 doc submitted, pending admin review
             else -> 0
         }
 
         // 2. Industry experience / Approval base (max 25)
-        val isApproved = b.approved || b.approvalStatus.equals("APPROVED", ignoreCase = true)
-        val expScore = if (isApproved) 25 else 10
+        // Base points for registered platform business; scales with completed verified appointments
+        val expScore = 5
 
         // 3. Profile completeness (max 15)
         var profScore = 0
-        if (b.description.isNotBlank()) profScore += 4
-        if (b.address.isNotBlank()) profScore += 4
-        if (b.contactNumber.isNotBlank()) profScore += 4
-        if (b.openingHours.isNotBlank()) profScore += 3
+        if (b.description.isNotBlank()) profScore += 1
+        if (b.address.isNotBlank()) profScore += 1
+        if (b.contactNumber.isNotBlank()) profScore += 1
 
         // 4. Verified documents (max 15)
-        val hasVerifiedDoc = allDocs.any { it.verificationStatus.equals("VERIFIED", ignoreCase = true) }
-        val docScore = if (hasVerifiedDoc || b.verificationStatus.equals("VERIFIED", ignoreCase = true) || isApproved) {
-            15
-        } else if (allDocs.isNotEmpty()) {
-            5 // Document submitted pending verification
-        } else {
-            0
+        // Only awarded when official business registration / legal documents are verified by admin
+        val hasVerifiedLegalDoc = allDocs.any {
+            (it.documentType.contains("REG", ignoreCase = true) || it.documentType.contains("IDENTITY", ignoreCase = true)) &&
+            it.verificationStatus.equals("VERIFIED", ignoreCase = true)
         }
+        val docScore = if (hasVerifiedLegalDoc) 15 else 0
 
         // 5. Eligible customer reviews (max 15)
         val rating = b.rating ?: 0.0
@@ -83,7 +80,7 @@ object TrustScoreRepository {
         val revScore = if (count >= 1 && rating > 0.0) {
             ((rating / 5.0) * 15.0).toInt().coerceIn(1, 15)
         } else {
-            0 // Exactly 0 points if there are no reviews yet
+            0 // Strictly 0 points if there are no reviews yet
         }
 
         val totalScore = (qualScore + expScore + profScore + docScore + revScore).coerceIn(0, 100)
