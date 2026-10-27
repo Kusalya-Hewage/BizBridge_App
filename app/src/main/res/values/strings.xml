@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BizBridge</string>
-    <string name="shared_auth_demo_tag">AUTHENTICATION PORTAL</string>
+    <string name="shared_auth_demo_tag">SHARED AUTHENTICATION · DEMONSTRATION DATA</string>
     <string name="tagline_connect_book_grow">Connect. Book. Grow.</string>
     <string name="tagline_neighborhood">Your neighborhood, connected.</string>
 
@@ -79,7 +79,7 @@
     <string name="btn_create_owner_account">Create Owner Account</string>
 
     <!-- Forgot Password -->
-    <string name="forgot_password_title">Forget Password</string>
+    <string name="forgot_password_title">Forgot Password</string>
     <string name="forgot_card_title">Let\'s get you back in.</string>
     <string name="forgot_card_subtitle">Enter the email associated with your account. We\'ll send instructions to reset your password.</string>
     <string name="btn_send_reset_link">Send Reset Link</string>
