@@ -39,9 +39,10 @@ class CustomerProfileFragment : Fragment() {
             val currentUser = FirebaseAuth.getInstance().currentUser
             val uid = currentUser?.uid ?: (UserSessionManager.getProfile()?.get("uid") as? String) ?: "customer"
 
-            // 2. Save locally into persistent internal storage
+            // 2. Save locally into persistent internal storage and Base64
             val localPath = com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), uri, uid)
-            val effectivePath = localPath ?: uri.toString()
+            val base64Data = com.example.bizbridgeapp.utils.ImageLoader.uriToBase64(requireContext(), uri, 600)
+            val effectivePath = base64Data ?: localPath ?: uri.toString()
 
             // 3. Immediately update local session
             UserSessionManager.updateProfileImage(effectivePath)
@@ -156,12 +157,13 @@ class CustomerProfileFragment : Fragment() {
                         return@setPositiveButton
                     }
                     val existingImg = (UserSessionManager.getProfile()?.get("profileImageUrl") as? String).orEmpty()
+                    val sessionRole = (UserSessionManager.getProfile()?.get("role") as? String)?.ifBlank { "CUSTOMER" } ?: "CUSTOMER"
                     val updated = com.example.bizbridgeapp.model.UserProfile(
                         uid = currentUser.uid,
                         fullName = newName,
                         email = currentUser.email.orEmpty(),
                         phone = newPhone,
-                        role = "CUSTOMER",
+                        role = sessionRole,
                         profileImageUrl = existingImg,
                         accountStatus = "ACTIVE"
                     )
