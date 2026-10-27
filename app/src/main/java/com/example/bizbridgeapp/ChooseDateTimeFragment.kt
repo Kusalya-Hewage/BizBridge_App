@@ -29,6 +29,7 @@ class ChooseDateTimeFragment : Fragment() {
 
     private val calendarDates = mutableListOf<CalendarDateItem>()
     private var selectedDateIndex = 0
+    private val slotViews = mutableListOf<TextView>()
 
     data class CalendarDateItem(
         val fullDateString: String,
@@ -92,6 +93,76 @@ class ChooseDateTimeFragment : Fragment() {
         // Generate upcoming 10 days starting from today
         generateUpcomingDates()
         setupDatePicker(view)
+
+        // Date Picker Dialog from Calendar button
+        view.findViewById<View>(R.id.btn_open_calendar_picker)?.setOnClickListener {
+            val cal = Calendar.getInstance()
+            val dpd = android.app.DatePickerDialog(
+                requireContext(),
+                { _, year, month, dayOfMonth ->
+                    val chosenCal = Calendar.getInstance().apply {
+                        set(year, month, dayOfMonth)
+                    }
+                    val fullFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
+                    val dayOfWeekFormat = SimpleDateFormat("EEE", Locale.US)
+                    val dayOfMonthFormat = SimpleDateFormat("d", Locale.US)
+                    val monthFormat = SimpleDateFormat("MMM", Locale.US)
+
+                    val full = fullFormat.format(chosenCal.time)
+                    val dow = dayOfWeekFormat.format(chosenCal.time)
+                    val dom = dayOfMonthFormat.format(chosenCal.time)
+                    val mon = monthFormat.format(chosenCal.time)
+
+                    val existingIndex = calendarDates.indexOfFirst { it.fullDateString == full }
+                    if (existingIndex >= 0) {
+                        selectedDateIndex = existingIndex
+                        setupDatePicker(view)
+                    } else {
+                        calendarDates.add(0, CalendarDateItem(full, dow, dom, mon))
+                        selectedDateIndex = 0
+                        setupDatePicker(view)
+                    }
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+            )
+            dpd.datePicker.minDate = System.currentTimeMillis() - 1000
+            dpd.show()
+        }
+
+        // Custom Time Picker
+        view.findViewById<View>(R.id.btn_custom_time_picker)?.setOnClickListener {
+            val cal = Calendar.getInstance()
+            val tpd = android.app.TimePickerDialog(
+                requireContext(),
+                { _, hourOfDay, minute ->
+                    val startCal = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, hourOfDay)
+                        set(Calendar.MINUTE, minute)
+                    }
+                    val endCal = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, hourOfDay)
+                        set(Calendar.MINUTE, minute + serviceDuration)
+                    }
+                    val timeFormat = SimpleDateFormat("h:mm a", Locale.US)
+                    val customSlot = "${timeFormat.format(startCal.time)}–${timeFormat.format(endCal.time)}"
+                    selectedTime = customSlot
+
+                    for (tv in slotViews) {
+                        tv.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
+                        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                        tv.setTypeface(tv.typeface, android.graphics.Typeface.NORMAL)
+                    }
+                    updateSelectedPill(view)
+                    android.widget.Toast.makeText(requireContext(), "Selected custom time: $customSlot", android.widget.Toast.LENGTH_SHORT).show()
+                },
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                false
+            )
+            tpd.show()
+        }
 
         // Fetch business opening hours and generate dynamic slots
         loadBusinessAndGenerateSlots(view)
@@ -319,7 +390,7 @@ class ChooseDateTimeFragment : Fragment() {
         }
 
         // Render slots in rows of 2 or 3
-        val slotViews = mutableListOf<TextView>()
+        slotViews.clear()
         val columnsPerRow = if (safeDuration > 60) 2 else 3
 
         fun selectSlot(slotText: String, clickedView: TextView) {
