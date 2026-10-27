@@ -144,7 +144,7 @@
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Signature haircut · $45 · 45 min · Elena Rivera"
+                    android:text="Signature haircut · Rs. 45 · 45 min · Elena Rivera"
                     android:textColor="@color/text_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />

@@ -233,7 +233,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Signature haircut · $45 · 45 min"
+                        android:text="Signature haircut · Rs. 45 · 45 min"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -342,7 +342,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Color refresh · $65 · 50 min"
+                        android:text="Color refresh · Rs. 65 · 50 min"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -451,7 +451,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Signature haircut · $45 · 45 min"
+                        android:text="Signature haircut · Rs. 45 · 45 min"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
