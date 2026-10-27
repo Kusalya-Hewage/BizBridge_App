@@ -125,6 +125,28 @@ object UserSessionManager {
         return map
     }
 
+    /** Save last known location name and coordinates */
+    fun saveLastKnownLocation(name: String, lat: Double, lng: Double) {
+        if (!::prefs.isInitialized) return
+        prefs.edit()
+            .putString(KEY_LAST_KNOWN_LOCATION_NAME, name)
+            .putFloat(KEY_LAST_KNOWN_LAT, lat.toFloat())
+            .putFloat(KEY_LAST_KNOWN_LNG, lng.toFloat())
+            .apply()
+    }
+
+    /** Get the last resolved real location name */
+    fun getLastKnownLocationName(): String? {
+        if (!::prefs.isInitialized) return null
+        return prefs.getString(KEY_LAST_KNOWN_LOCATION_NAME, null)
+    }
+
+    /** Get the last resolved real coordinates */
+    fun getLastKnownCoordinates(): Pair<Double, Double>? {
+        if (!::prefs.isInitialized || !prefs.contains(KEY_LAST_KNOWN_LAT)) return null
+        return Pair(prefs.getFloat(KEY_LAST_KNOWN_LAT, 0f).toDouble(), prefs.getFloat(KEY_LAST_KNOWN_LNG, 0f).toDouble())
+    }
+
     /** Update only the profile image URL in active session and registered account cache */
     fun updateProfileImage(imageUrl: String) {
         if (!::prefs.isInitialized || imageUrl.isBlank()) return
