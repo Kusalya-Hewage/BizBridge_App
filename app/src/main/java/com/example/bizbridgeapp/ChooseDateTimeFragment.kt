@@ -352,24 +352,28 @@ class ChooseDateTimeFragment : Fragment() {
         }
 
         // Check if currently selected slot is still valid and not blocked
-        var firstAvailableSlot: String? = null
+        var firstAvailableSlot: SlotInfo? = null
 
         for (slot in generatedSlots) {
-            val isBooked = isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, slot.startStr)
+            val isBooked = isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, slot.startMin, slot.endMin)
             if (!isBooked && firstAvailableSlot == null) {
-                firstAvailableSlot = slot.displaySlot
+                firstAvailableSlot = slot
             }
         }
 
-        if (selectedTimeSlot.isBlank() || isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, selectedTimeSlot)) {
-            selectedTimeSlot = firstAvailableSlot.orEmpty()
+        val currentSlotStillValid = generatedSlots.any {
+            it.displaySlot == selectedTimeSlot && !isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, it.startMin, it.endMin)
+        }
+
+        if (selectedTimeSlot.isBlank() || !currentSlotStillValid) {
+            selectedTimeSlot = firstAvailableSlot?.displaySlot.orEmpty()
         }
 
         fun updateSlotSelection(clickedSlot: String, clickedView: TextView) {
             selectedTimeSlot = clickedSlot
             for (tv in slotViews) {
                 val tagSlot = tv.tag as? String ?: continue
-                val booked = tv.id == View.NO_ID && !tv.isEnabled
+                val booked = !tv.isEnabled
 
                 if (booked) continue
 
@@ -400,7 +404,7 @@ class ChooseDateTimeFragment : Fragment() {
                 }
             }
 
-            val isBooked = isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, slot.startStr)
+            val isBooked = isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, slot.startMin, slot.endMin)
             val isSelected = (!isBooked && selectedTimeSlot == slot.displaySlot)
 
             val tvSlot = TextView(requireContext()).apply {
@@ -412,8 +416,8 @@ class ChooseDateTimeFragment : Fragment() {
                     if (index % columnsPerRow > 0) marginStart = (8 * density).toInt()
                 }
                 gravity = Gravity.CENTER
-                text = slot.startStr // e.g. "9:00 AM", "10:00 AM", "11:00 AM" matching screenshot
-                textSize = 13f
+                text = slot.startStr // e.g. "9:00 AM", "9:45 AM", "10:30 AM" dynamic start time
+                textSize = 12f
                 tag = slot.displaySlot
 
                 if (isBooked) {
@@ -489,13 +493,20 @@ class ChooseDateTimeFragment : Fragment() {
     data class SlotInfo(
         val startStr: String,
         val endStr: String,
-        val displaySlot: String
+        val displaySlot: String,
+        val startMin: Int,
+        val endMin: Int
     )
 
+    /**
+     * Generates slots strictly adhering to the service duration and business operating hours.
+     * E.g. for a 45 min service: 9:00 AM, 9:45 AM, 10:30 AM, 11:15 AM...
+     * E.g. for a 30 min service: 9:00 AM, 9:30 AM, 10:00 AM, 10:30 AM...
+     */
     private fun generateSlotList(openingHours: String, durationMin: Int): List<SlotInfo> {
-        val safeDuration = durationMin.coerceIn(15, 180)
+        val safeDuration = durationMin.coerceIn(15, 240)
         var startMin = 9 * 60 // 9:00 AM
-        var endMin = 18 * 60  // 6:00 PM
+        var endMin = 19 * 60  // 7:00 PM
 
         val timePattern = "(\\d{1,2}):?(\\d{2})?\\s*(AM|PM|am|pm)?".toRegex()
         val matches = timePattern.findAll(openingHours).toList()
@@ -504,7 +515,7 @@ class ChooseDateTimeFragment : Fragment() {
                 val hour = m.groupValues[1].toIntOrNull() ?: 9
                 val min = m.groupValues[2].toIntOrNull() ?: 0
                 val ampm = m.groupValues[3].uppercase()
-                var total = hour % 12 * 60 + min
+                var total = (hour % 12) * 60 + min
                 if (ampm == "PM") total += 12 * 60
                 return total
             }
@@ -524,69 +535,157 @@ class ChooseDateTimeFragment : Fragment() {
         val cal = Calendar.getInstance()
 
         while (current + safeDuration <= endMin) {
-            cal.set(Calendar.HOUR_OF_DAY, current / 60)
-            cal.set(Calendar.MINUTE, current % 60)
+            val sMin = current
+            val eMin = current + safeDuration
+
+            cal.set(Calendar.HOUR_OF_DAY, sMin / 60)
+            cal.set(Calendar.MINUTE, sMin % 60)
             val startStr = timeFormat.format(cal.time)
 
-            cal.set(Calendar.HOUR_OF_DAY, (current + safeDuration) / 60)
-            cal.set(Calendar.MINUTE, (current + safeDuration) % 60)
+            cal.set(Calendar.HOUR_OF_DAY, eMin / 60)
+            cal.set(Calendar.MINUTE, eMin % 60)
             val endStr = timeFormat.format(cal.time)
 
-            slots.add(SlotInfo(startStr, endStr, "$startStr–$endStr"))
+            slots.add(SlotInfo(
+                startStr = startStr,
+                endStr = endStr,
+                displaySlot = "$startStr–$endStr",
+                startMin = sMin,
+                endMin = eMin
+            ))
 
-            // Advance by service duration or 60 min intervals to match screenshot standard slots
-            val step = if (safeDuration <= 45) 60 else safeDuration
-            current += step
+            // Step dynamically by the exact service duration
+            current += safeDuration
         }
 
         if (slots.isEmpty()) {
-            slots.add(SlotInfo("9:00 AM", "9:45 AM", "9:00–9:45 AM"))
-            slots.add(SlotInfo("10:00 AM", "10:45 AM", "10:00–10:45 AM"))
-            slots.add(SlotInfo("11:00 AM", "11:45 AM", "11:00–11:45 AM"))
-            slots.add(SlotInfo("1:00 PM", "1:45 PM", "1:00–1:45 PM"))
-            slots.add(SlotInfo("2:00 PM", "2:45 PM", "2:00–2:45 PM"))
-            slots.add(SlotInfo("3:00 PM", "3:45 PM", "3:00–3:45 PM"))
+            var c = 9 * 60
+            while (c + safeDuration <= 18 * 60) {
+                val sMin = c
+                val eMin = c + safeDuration
+                cal.set(Calendar.HOUR_OF_DAY, sMin / 60)
+                cal.set(Calendar.MINUTE, sMin % 60)
+                val sStr = timeFormat.format(cal.time)
+
+                cal.set(Calendar.HOUR_OF_DAY, eMin / 60)
+                cal.set(Calendar.MINUTE, eMin % 60)
+                val eStr = timeFormat.format(cal.time)
+
+                slots.add(SlotInfo(
+                    startStr = sStr,
+                    endStr = eStr,
+                    displaySlot = "$sStr–$eStr",
+                    startMin = sMin,
+                    endMin = eMin
+                ))
+                c += safeDuration
+            }
         }
 
         return slots
     }
 
     /**
-     * Determines if a slot on a given date is already reserved by another customer.
+     * Determines if a slot time interval [slotStartMin, slotEndMin] on a given date
+     * conflicts with any active booking (PENDING or CONFIRMED) or is in the past.
      */
     private fun isSlotBooked(
         bookings: List<Booking>,
         year: Int,
         month: Int, // 0-based
         day: Int,
-        slotStart: String
+        slotStartMin: Int,
+        slotEndMin: Int
     ): Boolean {
-        val testCal = Calendar.getInstance().apply {
-            set(year, month, day)
-        }
-        val monthShort = SimpleDateFormat("MMM", Locale.US).format(testCal.time).lowercase()
-        val monthFull = SimpleDateFormat("MMMM", Locale.US).format(testCal.time).lowercase()
-        val isoDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day)
-        val slashDate = String.format(Locale.US, "%d/%d/%d", month + 1, day, year)
+        val today = Calendar.getInstance()
+        val isToday = (year == today.get(Calendar.YEAR) &&
+                month == today.get(Calendar.MONTH) &&
+                day == today.get(Calendar.DAY_OF_MONTH))
 
-        val cleanSlot = slotStart.split("–", "-", " ").firstOrNull()?.trim()?.lowercase() ?: ""
-        val slotAmPm = if (slotStart.uppercase().contains("PM")) "pm" else "am"
+        // If today, block past time slots
+        if (isToday) {
+            val currentMinNow = today.get(Calendar.HOUR_OF_DAY) * 60 + today.get(Calendar.MINUTE)
+            if (slotStartMin <= currentMinNow) {
+                return true
+            }
+        }
 
         return bookings.any { b ->
             if (b.status != "PENDING" && b.status != "CONFIRMED") return@any false
 
-            val bDate = b.appointmentDate.lowercase()
-            val dateMatches = (bDate.contains(day.toString()) && (bDate.contains(monthShort) || bDate.contains(monthFull))) ||
-                    bDate.contains(isoDate) ||
-                    bDate.contains(slashDate)
+            if (!isSameDay(b.appointmentDate, year, month, day)) return@any false
 
-            if (!dateMatches) return@any false
+            val (bStart, bEnd) = parseBookingWindow(b.appointmentTime, b.durationMinutes) ?: return@any false
 
-            val bTime = b.appointmentTime.lowercase()
-            val bCleanSlot = bTime.split("–", "-", " ").firstOrNull()?.trim() ?: ""
-            val bAmPm = if (bTime.uppercase().contains("PM")) "pm" else "am"
+            // Standard interval overlap: [slotStartMin, slotEndMin] overlaps with [bStart, bEnd]
+            (slotStartMin < bEnd && slotEndMin > bStart)
+        }
+    }
 
-            (bCleanSlot == cleanSlot && bAmPm == slotAmPm) || bTime.contains(cleanSlot)
+    /**
+     * Checks if the booking's appointment date string matches the target year, month, day.
+     */
+    private fun isSameDay(bookingDateStr: String, year: Int, month: Int, day: Int): Boolean {
+        val bLower = bookingDateStr.trim().lowercase(Locale.US)
+        if (bLower.isBlank()) return false
+
+        val cal = Calendar.getInstance().apply { set(year, month, day) }
+        val fullDate = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US).format(cal.time).lowercase(Locale.US)
+        val medDate = SimpleDateFormat("MMMM d, yyyy", Locale.US).format(cal.time).lowercase(Locale.US)
+        val shortDate = SimpleDateFormat("MMM d, yyyy", Locale.US).format(cal.time).lowercase(Locale.US)
+        val isoDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day)
+        val slashDate1 = String.format(Locale.US, "%d/%d/%d", month + 1, day, year)
+        val slashDate2 = String.format(Locale.US, "%02d/%02d/%04d", month + 1, day, year)
+
+        if (bLower == fullDate || bLower == medDate || bLower == shortDate || bLower == isoDate || bLower == slashDate1 || bLower == slashDate2) {
+            return true
+        }
+
+        val monthShort = SimpleDateFormat("MMM", Locale.US).format(cal.time).lowercase(Locale.US)
+        val monthFull = SimpleDateFormat("MMMM", Locale.US).format(cal.time).lowercase(Locale.US)
+        val hasMonth = bLower.contains(monthShort) || bLower.contains(monthFull)
+        val hasYear = bLower.contains(year.toString())
+        val dayRegex = "(?:^|\\D)$day(?:\\D|$)".toRegex()
+        val hasDay = dayRegex.containsMatchIn(bLower)
+
+        return (hasMonth && hasDay && hasYear) || bLower.contains(isoDate)
+    }
+
+    /**
+     * Parses an appointment time string (e.g. "10:00–10:45 AM" or "2:30 PM") into start and end minute integers.
+     */
+    private fun parseBookingWindow(appointmentTime: String, durationMinutes: Int): Pair<Int, Int>? {
+        val timePattern = "(\\d{1,2}):(\\d{2})\\s*(AM|PM|am|pm)?".toRegex()
+        val matches = timePattern.findAll(appointmentTime).toList()
+        if (matches.isEmpty()) return null
+
+        val overallAmPm = if (appointmentTime.contains("PM", ignoreCase = true)) "PM" else "AM"
+
+        fun parseMatch(m: MatchResult, fallbackAmPm: String): Int {
+            var h = m.groupValues[1].toIntOrNull() ?: 9
+            val min = m.groupValues[2].toIntOrNull() ?: 0
+            val ampm = m.groupValues[3].ifBlank { fallbackAmPm }.uppercase()
+            if (ampm == "PM" && h < 12) h += 12
+            if (ampm == "AM" && h == 12) h = 0
+            return h * 60 + min
+        }
+
+        val safeDuration = if (durationMinutes > 0) durationMinutes else 30
+
+        if (matches.size >= 2) {
+            val endAmPm = matches[1].groupValues[3].ifBlank { overallAmPm }
+            val startAmPm = matches[0].groupValues[3].ifBlank {
+                val h0 = matches[0].groupValues[1].toIntOrNull() ?: 9
+                val h1 = matches[1].groupValues[1].toIntOrNull() ?: 9
+                if (endAmPm.uppercase() == "PM" && h0 > h1 && h0 != 12) "AM" else endAmPm
+            }
+            val start = parseMatch(matches[0], startAmPm)
+            val end = parseMatch(matches[1], endAmPm)
+            if (end > start) return Pair(start, end)
+            return Pair(start, start + safeDuration)
+        } else {
+            val start = parseMatch(matches[0], overallAmPm)
+            return Pair(start, start + safeDuration)
         }
     }
 }
