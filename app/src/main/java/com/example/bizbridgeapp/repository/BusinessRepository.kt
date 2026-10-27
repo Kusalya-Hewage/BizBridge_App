@@ -122,22 +122,13 @@ object BusinessRepository {
 
                 val combined = deduplicateBusinesses(allLocal, firestoreList)
 
-                val approvedOrOwn = combined.filter { biz ->
-                    (biz.approved && biz.active) ||
-                    (currentUid != null && biz.ownerId == currentUid) ||
-                    (sessionBizId.isNotBlank() && biz.id == sessionBizId)
-                }
-
-                val result = if (approvedOrOwn.isNotEmpty()) approvedOrOwn else combined
+                val validBusinesses = combined.filter { it.approvalStatus != "REJECTED" }
+                val result = if (validBusinesses.isNotEmpty()) validBusinesses else combined
                 onSuccess(result)
             }
             .addOnFailureListener {
-                val approvedOrOwn = allLocal.filter { biz ->
-                    (biz.approved && biz.active) ||
-                    (currentUid != null && biz.ownerId == currentUid) ||
-                    (sessionBizId.isNotBlank() && biz.id == sessionBizId)
-                }
-                val result = if (approvedOrOwn.isNotEmpty()) approvedOrOwn else allLocal
+                val validLocal = allLocal.filter { it.approvalStatus != "REJECTED" }
+                val result = if (validLocal.isNotEmpty()) validLocal else allLocal
                 onSuccess(result)
             }
     }
