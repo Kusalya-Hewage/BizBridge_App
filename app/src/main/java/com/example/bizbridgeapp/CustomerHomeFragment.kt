@@ -259,8 +259,9 @@ class CustomerHomeFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_nearby_trust_score)?.text = "Trust: ${b0.trustScore}/100"
             view.findViewById<TextView>(R.id.tv_nearby_price)?.text = if (!b0.price.isNullOrBlank()) b0.price else "Explore"
             
-            if (currentDeviceLocation != null) {
-                updateNearbyDistanceDisplay(currentDeviceLocation!)
+            val loc = currentDeviceLocation
+            if (loc != null) {
+                updateNearbyDistanceDisplay(loc)
             } else {
                 view.findViewById<TextView>(R.id.tv_nearby_distance)?.text = if (b0.address.isNotBlank()) b0.address else "Nearby"
             }
