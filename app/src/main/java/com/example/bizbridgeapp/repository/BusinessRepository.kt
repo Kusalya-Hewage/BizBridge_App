@@ -18,6 +18,25 @@ object BusinessRepository {
         onComplete(emptyList())
     }
 
+    /** Deduplicate businesses by normalized name and ID, favoring authoritative remote entries */
+    fun deduplicateBusinesses(local: List<Business>, remote: List<Business>): List<Business> {
+        val combined = (remote + local) // remote takes precedence
+        val distinctList = mutableListOf<Business>()
+        val seenNames = mutableSetOf<String>()
+        val seenIds = mutableSetOf<String>()
+
+        for (biz in combined) {
+            val normName = biz.name.trim().lowercase()
+            val id = biz.id.trim()
+            if (normName.isNotEmpty() && !seenNames.contains(normName) && !seenIds.contains(id)) {
+                seenNames.add(normName)
+                seenIds.add(id)
+                distinctList.add(biz)
+            }
+        }
+        return distinctList
+    }
+
     /** Fetch all approved and active businesses from Firestore and local cache */
     fun getApprovedActiveBusinesses(
         onSuccess: (List<Business>) -> Unit,
@@ -38,7 +57,7 @@ object BusinessRepository {
                 val firestoreList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Business::class.java)?.copy(id = doc.id)
                 }.filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
-                val merged = (localApproved + firestoreList).distinctBy { it.id }
+                val merged = deduplicateBusinesses(localApproved, firestoreList)
                 if (merged.isNotEmpty()) {
                     onSuccess(merged)
                 } else {
@@ -75,7 +94,7 @@ object BusinessRepository {
                     doc.toObject(Business::class.java)?.copy(id = doc.id)
                 }.filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
 
-                val combined = (allLocal + firestoreList).distinctBy { it.id }
+                val combined = deduplicateBusinesses(allLocal, firestoreList)
 
                 val approvedOrOwn = combined.filter { biz ->
                     (biz.approved && biz.active) ||
@@ -632,7 +651,7 @@ object BusinessRepository {
                 }
                 val firestoreList = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
                     .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
-                val merged = (localApproved + firestoreList).distinctBy { it.id }
+                val merged = deduplicateBusinesses(localApproved, firestoreList)
                 val finalResult = if (merged.isNotEmpty()) {
                     merged
                 } else {
