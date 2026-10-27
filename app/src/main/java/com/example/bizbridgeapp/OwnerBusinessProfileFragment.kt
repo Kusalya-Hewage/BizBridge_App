@@ -28,8 +28,15 @@ class OwnerBusinessProfileFragment : Fragment() {
             view?.findViewById<ImageView>(R.id.iv_cover_photo)?.setImageURI(uri)
             val bizId = if (currentBusinessId.isNotBlank()) currentBusinessId else BusinessRepository.getOwnerBusinessId()
             val localPath = com.example.bizbridgeapp.utils.ImageLoader.saveImageLocally(requireContext(), uri, bizId.ifBlank { "owner_biz" })
-            if (localPath != null) {
-                currentImageUrl = localPath
+            val base64Data = com.example.bizbridgeapp.utils.ImageLoader.uriToBase64(requireContext(), uri, 600)
+            val effectiveImage = base64Data ?: localPath ?: uri.toString()
+            currentImageUrl = effectiveImage
+
+            if (bizId.isNotBlank()) {
+                val existingBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == bizId }
+                if (existingBiz != null) {
+                    com.example.bizbridgeapp.UserSessionManager.saveBusiness(existingBiz.copy(imageUrl = effectiveImage))
+                }
             }
             Toast.makeText(requireContext(), "Photo selected! Tap 'Save Changes' to update.", Toast.LENGTH_SHORT).show()
         }
@@ -141,9 +148,10 @@ class OwnerBusinessProfileFragment : Fragment() {
                 )
             }
 
-            // If a new cover photo was picked, upload to Firebase Storage
             val uri = selectedImageUri
             if (uri != null) {
+                val base64Data = com.example.bizbridgeapp.utils.ImageLoader.uriToBase64(requireContext(), uri, 600)
+                val persistentFallback = base64Data ?: currentImageUrl ?: uri.toString()
                 val storageRef = FirebaseStorage.getInstance().reference.child("business_covers/$currentBusinessId.jpg")
                 storageRef.putFile(uri)
                     .continueWithTask { task ->
@@ -156,8 +164,8 @@ class OwnerBusinessProfileFragment : Fragment() {
                         saveToFirestore(downloadUri.toString())
                     }
                     .addOnFailureListener {
-                        // If remote storage fails, still save profile details with local URI or persistent path
-                        saveToFirestore(currentImageUrl ?: uri.toString())
+                        // If remote storage fails, save persistent Base64 data string
+                        saveToFirestore(persistentFallback)
                     }
             } else {
                 saveToFirestore(currentImageUrl)
