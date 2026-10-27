@@ -39,7 +39,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · SCHEDULE APPOINTMENT"
+                    android:text="@string/customer_demo_tag"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
@@ -153,7 +153,7 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/inter_variable"
-                android:text="Service • 45 min • $45"
+                android:text="Service • 45 min • Rs. 45"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:textStyle="bold" />

@@ -136,7 +136,7 @@ class OwnerManageServicesFragment : Fragment() {
 
                 tvTitle?.text = service.name
                 tvDesc?.text = service.description
-                tvPriceDuration?.text = "$${service.price.toInt()} · ${service.durationMinutes} min"
+                tvPriceDuration?.text = "Rs. ${service.price.toInt()} · ${service.durationMinutes} min"
 
                 if (service.isActive) {
                     tvBadge?.text = "Active"

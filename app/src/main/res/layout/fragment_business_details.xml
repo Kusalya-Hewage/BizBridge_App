@@ -39,7 +39,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · BUSINESS DETAILS"
+                    android:text="@string/customer_demo_tag"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
@@ -58,13 +58,13 @@
                         android:src="@drawable/ic_arrow_back"
                         app:tint="@color/text_primary" />
 
-                                        <TextView
+                    <TextView
                         android:id="@+id/txt_business_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Business Profile"
+                        android:text="Juniper Studio"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -72,23 +72,63 @@
                 </RelativeLayout>
             </LinearLayout>
 
-            <!-- Banner Photo -->
-            <FrameLayout
+            <!-- 3-Image Horizontal Gallery -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="200dp">
+                android:layout_height="115dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/img_business"
-                    android:layout_width="match_parent"
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/img_salon_interior" />
+                    android:layout_weight="1.2"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp">
 
-                <View
-                    android:layout_width="match_parent"
+                    <ImageView
+                        android:id="@+id/img_business"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/img_salon_interior" />
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_image_scrim" />
-            </FrameLayout>
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp">
+
+                    <ImageView
+                        android:id="@+id/img_gallery_2"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/img_spa_treatment" />
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp">
+
+                    <ImageView
+                        android:id="@+id/img_gallery_3"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/img_salon_interior" />
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
 
             <!-- Business Header Card -->
             <LinearLayout
@@ -114,7 +154,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Business Name"
+                            android:text="Juniper Studio"
                             android:textColor="@color/text_primary"
                             android:textSize="22sp"
                             android:textStyle="bold" />
@@ -158,33 +198,18 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/inter_variable"
-                        android:id="@+id/txt_category" android:text="Hair salon"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_marginEnd="6dp"
-                        android:text="•"
-                        android:textColor="@color/text_muted" />
-
                     <ImageView
                         android:layout_width="14dp"
                         android:layout_height="14dp"
                         android:src="@drawable/ic_star_filled" />
 
                     <TextView
+                        android:id="@+id/txt_rating"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:fontFamily="@font/inter_variable"
-                        android:id="@+id/txt_rating" android:text="4.9 (128 reviews)"
+                        android:text="4.9 (128 reviews)"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -201,7 +226,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="0.8 mi"
+                        android:text="$$"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:text="•"
+                        android:textColor="@color/text_muted" />
+
+                    <TextView
+                        android:id="@+id/txt_category"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Hair salon"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -213,7 +255,8 @@
                     android:layout_marginTop="12dp"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="4dp"
-                    android:id="@+id/txt_description" android:text="Thoughtful cuts, natural color and a warm calmness. Rosa and her team make good hair feel effortless."
+                    android:id="@+id/txt_description"
+                    android:text="Thoughtful cuts, natural color and a warm welcome. Rosa and her team make great hair feel effortless."
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
                     <TextView
@@ -254,7 +297,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
                             android:letterSpacing="0.06"
-                            android:text="TRUST SCORE &amp; CREDENTIALS"
+                            android:text="Trust Score : demonstration"
                             android:textColor="@color/primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -276,16 +319,17 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_alignParentEnd="true"
-                        android:src="@drawable/ic_shield_check"
+                        android:src="@drawable/ic_insights"
                         app:tint="@color/primary" />
                 </RelativeLayout>
 
                 <TextView
+                    android:id="@+id/txt_trust_score_caption"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Read-only sample score. Not a verified badge."
+                    android:text="Business is sample assets. Not verified locally."
                     android:textColor="@color/text_muted"
                     android:textSize="12sp" />
 
@@ -308,11 +352,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_qualifications"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="24/25"
+                        android:text="24/30"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -327,15 +372,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="In-biz experience"
+                        android:text="Industry experience"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_experience"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="19/20"
+                        android:text="20/20"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -354,6 +400,7 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_profile"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
@@ -377,11 +424,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_documents"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="14/15"
+                        android:text="15/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -400,11 +448,12 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
                     <TextView
+                        android:id="@+id/txt_metric_reviews"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="12/25"
+                        android:text="10/20"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />

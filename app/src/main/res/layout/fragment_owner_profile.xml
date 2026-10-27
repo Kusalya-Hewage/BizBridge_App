@@ -76,6 +76,7 @@
                             android:layout_width="54dp"
                             android:layout_height="54dp"
                             android:background="@drawable/bg_avatar_circle"
+                            android:clipToOutline="true"
                             android:clickable="true"
                             android:focusable="true">
 
@@ -130,7 +131,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:fontFamily="@font/inter_variable"
-                                android:text="elena@juniper.example · +1 (415) 555-2782"
+                                android:text="elena@juniper.example · +1 (415) 555-0188"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="12sp" />
                         </LinearLayout>

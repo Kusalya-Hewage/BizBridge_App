@@ -202,7 +202,13 @@ class LoginFragment : Fragment() {
                             activity?.runOnUiThread {
                                 btnLogin.isEnabled = true
                                 val role = profile["role"] as? String ?: ""
-                                routeUser(role, profile)
+                                val merged = profile.toMutableMap()
+                                val localAcc = UserSessionManager.getRegisteredAccount(email)
+                                val localImg = localAcc?.get("profileImageUrl") as? String
+                                if ((merged["profileImageUrl"] as? String).isNullOrBlank() && !localImg.isNullOrBlank()) {
+                                    merged["profileImageUrl"] = localImg
+                                }
+                                routeUser(role, merged)
                             }
                         },
                         onFailure = { _ ->

@@ -144,7 +144,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Price must be $0 or more."
+                        android:text="Price must be Rs. 0 or more."
                         android:textColor="@color/error_text"
                         android:textSize="11sp"
                         android:visibility="gone" />

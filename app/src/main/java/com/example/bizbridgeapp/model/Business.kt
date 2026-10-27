@@ -24,7 +24,7 @@ data class Business(
     val active: Boolean = false,
     val approvalStatus: String = "PENDING", // PENDING, APPROVED, REJECTED
     val verificationStatus: String = "PENDING", // PENDING, VERIFIED, REJECTED
-    val trustScore: Int = 80,
+    val trustScore: Int = 0,
     val latitude: Double? = null,
     val longitude: Double? = null,
     val createdAt: Timestamp? = null,

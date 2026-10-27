@@ -27,7 +27,12 @@ class RegisterCustomerFragment : Fragment() {
     private val pickImageLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             selectedImageUri = uri
-            view?.findViewById<TextView>(R.id.tv_add_profile_image)?.text = "Image Selected"
+            val ivPhoto = view?.findViewById<ImageView>(R.id.iv_reg_customer_photo)
+            val tvInitials = view?.findViewById<TextView>(R.id.tv_avatar_initials)
+            ivPhoto?.visibility = View.VISIBLE
+            tvInitials?.visibility = View.GONE
+            ivPhoto?.setImageURI(uri)
+            view?.findViewById<TextView>(R.id.tv_add_profile_image)?.text = "Change Profile Picture"
             Toast.makeText(requireContext(), "Profile picture selected", Toast.LENGTH_SHORT).show()
         }
     }
@@ -48,6 +53,9 @@ class RegisterCustomerFragment : Fragment() {
         val tvAddProfileImage = view.findViewById<TextView>(R.id.tv_add_profile_image)
         val etFullName = view.findViewById<EditText>(R.id.et_full_name)
 
+        view.findViewById<View>(R.id.container_customer_avatar)?.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
         tvAddProfileImage?.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
@@ -146,6 +154,12 @@ class RegisterCustomerFragment : Fragment() {
             // Disable button to prevent double clicks
             btnCreateAccount.isEnabled = false
 
+            // Save image locally if picked
+            val localImgPath = if (selectedImageUri != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), selectedImageUri!!, "cust_${System.currentTimeMillis()}")
+            } else null
+            val effectiveImg = localImgPath ?: selectedImageUri?.toString() ?: ""
+
             // Call Firebase to register and store profile
             com.example.bizbridgeapp.FirebaseAuthManager.registerCustomer(
                 fullName = name,
@@ -162,10 +176,14 @@ class RegisterCustomerFragment : Fragment() {
                             "email" to email,
                             "phone" to phone,
                             "role" to "CUSTOMER",
+                            "profileImageUrl" to effectiveImg,
                             "accountStatus" to "ACTIVE"
                         )
                         UserSessionManager.saveRegisteredAccount(email, password, custProfile)
                         UserSessionManager.saveProfile(custProfile)
+                        if (effectiveImg.isNotEmpty()) {
+                            UserSessionManager.updateProfileImage(effectiveImg)
+                        }
                         btnCreateAccount.isEnabled = true
                         AlertDialog.Builder(requireContext())
                             .setTitle("Account Created")

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -12,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 
 import com.example.bizbridgeapp.model.NotificationItem
+import com.example.bizbridgeapp.repository.BookingRepository
 import com.example.bizbridgeapp.repository.NotificationRepository
 import com.google.firebase.auth.FirebaseAuth
 
@@ -43,6 +45,102 @@ class NotificationsFragment : Fragment() {
             Toast.makeText(requireContext(), "Notifications are up to date.", Toast.LENGTH_SHORT).show()
         }
 
+        // Active tab state
+        var currentTab = "ALL"
+
+        val container = view.findViewById<LinearLayout>(R.id.container_notifications)
+        val layoutEmpty = view.findViewById<LinearLayout>(R.id.layout_empty_notifications)
+
+        fun renderNotifications() {
+            if (!isAdded) return
+            val filtered = when (currentTab) {
+                "BOOKING" -> userNotifications.filter { it.category.equals("BOOKING", ignoreCase = true) }
+                "OFFER" -> userNotifications.filter { it.category.equals("OFFER", ignoreCase = true) || it.category.equals("PROMOTION", ignoreCase = true) }
+                else -> userNotifications
+            }
+
+            container?.removeAllViews()
+
+            if (filtered.isEmpty()) {
+                container?.visibility = View.GONE
+                layoutEmpty?.visibility = View.VISIBLE
+                return
+            }
+
+            container?.visibility = View.VISIBLE
+            layoutEmpty?.visibility = View.GONE
+
+            val inflater = LayoutInflater.from(requireContext())
+            for (item in filtered) {
+                val itemView = inflater.inflate(R.layout.item_notification_card, container, false)
+
+                val tvTitle = itemView.findViewById<TextView>(R.id.tv_notif_title)
+                val tvMessage = itemView.findViewById<TextView>(R.id.tv_notif_message)
+                val tvTime = itemView.findViewById<TextView>(R.id.tv_notif_time)
+                val viewUnreadDot = itemView.findViewById<View>(R.id.view_unread_dot)
+                val frameIcon = itemView.findViewById<FrameLayout>(R.id.frame_notif_icon)
+                val ivIcon = itemView.findViewById<ImageView>(R.id.iv_notif_icon)
+
+                tvTitle.text = item.title
+                tvMessage.text = item.message
+                viewUnreadDot.visibility = if (!item.isRead) View.VISIBLE else View.GONE
+
+                val timeStr = item.createdAt?.toDate()?.let { date ->
+                    val diffMs = java.lang.System.currentTimeMillis() - date.time
+                    val hours = diffMs / (1000 * 60 * 60)
+                    when {
+                        hours < 1 -> "Just now"
+                        hours < 24 -> "$hours hours ago"
+                        hours < 48 -> "Yesterday"
+                        else -> java.text.SimpleDateFormat("MMM d", java.util.Locale.US).format(date)
+                    }
+                } ?: "Recent"
+                tvTime.text = timeStr
+
+                val isOffer = item.category.equals("OFFER", ignoreCase = true) || item.category.equals("PROMOTION", ignoreCase = true)
+                val isCancelled = item.title.contains("cancel", ignoreCase = true) || item.message.contains("cancel", ignoreCase = true)
+                val isReminder = item.title.contains("reminder", ignoreCase = true) || item.message.contains("reminder", ignoreCase = true)
+
+                when {
+                    isOffer -> {
+                        frameIcon.setBackgroundResource(R.drawable.bg_tag_verified)
+                        ivIcon.setImageResource(R.drawable.ic_sparkle)
+                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.secondary_dark))
+                    }
+                    isCancelled -> {
+                        frameIcon.setBackgroundColor(android.graphics.Color.parseColor("#FEE2E2"))
+                        ivIcon.setImageResource(R.drawable.ic_cancel)
+                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.error_text))
+                    }
+                    isReminder -> {
+                        frameIcon.setBackgroundResource(R.drawable.bg_card_lavender)
+                        ivIcon.setImageResource(R.drawable.ic_clock)
+                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary))
+                    }
+                    else -> {
+                        frameIcon.setBackgroundResource(R.drawable.bg_card_lavender)
+                        ivIcon.setImageResource(R.drawable.ic_calendar)
+                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary))
+                    }
+                }
+
+                itemView.setOnClickListener {
+                    if (!item.isRead) {
+                        NotificationRepository.markAsRead(item.id, onSuccess = {}, onFailure = {})
+                        viewUnreadDot.visibility = View.GONE
+                    }
+
+                    if (item.relatedBookingId.isNotBlank()) {
+                        (activity as? MainActivity)?.navigateTo(BookingDetailsFragment.newInstance(item.relatedBookingId), addToBackStack = true)
+                    } else if (item.relatedBusinessId.isNotBlank()) {
+                        (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(item.relatedBusinessId), addToBackStack = true)
+                    }
+                }
+
+                container?.addView(itemView)
+            }
+        }
+
         // Mark all as read
         val btnMarkAll = view.findViewById<TextView>(R.id.btn_mark_all_read)
         btnMarkAll?.setOnClickListener {
@@ -54,7 +152,9 @@ class NotificationsFragment : Fragment() {
                         Toast.makeText(requireContext(), "All notifications marked as read", Toast.LENGTH_SHORT).show()
                         btnMarkAll.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
                         btnMarkAll.isEnabled = false
-                        loadNotifications(targetUid)
+                        loadNotifications(targetUid) {
+                            renderNotifications()
+                        }
                     }
                 },
                 onFailure = {
@@ -67,9 +167,6 @@ class NotificationsFragment : Fragment() {
             )
         }
 
-        if (uid.isNotEmpty()) {
-            loadNotifications(uid)
-        }
 
         // Tabs
         val tabAll = view.findViewById<LinearLayout>(R.id.tab_all)
@@ -79,15 +176,8 @@ class NotificationsFragment : Fragment() {
         val tvTabBookings = view.findViewById<TextView>(R.id.tv_tab_bookings)
         val tvTabOffers = view.findViewById<TextView>(R.id.tv_tab_offers)
 
-        // Notification views to filter
-        val groupToday = view.findViewById<View>(R.id.tv_group_today)
-        val item1 = view.findViewById<View>(R.id.notif_item_1)
-        val item2 = view.findViewById<View>(R.id.notif_item_2)
-        val groupEarlier = view.findViewById<View>(R.id.tv_group_earlier)
-        val item3 = view.findViewById<View>(R.id.notif_item_3)
-        val item4 = view.findViewById<View>(R.id.notif_item_4)
-
         fun selectTab(selected: String) {
+            currentTab = selected
             val tabs = listOf(
                 Triple(tabAll, tvTabAll, "ALL"),
                 Triple(tabBookings, tvTabBookings, "BOOKING"),
@@ -102,33 +192,7 @@ class NotificationsFragment : Fragment() {
                     tv?.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
                 }
             }
-
-            when (selected) {
-                "ALL" -> {
-                    groupToday?.visibility = View.VISIBLE
-                    item1?.visibility = View.VISIBLE
-                    item2?.visibility = View.VISIBLE
-                    groupEarlier?.visibility = View.VISIBLE
-                    item3?.visibility = View.VISIBLE
-                    item4?.visibility = View.VISIBLE
-                }
-                "BOOKING" -> {
-                    groupToday?.visibility = View.VISIBLE
-                    item1?.visibility = View.VISIBLE
-                    item2?.visibility = View.VISIBLE
-                    groupEarlier?.visibility = View.VISIBLE
-                    item3?.visibility = View.GONE
-                    item4?.visibility = View.VISIBLE
-                }
-                "OFFER" -> {
-                    groupToday?.visibility = View.GONE
-                    item1?.visibility = View.GONE
-                    item2?.visibility = View.GONE
-                    groupEarlier?.visibility = View.VISIBLE
-                    item3?.visibility = View.VISIBLE
-                    item4?.visibility = View.GONE
-                }
-            }
+            renderNotifications()
         }
 
         tabAll?.setOnClickListener { selectTab("ALL") }
@@ -138,21 +202,10 @@ class NotificationsFragment : Fragment() {
         tabOffers?.setOnClickListener { selectTab("OFFER") }
         tvTabOffers?.setOnClickListener { selectTab("OFFER") }
 
-        // Notification items click
-        view.findViewById<LinearLayout>(R.id.notif_item_1)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(BookingDetailsFragment.newInstance("bk_demo_1"), addToBackStack = true)
-        }
-
-        view.findViewById<LinearLayout>(R.id.notif_item_2)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(BookingDetailsFragment(), addToBackStack = true)
-        }
-
-        view.findViewById<LinearLayout>(R.id.notif_item_3)?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment(), addToBackStack = true)
-        }
-
-        view.findViewById<LinearLayout>(R.id.notif_item_4)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Booking BB-24090 was canceled", Toast.LENGTH_SHORT).show()
+        // Start listening to real notifications
+        val effectiveUid = uid.ifEmpty { (UserSessionManager.getProfile()?.get("uid") as? String).orEmpty() }
+        loadNotifications(effectiveUid) {
+            renderNotifications()
         }
 
         // Bottom Navigation
@@ -172,18 +225,37 @@ class NotificationsFragment : Fragment() {
 
     private var notificationsListener: com.google.firebase.firestore.ListenerRegistration? = null
 
-    private fun loadNotifications(uid: String) {
+    private fun loadNotifications(uid: String, onLoaded: () -> Unit = {}) {
         notificationsListener?.remove()
         notificationsListener = NotificationRepository.listenToNotificationsForUser(uid) { list ->
             if (!isAdded) return@listenToNotificationsForUser
             userNotifications = list
-            val n1 = list.firstOrNull { it.relatedBookingId.isNotEmpty() }
-            if (n1 != null) {
-                view?.findViewById<LinearLayout>(R.id.notif_item_1)?.setOnClickListener {
-                    val frag = BookingDetailsFragment.newInstance(n1.relatedBookingId)
-                    (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
-                }
+            if (list.isEmpty() && uid.isNotBlank()) {
+                // If there are real customer bookings, automatically generate corresponding notifications
+                BookingRepository.getBookingsForCustomer(uid,
+                    onSuccess = { bookings ->
+                        if (!isAdded) return@getBookingsForCustomer
+                        if (bookings.isNotEmpty()) {
+                            for (b in bookings) {
+                                val statusLabel = if (b.status.equals("CANCELLED", ignoreCase = true)) "Cancelled" else "Confirmed"
+                                val notif = NotificationItem(
+                                    id = "notif_bk_${b.id}",
+                                    userId = uid,
+                                    title = "Booking $statusLabel",
+                                    message = "${b.businessNameSnapshot} • ${b.serviceNameSnapshot} on ${b.appointmentDate} at ${b.appointmentTime}",
+                                    category = "BOOKING",
+                                    relatedBookingId = b.id,
+                                    relatedBusinessId = b.businessId,
+                                    isRead = false
+                                )
+                                NotificationRepository.createNotification(notif, onSuccess = {}, onFailure = {})
+                            }
+                        }
+                    },
+                    onFailure = {}
+                )
             }
+            onLoaded()
         }
     }
 

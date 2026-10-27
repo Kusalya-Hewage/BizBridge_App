@@ -192,6 +192,24 @@ object ImageLoader {
     }
 
     /**
+     * Converts a picked image Uri into a compact Base64 data string (max 600px, 75% quality JPEG).
+     * This string can be stored directly in Firestore or SharedPreferences without losing permissions.
+     */
+    fun uriToBase64(context: Context, sourceUri: Uri, maxDim: Int = 600): String? {
+        return try {
+            val bitmap = context.contentResolver.openInputStream(sourceUri)?.use { stream ->
+                decodeSampledBitmap(stream, maxDim)
+            } ?: return null
+            val baos = java.io.ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 75, baos)
+            val bytes = baos.toByteArray()
+            "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
      * Copies a picked image Uri into app's persistent internal storage and returns the local file path.
      */
     fun saveImageLocally(context: Context, sourceUri: Uri, businessId: String): String? {
@@ -200,6 +218,26 @@ object ImageLoader {
             if (!dir.exists()) dir.mkdirs()
             val safeId = businessId.replace("[^a-zA-Z0-9_-]".toRegex(), "_")
             val targetFile = File(dir, "${safeId}_cover.jpg")
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                targetFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            targetFile.absolutePath
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Copies a picked profile image Uri into app's persistent internal storage and returns the local file path.
+     */
+    fun saveProfileImageLocally(context: Context, sourceUri: Uri, uid: String): String? {
+        return try {
+            val dir = File(context.filesDir, "profile_images")
+            if (!dir.exists()) dir.mkdirs()
+            val safeId = uid.replace("[^a-zA-Z0-9_-]".toRegex(), "_")
+            val targetFile = File(dir, "${safeId}_profile.jpg")
             context.contentResolver.openInputStream(sourceUri)?.use { input ->
                 targetFile.outputStream().use { output ->
                     input.copyTo(output)

@@ -142,7 +142,7 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
                 onSuccess = {
                     if (isAdded) {
                         btnUpload?.isEnabled = true
-                        btnUpload?.text = "Submit Qualification for Review"
+                        btnUpload?.text = "Upload Certificate / Document"
                         selectedDocUri = null
                         tvStatus?.apply {
                             text = "No file attached · PDF, JPG or PNG up to 10 MB"
@@ -161,7 +161,7 @@ class OwnerQualificationsDocumentsFragment : Fragment() {
                 onFailure = { e ->
                     if (isAdded) {
                         btnUpload?.isEnabled = true
-                        btnUpload?.text = "Submit Qualification for Review"
+                        btnUpload?.text = "Upload Certificate / Document"
                         selectedDocUri = null
                         tvStatus?.apply {
                             text = "No file attached · PDF, JPG or PNG up to 10 MB"

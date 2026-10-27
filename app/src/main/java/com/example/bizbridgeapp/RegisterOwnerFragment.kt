@@ -22,7 +22,9 @@ class RegisterOwnerFragment : Fragment() {
 
     private var isPasswordVisible = false
     private var attachedDocUri: Uri? = null
-    private lateinit var imagePickerHelper: ImagePickerHelper
+    private var ownerPhotoUri: Uri? = null
+    private lateinit var docPickerHelper: ImagePickerHelper
+    private lateinit var photoPickerHelper: ImagePickerHelper
 
     private val categories = arrayOf(
         "Hair salon",
@@ -36,13 +38,23 @@ class RegisterOwnerFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        imagePickerHelper = ImagePickerHelper(this) { uri ->
+        docPickerHelper = ImagePickerHelper(this) { uri ->
             attachedDocUri = uri
             view?.findViewById<TextView>(R.id.tv_reg_attached_doc_status)?.apply {
                 text = "✓ Document photo attached"
                 setTextColor(ContextCompat.getColor(requireContext(), R.color.secondary_dark))
             }
             Toast.makeText(requireContext(), "Document attached for application!", Toast.LENGTH_SHORT).show()
+        }
+        photoPickerHelper = ImagePickerHelper(this) { uri ->
+            ownerPhotoUri = uri
+            val ivPhoto = view?.findViewById<ImageView>(R.id.iv_reg_owner_photo)
+            val tvInitials = view?.findViewById<TextView>(R.id.tv_reg_owner_avatar_initials)
+            ivPhoto?.visibility = View.VISIBLE
+            tvInitials?.visibility = View.GONE
+            ivPhoto?.setImageURI(uri)
+            view?.findViewById<TextView>(R.id.tv_add_owner_profile_image)?.text = "Change owner photo"
+            Toast.makeText(requireContext(), "Owner photo selected!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -72,6 +84,14 @@ class RegisterOwnerFragment : Fragment() {
         val etDocIssuer = view.findViewById<EditText>(R.id.et_reg_doc_issuer)
         val btnAttachDoc = view.findViewById<Button>(R.id.btn_reg_attach_doc)
 
+        // Owner photo picker
+        view.findViewById<View>(R.id.layout_owner_photo_picker)?.setOnClickListener {
+            photoPickerHelper.showImageSourceDialog("Add Owner Profile Photo")
+        }
+        view.findViewById<View>(R.id.container_reg_owner_avatar)?.setOnClickListener {
+            photoPickerHelper.showImageSourceDialog("Add Owner Profile Photo")
+        }
+
         // Back button
         btnBack?.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -79,7 +99,7 @@ class RegisterOwnerFragment : Fragment() {
 
         // Attach document / photo
         btnAttachDoc?.setOnClickListener {
-            imagePickerHelper.showImageSourceDialog("Attach Qualification / Certificate")
+            docPickerHelper.showImageSourceDialog("Attach Qualification / Certificate")
         }
 
         // Category dropdown dialog
@@ -143,20 +163,32 @@ class RegisterOwnerFragment : Fragment() {
             UserSessionManager.init(requireContext())
             val localUid = "owner_${System.currentTimeMillis()}"
             val localBizId = "biz_${localUid.take(12)}"
+
+            val localOwnerPhotoPath = if (ownerPhotoUri != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), ownerPhotoUri!!, "owner_${System.currentTimeMillis()}")
+            } else null
+            val effectiveOwnerPhoto = localOwnerPhotoPath ?: ownerPhotoUri?.toString() ?: ""
+
             val initialProfile = mapOf(
                 "uid" to localUid,
                 "fullName" to ownerName,
                 "email" to email,
                 "phone" to phone,
                 "role" to "BUSINESS_OWNER",
+                "profileImageUrl" to effectiveOwnerPhoto,
                 "businessId" to localBizId,
                 "businessName" to businessName,
                 "category" to category,
+                "latitude" to 6.9271,
+                "longitude" to 79.8612,
                 "accountStatus" to "ACTIVE"
             )
             // Pre-save account locally so the user can always log in immediately
             UserSessionManager.saveRegisteredAccount(email, password, initialProfile)
             UserSessionManager.saveProfile(initialProfile)
+            if (effectiveOwnerPhoto.isNotEmpty()) {
+                UserSessionManager.updateProfileImage(effectiveOwnerPhoto)
+            }
 
             fun handleAttachedDocument(finalUid: String, finalBizId: String) {
                 val effectiveDocTitle = if (docTitleInput.isNotEmpty()) {
@@ -196,13 +228,19 @@ class RegisterOwnerFragment : Fragment() {
                     "email" to email,
                     "phone" to phone,
                     "role" to "BUSINESS_OWNER",
+                    "profileImageUrl" to effectiveOwnerPhoto,
                     "businessId" to finalBizId,
                     "businessName" to businessName,
                     "category" to category,
+                    "latitude" to 6.9271,
+                    "longitude" to 79.8612,
                     "accountStatus" to "ACTIVE"
                 )
                 UserSessionManager.saveRegisteredAccount(email, password, finalProfile)
                 UserSessionManager.saveProfile(finalProfile)
+                if (effectiveOwnerPhoto.isNotEmpty()) {
+                    UserSessionManager.updateProfileImage(effectiveOwnerPhoto)
+                }
 
                 btnCreateOwnerAccount.isEnabled = true
                 AlertDialog.Builder(requireContext())
@@ -225,6 +263,7 @@ class RegisterOwnerFragment : Fragment() {
                 phone = phone,
                 email = email,
                 password = password,
+                profileImageUri = ownerPhotoUri,
                 onSuccess = { firebaseUser, businessId ->
                     activity?.runOnUiThread {
                         showSuccessDialog(firebaseUser.uid, businessId)

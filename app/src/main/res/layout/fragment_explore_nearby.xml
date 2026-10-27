@@ -34,7 +34,7 @@
                 android:paddingEnd="8dp"
                 android:paddingTop="4dp"
                 android:paddingBottom="4dp"
-                android:text="SRI LANKA · NEARBY BUSINESSES"
+                android:text="CUSTOMER · DEMONSTRATION DATA"
                 android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                 android:textSize="10sp" />
 
@@ -90,7 +90,7 @@
                     android:layout_weight="1"
                     android:background="@null"
                     android:fontFamily="@font/inter_variable"
-                    android:hint="Search nearby businesses in Colombo..."
+                    android:hint="Mission District"
                     android:imeOptions="actionSearch"
                     android:inputType="text"
                     android:textColor="@color/text_primary"
@@ -244,7 +244,8 @@
             android:elevation="10dp"
             android:focusable="true"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:visibility="gone">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -345,7 +346,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="From $35"
+                        android:text="From Rs. 35"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />

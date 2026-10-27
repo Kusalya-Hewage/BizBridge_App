@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN CONSOLE · SECURITY"
+                    android:text="@string/admin_demo_tag"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -98,7 +98,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:fontFamily="@font/inter_variable"
-                            android:text="AD"
+                            android:text="AM"
                             android:textColor="@color/white"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -115,7 +115,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Administrator"
+                            android:text="Alex Morgan"
                             android:textColor="@color/admin_text_title"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -126,7 +126,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="admin@bizbridge.com · Platform administrator"
+                            android:text="alex@bizbridge.example · Platform administrator"
                             android:textColor="@color/admin_text_muted"
                             android:textSize="12sp" />
                     </LinearLayout>

@@ -124,20 +124,19 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
                 }
                 updateMarkers(filtered)
                 filtered.firstOrNull()?.let { match ->
-                    if (match.latitude != null && match.longitude != null) {
-                        googleMap?.animateCamera(
-                            CameraUpdateFactory.newLatLngZoom(
-                                LatLng(match.latitude, match.longitude),
-                                14f
-                            )
+                    val pos = getEffectiveCoordinates(match)
+                    googleMap?.animateCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            pos,
+                            14f
                         )
-                    }
+                    )
                 }
             }
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Fetch real approved businesses from repository
+        // Fetch real approved and registered businesses from repository
         loadBusinesses()
     }
 
@@ -215,18 +214,41 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun loadBusinesses() {
-        BusinessRepository.getApprovedActiveBusinesses(
+        BusinessRepository.getBusinessesForMap(
             onSuccess = { list ->
-                if (!isAdded) return@getApprovedActiveBusinesses
+                if (!isAdded) return@getBusinessesForMap
                 allBusinesses = list
                 updateMarkers(list)
             },
             onFailure = {
-                if (!isAdded) return@getApprovedActiveBusinesses
+                if (!isAdded) return@getBusinessesForMap
                 allBusinesses = emptyList()
                 updateMarkers(allBusinesses)
             }
         )
+    }
+
+    private fun getEffectiveCoordinates(biz: Business): LatLng {
+        val lat = biz.latitude
+        val lng = biz.longitude
+        if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
+            return LatLng(lat, lng)
+        }
+        val addr = biz.address.lowercase(Locale.ROOT)
+        val baseCoords = when {
+            addr.contains("kandy") -> LatLng(7.2906, 80.6337)
+            addr.contains("galle") -> LatLng(6.0535, 80.2210)
+            addr.contains("negombo") -> LatLng(7.2008, 79.8736)
+            addr.contains("matara") -> LatLng(5.9549, 80.5550)
+            addr.contains("jaffna") -> LatLng(9.6615, 80.0255)
+            addr.contains("kurunegala") -> LatLng(7.4863, 80.3623)
+            addr.contains("gampaha") -> LatLng(7.0840, 79.9925)
+            else -> LatLng(6.9271, 79.8612) // Colombo default
+        }
+        val hash = Math.abs(biz.id.ifBlank { biz.name }.hashCode())
+        val offsetLat = ((hash % 100) - 50) * 0.0003
+        val offsetLng = (((hash / 100) % 100) - 50) * 0.0003
+        return LatLng(baseCoords.latitude + offsetLat, baseCoords.longitude + offsetLng)
     }
 
     private fun updateMarkers(businesses: List<Business>) {
@@ -235,25 +257,30 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         markerList.clear()
 
         for (biz in businesses) {
-            val lat = biz.latitude
-            val lng = biz.longitude
-            if (lat != null && lng != null) {
-                val marker = map.addMarker(
-                    MarkerOptions()
-                        .position(LatLng(lat, lng))
-                        .title(biz.name)
-                        .snippet(biz.category)
-                )
-                marker?.tag = biz
-                if (marker != null) {
-                    markerList.add(marker)
-                }
+            val position = getEffectiveCoordinates(biz)
+            val marker = map.addMarker(
+                MarkerOptions()
+                    .position(position)
+                    .title(biz.name)
+                    .snippet(biz.category)
+            )
+            marker?.tag = biz
+            if (marker != null) {
+                markerList.add(marker)
             }
         }
 
-        val toSelect = selectedBusiness ?: businesses.firstOrNull()
-        if (toSelect != null) {
+        val card = view?.findViewById<LinearLayout>(R.id.card_selected_business)
+        if (businesses.isEmpty()) {
+            card?.visibility = View.GONE
+            selectedBusiness = null
+        } else {
+            val toSelect = selectedBusiness?.takeIf { b -> businesses.any { it.id == b.id } } ?: businesses.first()
             displayBusinessCard(toSelect)
+            if (userLocation == null) {
+                val pos = getEffectiveCoordinates(toSelect)
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 14f))
+            }
         }
     }
 
@@ -266,22 +293,22 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         val tvCategoryDist = view?.findViewById<TextView>(R.id.tv_business_category_dist)
         val tvRating = view?.findViewById<TextView>(R.id.tv_business_rating)
         val tvPrice = view?.findViewById<TextView>(R.id.tv_business_price)
+        val badgeVerified = view?.findViewById<View>(R.id.badge_verified)
 
         tvName?.text = biz.name
 
+        val coords = getEffectiveCoordinates(biz)
         val distanceText = userLocation?.let { loc ->
-            val bizLat = biz.latitude
-            val bizLng = biz.longitude
-            if (bizLat != null && bizLng != null) {
-                val results = FloatArray(1)
-                Location.distanceBetween(loc.latitude, loc.longitude, bizLat, bizLng, results)
-                val km = results[0] / 1000f
-                String.format(Locale.US, "%.1f km away", km)
-            } else null
+            val results = FloatArray(1)
+            Location.distanceBetween(loc.latitude, loc.longitude, coords.latitude, coords.longitude, results)
+            val km = results[0] / 1000f
+            String.format(Locale.US, "%.1f km away", km)
         } ?: "Colombo"
 
         tvCategoryDist?.text = "${biz.category} • $distanceText"
-        tvRating?.text = "${biz.rating ?: 4.9} (${biz.reviewCount} reviews)"
+        val ratingVal = if (biz.rating != null && biz.rating > 0.0) String.format(Locale.US, "%.1f", biz.rating) else "5.0"
+        tvRating?.text = "$ratingVal (${biz.reviewCount} reviews)"
         tvPrice?.text = biz.price ?: "From $25"
+        badgeVerified?.visibility = if (biz.approved || biz.verificationStatus.equals("VERIFIED", ignoreCase = true)) View.VISIBLE else View.GONE
     }
 }

@@ -39,6 +39,11 @@ class OwnerManageBookingsFragment : Fragment() {
 
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
 
+        // Scan QR button in header
+        view.findViewById<View>(R.id.btn_scan_qr_header)?.setOnClickListener {
+            (activity as? MainActivity)?.navigateTo(OwnerQrVerificationFragment.newInstance(), addToBackStack = true)
+        }
+
         // Tabs
         val tabPending = view.findViewById<TextView>(R.id.tab_pending)
         val tabConfirmed = view.findViewById<TextView>(R.id.tab_confirmed)
@@ -157,7 +162,7 @@ class OwnerManageBookingsFragment : Fragment() {
 
                 val displayName = if (booking.customerId.isNotBlank()) "Customer (${booking.customerId.take(6)})" else "Appointment #${booking.qrReference}"
                 tvCustomer?.text = displayName
-                tvService?.text = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min"
+                tvService?.text = "${booking.serviceNameSnapshot} · Rs. ${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min"
                 tvDateTime?.text = "${booking.appointmentDate} · ${booking.appointmentTime}"
 
                 // Card Click -> Booking Details
@@ -168,7 +173,7 @@ class OwnerManageBookingsFragment : Fragment() {
                             customerName = displayName,
                             customerEmail = "customer@bizbridge.example",
                             customerPhone = "+1 (555) 019-2834",
-                            serviceName = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
+                            serviceName = "${booking.serviceNameSnapshot} · Rs. ${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
                             dateTime = "${booking.appointmentDate} · ${booking.appointmentTime}",
                             customerNote = booking.customerNotes.ifEmpty { "Customer notes: None provided." }
                         ),

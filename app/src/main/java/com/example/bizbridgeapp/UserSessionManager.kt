@@ -3,8 +3,10 @@ package com.example.bizbridgeapp
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.bizbridgeapp.model.AdminAuditLog
+import com.example.bizbridgeapp.model.Booking
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.model.BusinessApplication
+import com.example.bizbridgeapp.model.NotificationItem
 import com.example.bizbridgeapp.model.Promotion
 import com.example.bizbridgeapp.model.QualificationDocument
 import com.example.bizbridgeapp.model.Service
@@ -25,6 +27,11 @@ object UserSessionManager {
     private const val KEY_AUDIT_LOGS = "local_admin_audit_logs"
     private const val KEY_SERVICES = "local_services"
     private const val KEY_PROMOTIONS = "local_promotions"
+    private const val KEY_NOTIFICATIONS = "local_notifications"
+    private const val KEY_BOOKINGS = "local_bookings"
+    private const val KEY_LAST_KNOWN_LOCATION_NAME = "last_known_location_name"
+    private const val KEY_LAST_KNOWN_LAT = "last_known_lat"
+    private const val KEY_LAST_KNOWN_LNG = "last_known_lng"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -95,6 +102,35 @@ object UserSessionManager {
             }
             prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
         }
+
+        // Recalibrate trust scores for businesses with 0 reviews to eliminate legacy inflated scores
+        val storedBiz = getAllBusinesses()
+        var bizUpdated = false
+        val recalibrated = storedBiz.map { b ->
+            if (b.reviewCount == 0 && b.trustScore > 20) {
+                bizUpdated = true
+                val realScore = com.example.bizbridgeapp.repository.TrustScoreRepository.getLocalTrustScoreBreakdown(b.id).totalScore
+                b.copy(trustScore = realScore)
+            } else {
+                b
+            }
+        }
+        if (bizUpdated) {
+            val array = JSONArray()
+            for (b in recalibrated) {
+                array.put(businessToJson(b))
+            }
+            prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
+        }
+
+        val currentProfile = getProfile()
+        if (currentProfile != null && (currentProfile["trustScore"] as? Int ?: 0) > 20) {
+            val bId = (currentProfile["businessId"] as? String) ?: ""
+            val realScore = com.example.bizbridgeapp.repository.TrustScoreRepository.getLocalTrustScoreBreakdown(bId).totalScore
+            val updated = currentProfile.toMutableMap()
+            updated["trustScore"] = realScore
+            saveProfile(updated)
+        }
     }
 
     /** Save a map (profile) as a JSON string. */
@@ -116,6 +152,51 @@ object UserSessionManager {
             map[key] = obj.get(key)
         }
         return map
+    }
+
+    /** Save last known location name and coordinates */
+    fun saveLastKnownLocation(name: String, lat: Double, lng: Double) {
+        if (!::prefs.isInitialized) return
+        prefs.edit()
+            .putString(KEY_LAST_KNOWN_LOCATION_NAME, name)
+            .putFloat(KEY_LAST_KNOWN_LAT, lat.toFloat())
+            .putFloat(KEY_LAST_KNOWN_LNG, lng.toFloat())
+            .apply()
+    }
+
+    /** Get the last resolved real location name */
+    fun getLastKnownLocationName(): String? {
+        if (!::prefs.isInitialized) return null
+        return prefs.getString(KEY_LAST_KNOWN_LOCATION_NAME, null)
+    }
+
+    /** Get the last resolved real coordinates */
+    fun getLastKnownCoordinates(): Pair<Double, Double>? {
+        if (!::prefs.isInitialized || !prefs.contains(KEY_LAST_KNOWN_LAT)) return null
+        return Pair(prefs.getFloat(KEY_LAST_KNOWN_LAT, 0f).toDouble(), prefs.getFloat(KEY_LAST_KNOWN_LNG, 0f).toDouble())
+    }
+
+    /** Update only the profile image URL in active session and registered account cache */
+    fun updateProfileImage(imageUrl: String) {
+        if (!::prefs.isInitialized || imageUrl.isBlank()) return
+        val profile = getProfile()?.toMutableMap() ?: mutableMapOf()
+        profile["profileImageUrl"] = imageUrl
+        saveProfile(profile)
+
+        val email = profile["email"] as? String
+        if (!email.isNullOrBlank()) {
+            val normalized = email.trim().lowercase()
+            val accountsJson = prefs.getString(KEY_REGISTERED_ACCOUNTS, "{}") ?: "{}"
+            try {
+                val obj = JSONObject(accountsJson)
+                if (obj.has(normalized)) {
+                    val acc = obj.getJSONObject(normalized)
+                    acc.put("profileImageUrl", imageUrl)
+                    obj.put(normalized, acc)
+                    prefs.edit().putString(KEY_REGISTERED_ACCOUNTS, obj.toString()).apply()
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     /** Save a registered account for reliable local authentication fallback */
@@ -147,7 +228,7 @@ object UserSessionManager {
             val isActive = (data["active"] as? Boolean) ?: existingBiz?.active ?: false
             val approvalStatus = (data["approvalStatus"] as? String) ?: existingBiz?.approvalStatus ?: "PENDING"
             val verificationStatus = (data["verificationStatus"] as? String) ?: existingBiz?.verificationStatus ?: "PENDING"
-            val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 80
+            val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 0
             val imageUrl = (data["imageUrl"] as? String)?.ifBlank { null } ?: existingBiz?.imageUrl
 
             saveApplication(
@@ -165,6 +246,10 @@ object UserSessionManager {
                 )
             )
 
+            val hash = Math.abs(bizId.hashCode())
+            val defaultLat = existingBiz?.latitude ?: (6.9271 + ((hash % 100) - 50) * 0.0003)
+            val defaultLng = existingBiz?.longitude ?: (79.8612 + (((hash / 100) % 100) - 50) * 0.0003)
+
             saveBusiness(
                 Business(
                     id = bizId,
@@ -179,8 +264,10 @@ object UserSessionManager {
                     approvalStatus = approvalStatus,
                     verificationStatus = verificationStatus,
                     trustScore = trustScore,
-                    rating = existingBiz?.rating ?: 0.0,
-                    reviewCount = existingBiz?.reviewCount ?: 0
+                    rating = existingBiz?.rating ?: 5.0,
+                    reviewCount = existingBiz?.reviewCount ?: 0,
+                    latitude = defaultLat,
+                    longitude = defaultLng
                 )
             )
         }
@@ -349,7 +436,7 @@ object UserSessionManager {
             active = o.optBoolean("active", false),
             approvalStatus = o.optString("approvalStatus", "PENDING"),
             verificationStatus = o.optString("verificationStatus", "PENDING"),
-            trustScore = o.optInt("trustScore", 80),
+            trustScore = o.optInt("trustScore", 0),
             rating = o.optDouble("rating", 0.0),
             reviewCount = o.optInt("reviewCount", 0),
             price = if (o.has("price") && !o.isNull("price")) o.optString("price").ifBlank { null } else null,
@@ -405,6 +492,9 @@ object UserSessionManager {
         val currentList = getAllBusinesses().toMutableList()
         val index = currentList.indexOfFirst { it.id == businessId }
         if (index >= 0) {
+            val hash = Math.abs(businessId.hashCode())
+            val defaultLat = currentList[index].latitude ?: (6.9271 + ((hash % 100) - 50) * 0.0003)
+            val defaultLng = currentList[index].longitude ?: (79.8612 + (((hash / 100) % 100) - 50) * 0.0003)
             currentList[index] = currentList[index].copy(
                 approved = approved,
                 active = active,
@@ -414,9 +504,15 @@ object UserSessionManager {
                 category = if (category.isNotBlank()) category else currentList[index].category,
                 address = if (address.isNotBlank()) address else currentList[index].address,
                 ownerId = if (ownerId.isNotBlank()) ownerId else currentList[index].ownerId,
-                contactNumber = if (contactNumber.isNotBlank()) contactNumber else currentList[index].contactNumber
+                contactNumber = if (contactNumber.isNotBlank()) contactNumber else currentList[index].contactNumber,
+                latitude = defaultLat,
+                longitude = defaultLng
             )
         } else {
+            val hash = Math.abs(businessId.hashCode())
+            val defaultLat = 6.9271 + ((hash % 100) - 50) * 0.0003
+            val defaultLng = 79.8612 + (((hash / 100) % 100) - 50) * 0.0003
+            val existing = currentList.firstOrNull { it.id == businessId || (name.isNotBlank() && it.name.trim().equals(name.trim(), ignoreCase = true)) }
             currentList.add(
                 0,
                 Business(
@@ -430,9 +526,11 @@ object UserSessionManager {
                     active = active,
                     approvalStatus = approvalStatus,
                     verificationStatus = verificationStatus,
-                    trustScore = 85,
-                    rating = 5.0,
-                    reviewCount = 0
+                    trustScore = existing?.trustScore ?: 0,
+                    rating = existing?.rating ?: 0.0,
+                    reviewCount = existing?.reviewCount ?: 0,
+                    latitude = defaultLat,
+                    longitude = defaultLng
                 )
             )
         }
@@ -471,8 +569,14 @@ object UserSessionManager {
     /** Update business trust score across session, stored businesses, and registered accounts */
     fun updateBusinessTrustScore(businessId: String, trustScore: Int) {
         if (!::prefs.isInitialized) return
-        val businesses = getAllBusinesses().map {
-            if (it.id == businessId) it.copy(trustScore = trustScore) else it
+        val currentBusinesses = getAllBusinesses()
+        val targetName = currentBusinesses.firstOrNull { it.id == businessId }?.name?.trim()?.lowercase()
+            ?: (getProfile()?.get("businessName") as? String)?.trim()?.lowercase()
+
+        val businesses = currentBusinesses.map {
+            val matchesId = it.id == businessId
+            val matchesName = !targetName.isNullOrBlank() && it.name.trim().lowercase() == targetName
+            if (matchesId || matchesName) it.copy(trustScore = trustScore) else it
         }
         val array = JSONArray()
         for (b in businesses) {
@@ -483,7 +587,8 @@ object UserSessionManager {
         val activeProfile = getProfile()
         if (activeProfile != null) {
             val currentBizId = activeProfile["businessId"] as? String
-            if (currentBizId == businessId) {
+            val profName = (activeProfile["businessName"] as? String)?.trim()?.lowercase()
+            if (currentBizId == businessId || (!targetName.isNullOrBlank() && profName == targetName)) {
                 val updated = activeProfile.toMutableMap()
                 updated["trustScore"] = trustScore
                 saveProfile(updated)
@@ -796,6 +901,195 @@ object UserSessionManager {
     fun getPromotionsForBusiness(businessId: String): List<Promotion> {
         val all = getAllPromotions()
         return if (businessId.isBlank()) all else all.filter { it.businessId == businessId }
+    }
+
+    /** Save or update a notification locally */
+    fun saveNotification(item: NotificationItem) {
+        if (!::prefs.isInitialized) return
+        val current = getAllNotifications().toMutableList()
+        val index = current.indexOfFirst { it.id == item.id }
+        if (index >= 0) {
+            current[index] = item
+        } else {
+            current.add(0, item)
+        }
+        val array = JSONArray()
+        for (n in current) {
+            val o = JSONObject()
+            o.put("id", n.id)
+            o.put("userId", n.userId)
+            o.put("title", n.title)
+            o.put("message", n.message)
+            o.put("category", n.category)
+            o.put("relatedBookingId", n.relatedBookingId)
+            o.put("relatedBusinessId", n.relatedBusinessId)
+            o.put("isRead", n.isRead)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_NOTIFICATIONS, array.toString()).apply()
+    }
+
+    /** Retrieve all locally stored notifications */
+    fun getAllNotifications(): List<NotificationItem> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_NOTIFICATIONS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<NotificationItem>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                NotificationItem(
+                    id = o.optString("id"),
+                    userId = o.optString("userId"),
+                    title = o.optString("title"),
+                    message = o.optString("message"),
+                    category = o.optString("category", "BOOKING"),
+                    relatedBookingId = o.optString("relatedBookingId"),
+                    relatedBusinessId = o.optString("relatedBusinessId"),
+                    isRead = o.optBoolean("isRead", false)
+                )
+            )
+        }
+        return list
+    }
+
+    /** Mark a single notification as read locally */
+    fun markNotificationRead(id: String) {
+        if (!::prefs.isInitialized) return
+        val current = getAllNotifications().map {
+            if (it.id == id) it.copy(isRead = true) else it
+        }
+        val array = JSONArray()
+        for (n in current) {
+            val o = JSONObject()
+            o.put("id", n.id)
+            o.put("userId", n.userId)
+            o.put("title", n.title)
+            o.put("message", n.message)
+            o.put("category", n.category)
+            o.put("relatedBookingId", n.relatedBookingId)
+            o.put("relatedBusinessId", n.relatedBusinessId)
+            o.put("isRead", n.isRead)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_NOTIFICATIONS, array.toString()).apply()
+    }
+
+    /** Mark all notifications for a user as read locally */
+    fun markAllNotificationsRead(userId: String) {
+        if (!::prefs.isInitialized) return
+        val current = getAllNotifications().map {
+            if (it.userId == userId) it.copy(isRead = true) else it
+        }
+        val array = JSONArray()
+        for (n in current) {
+            val o = JSONObject()
+            o.put("id", n.id)
+            o.put("userId", n.userId)
+            o.put("title", n.title)
+            o.put("message", n.message)
+            o.put("category", n.category)
+            o.put("relatedBookingId", n.relatedBookingId)
+            o.put("relatedBusinessId", n.relatedBusinessId)
+            o.put("isRead", n.isRead)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_NOTIFICATIONS, array.toString()).apply()
+    }
+
+    /** Save or update a booking in local cache */
+    fun saveBooking(booking: Booking) {
+        if (!::prefs.isInitialized) return
+        val current = getAllBookings().toMutableList()
+        val index = current.indexOfFirst { it.id == booking.id || (it.qrReference.isNotBlank() && it.qrReference == booking.qrReference) }
+        if (index >= 0) {
+            current[index] = booking
+        } else {
+            current.add(0, booking)
+        }
+        val array = JSONArray()
+        for (b in current) {
+            val o = JSONObject()
+            o.put("id", b.id)
+            o.put("customerId", b.customerId)
+            o.put("businessId", b.businessId)
+            o.put("businessNameSnapshot", b.businessNameSnapshot)
+            o.put("businessAddressSnapshot", b.businessAddressSnapshot)
+            o.put("serviceId", b.serviceId)
+            o.put("serviceNameSnapshot", b.serviceNameSnapshot)
+            o.put("appointmentDate", b.appointmentDate)
+            o.put("appointmentTime", b.appointmentTime)
+            o.put("priceAtBooking", b.priceAtBooking)
+            o.put("durationMinutes", b.durationMinutes)
+            o.put("status", b.status)
+            o.put("customerNotes", b.customerNotes)
+            o.put("qrReference", b.qrReference)
+            o.put("cancellationReason", b.cancellationReason)
+            array.put(o)
+        }
+        prefs.edit().putString(KEY_BOOKINGS, array.toString()).apply()
+    }
+
+    /** Retrieve all stored bookings */
+    fun getAllBookings(): List<Booking> {
+        if (!::prefs.isInitialized) return emptyList()
+        val raw = prefs.getString(KEY_BOOKINGS, null) ?: return emptyList()
+        val array = JSONArray(raw)
+        val list = mutableListOf<Booking>()
+        for (i in 0 until array.length()) {
+            val o = array.getJSONObject(i)
+            list.add(
+                Booking(
+                    id = o.optString("id"),
+                    customerId = o.optString("customerId"),
+                    businessId = o.optString("businessId"),
+                    businessNameSnapshot = o.optString("businessNameSnapshot"),
+                    businessAddressSnapshot = o.optString("businessAddressSnapshot"),
+                    serviceId = o.optString("serviceId"),
+                    serviceNameSnapshot = o.optString("serviceNameSnapshot"),
+                    appointmentDate = o.optString("appointmentDate"),
+                    appointmentTime = o.optString("appointmentTime"),
+                    priceAtBooking = o.optDouble("priceAtBooking", 0.0),
+                    durationMinutes = o.optInt("durationMinutes", 30),
+                    status = o.optString("status", "PENDING"),
+                    customerNotes = o.optString("customerNotes"),
+                    qrReference = o.optString("qrReference"),
+                    cancellationReason = o.optString("cancellationReason")
+                )
+            )
+        }
+        return list
+    }
+
+    /** Update booking status locally */
+    fun updateBookingStatus(bookingIdOrRef: String, newStatus: String, reason: String = "") {
+        if (!::prefs.isInitialized) return
+        val current = getAllBookings().toMutableList()
+        val index = current.indexOfFirst { it.id == bookingIdOrRef || it.qrReference.equals(bookingIdOrRef, ignoreCase = true) }
+        if (index >= 0) {
+            current[index] = current[index].copy(status = newStatus, cancellationReason = reason)
+            val array = JSONArray()
+            for (b in current) {
+                val o = JSONObject()
+                o.put("id", b.id)
+                o.put("customerId", b.customerId)
+                o.put("businessId", b.businessId)
+                o.put("businessNameSnapshot", b.businessNameSnapshot)
+                o.put("businessAddressSnapshot", b.businessAddressSnapshot)
+                o.put("serviceId", b.serviceId)
+                o.put("serviceNameSnapshot", b.serviceNameSnapshot)
+                o.put("appointmentDate", b.appointmentDate)
+                o.put("appointmentTime", b.appointmentTime)
+                o.put("priceAtBooking", b.priceAtBooking)
+                o.put("durationMinutes", b.durationMinutes)
+                o.put("status", b.status)
+                o.put("customerNotes", b.customerNotes)
+                o.put("qrReference", b.qrReference)
+                o.put("cancellationReason", b.cancellationReason)
+                array.put(o)
+            }
+            prefs.edit().putString(KEY_BOOKINGS, array.toString()).apply()
+        }
     }
 
     /** Clear stored session data – on logout, preserves registered accounts. */

@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import com.example.bizbridgeapp.model.Service
 import com.example.bizbridgeapp.repository.BusinessRepository
 import com.example.bizbridgeapp.repository.ServiceRepository
+import com.example.bizbridgeapp.repository.TrustScoreRepository
 
 class BusinessDetailsFragment : Fragment() {
 
@@ -88,7 +89,18 @@ class BusinessDetailsFragment : Fragment() {
                     view?.findViewById<TextView>(R.id.txt_rating)?.text = "$ratingStr (${it.reviewCount} reviews)"
                     view?.findViewById<TextView>(R.id.txt_description)?.text = if (it.description.isNotBlank()) it.description else "Welcome to ${it.name}! Professional services tailored for you."
                     view?.findViewById<TextView>(R.id.txt_address)?.text = if (it.address.isNotBlank()) it.address else "Colombo, Sri Lanka"
-                    view?.findViewById<TextView>(R.id.txt_trust_score)?.text = "${it.trustScore} / 100"
+
+                    // Dynamically load Trust Score and all 5 breakdown metrics
+                    TrustScoreRepository.getTrustScoreBreakdown(businessId) { breakdown ->
+                        if (!isAdded) return@getTrustScoreBreakdown
+                        view?.findViewById<TextView>(R.id.txt_trust_score)?.text = "${breakdown.totalScore} / 100"
+                        view?.findViewById<TextView>(R.id.txt_trust_score_caption)?.text = "${breakdown.trustBadge} · ${breakdown.trustDescription}"
+                        view?.findViewById<TextView>(R.id.txt_metric_qualifications)?.text = "${breakdown.qualificationScore}/${breakdown.maxQualificationScore}"
+                        view?.findViewById<TextView>(R.id.txt_metric_experience)?.text = "${breakdown.experienceScore}/${breakdown.maxExperienceScore}"
+                        view?.findViewById<TextView>(R.id.txt_metric_profile)?.text = "${breakdown.profileScore}/${breakdown.maxProfileScore}"
+                        view?.findViewById<TextView>(R.id.txt_metric_documents)?.text = "${breakdown.docScore}/${breakdown.maxDocScore}"
+                        view?.findViewById<TextView>(R.id.txt_metric_reviews)?.text = "${breakdown.reviewScore}/${breakdown.maxReviewScore}"
+                    }
 
                     val imgView = view?.findViewById<ImageView>(R.id.img_business)
                     if (imgView != null) {

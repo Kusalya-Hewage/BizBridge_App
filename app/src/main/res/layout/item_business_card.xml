@@ -132,12 +132,28 @@
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/tv_business_trust_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:background="@drawable/bg_tag_verified"
+                    android:fontFamily="@font/inter_variable"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:paddingTop="1dp"
+                    android:paddingBottom="1dp"
+                    android:text="Trust: 80/100"
+                    android:textColor="@color/primary"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
                     android:id="@+id/tv_business_price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="3dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="From $30"
+                    android:text="From Rs. 30"
                     android:textColor="@color/primary"
                     android:textSize="12sp"
                     android:textStyle="bold" />

@@ -52,10 +52,10 @@ class AdminProfileSecurityFragment : Fragment() {
 
         val name = (profile?.get("fullName") as? String)?.ifBlank { null }
             ?: fbUser?.displayName?.ifBlank { null }
-            ?: "Platform Administrator"
+            ?: "Alex Morgan"
         val email = (profile?.get("email") as? String)?.ifBlank { null }
             ?: fbUser?.email?.ifBlank { null }
-            ?: "admin@bizbridge.com"
+            ?: "alex@bizbridge.example"
         val role = (profile?.get("role") as? String)?.ifBlank { null }
             ?: "Platform administrator"
 
@@ -64,7 +64,7 @@ class AdminProfileSecurityFragment : Fragment() {
             .take(2)
             .map { it.first().uppercaseChar() }
             .joinToString("")
-            .ifBlank { "AD" }
+            .ifBlank { "AM" }
 
         view.findViewById<TextView>(R.id.tv_admin_initials)?.text = initials
         view.findViewById<TextView>(R.id.tv_admin_name)?.text = name

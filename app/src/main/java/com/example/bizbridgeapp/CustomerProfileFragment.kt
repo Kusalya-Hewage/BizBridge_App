@@ -29,10 +29,48 @@ class CustomerProfileFragment : Fragment() {
         imagePickerHelper = ImagePickerHelper(this) { uri ->
             val ivPhoto = view?.findViewById<ImageView>(R.id.iv_profile_photo)
             val tvInitials = view?.findViewById<TextView>(R.id.tv_avatar_initials)
-            ivPhoto?.setImageURI(uri)
+            val progressBar = view?.findViewById<ProgressBar>(R.id.profile_progress)
+
+            // 1. Immediately show locally in UI
             ivPhoto?.visibility = View.VISIBLE
             tvInitials?.visibility = View.GONE
-            Toast.makeText(requireContext(), "Profile photo updated successfully!", Toast.LENGTH_SHORT).show()
+            ivPhoto?.setImageURI(uri)
+
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val uid = currentUser?.uid ?: (UserSessionManager.getProfile()?.get("uid") as? String) ?: "customer"
+
+            // 2. Save locally into persistent internal storage and Base64
+            val localPath = com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), uri, uid)
+            val base64Data = com.example.bizbridgeapp.utils.ImageLoader.uriToBase64(requireContext(), uri, 600)
+            val effectivePath = base64Data ?: localPath ?: uri.toString()
+
+            // 3. Immediately update local session
+            UserSessionManager.updateProfileImage(effectivePath)
+
+            // 4. Upload to Firebase Storage and update Firestore
+            progressBar?.visibility = View.VISIBLE
+            FirebaseAuthManager.uploadProfileImage(
+                uid = uid,
+                uri = uri,
+                onSuccess = { downloadUrl ->
+                    activity?.runOnUiThread {
+                        progressBar?.visibility = View.GONE
+                        UserSessionManager.updateProfileImage(downloadUrl)
+                        if (ivPhoto != null && isAdded) {
+                            com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, downloadUrl, R.drawable.bg_score_badge)
+                        }
+                        FirebaseAuthManager.updateUserProfileImage(uid, downloadUrl)
+                        Toast.makeText(requireContext(), "Profile photo updated successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onFailure = {
+                    activity?.runOnUiThread {
+                        progressBar?.visibility = View.GONE
+                        FirebaseAuthManager.updateUserProfileImage(uid, effectivePath)
+                        Toast.makeText(requireContext(), "Profile photo updated!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
         }
     }
 
@@ -46,6 +84,37 @@ class CustomerProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val ivPhoto = view.findViewById<ImageView>(R.id.iv_profile_photo)
+        val tvInitials = view.findViewById<TextView>(R.id.tv_avatar_initials)
+
+        // Instant bind from local session cache
+        val cachedProfile = UserSessionManager.getProfile()
+        val cachedName = (cachedProfile?.get("fullName") as? String).orEmpty()
+        if (cachedName.isNotEmpty()) {
+            view.findViewById<TextView>(R.id.tv_profile_name)?.text = cachedName
+            val initials = cachedName.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase()
+            tvInitials?.text = if (initials.isNotEmpty()) initials else "MC"
+        }
+        val cachedEmail = (cachedProfile?.get("email") as? String).orEmpty()
+        if (cachedEmail.isNotEmpty()) {
+            view.findViewById<TextView>(R.id.tv_profile_email)?.text = cachedEmail
+        }
+        val cachedPhone = (cachedProfile?.get("phone") as? String).orEmpty()
+        if (cachedPhone.isNotEmpty()) {
+            view.findViewById<TextView>(R.id.tv_profile_phone)?.text = cachedPhone
+        }
+        val cachedImageUrl = (cachedProfile?.get("profileImageUrl") as? String)?.ifBlank { null }
+        if (!cachedImageUrl.isNullOrBlank()) {
+            ivPhoto?.visibility = View.VISIBLE
+            tvInitials?.visibility = View.GONE
+            if (ivPhoto != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, cachedImageUrl, R.drawable.bg_score_badge)
+            }
+        } else {
+            ivPhoto?.visibility = View.GONE
+            tvInitials?.visibility = View.VISIBLE
+        }
 
         // Profile Avatar Click -> Choose Camera or Gallery
         view.findViewById<View>(R.id.btn_edit_avatar)?.setOnClickListener {
@@ -87,12 +156,15 @@ class CustomerProfileFragment : Fragment() {
                         Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
                         return@setPositiveButton
                     }
+                    val existingImg = (UserSessionManager.getProfile()?.get("profileImageUrl") as? String).orEmpty()
+                    val sessionRole = (UserSessionManager.getProfile()?.get("role") as? String)?.ifBlank { "CUSTOMER" } ?: "CUSTOMER"
                     val updated = com.example.bizbridgeapp.model.UserProfile(
                         uid = currentUser.uid,
                         fullName = newName,
                         email = currentUser.email.orEmpty(),
                         phone = newPhone,
-                        role = "CUSTOMER",
+                        role = sessionRole,
+                        profileImageUrl = existingImg,
                         accountStatus = "ACTIVE"
                     )
                     UserRepository.createOrUpdate(updated,
@@ -178,7 +250,27 @@ class CustomerProfileFragment : Fragment() {
                     view.findViewById<TextView>(R.id.tv_profile_name)?.text = profile.fullName
                     view.findViewById<TextView>(R.id.tv_profile_email)?.text = profile.email
                     view.findViewById<TextView>(R.id.tv_profile_phone)?.text = profile.phone
-                    UserSessionManager.saveProfile(profile.toMap())
+
+                    val effectiveImageUrl = if (profile.profileImageUrl.isNotBlank()) {
+                        profile.profileImageUrl
+                    } else {
+                        (UserSessionManager.getProfile()?.get("profileImageUrl") as? String).orEmpty()
+                    }
+
+                    if (effectiveImageUrl.isNotBlank()) {
+                        ivPhoto?.visibility = View.VISIBLE
+                        tvInitials?.visibility = View.GONE
+                        if (ivPhoto != null) {
+                            com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, effectiveImageUrl, R.drawable.bg_score_badge)
+                        }
+                        UserSessionManager.updateProfileImage(effectiveImageUrl)
+                    }
+
+                    val updatedMap = profile.toMap().toMutableMap()
+                    if (effectiveImageUrl.isNotBlank()) {
+                        updatedMap["profileImageUrl"] = effectiveImageUrl
+                    }
+                    UserSessionManager.saveProfile(updatedMap)
                     progressBar?.visibility = View.GONE
                 },
                 onFailure = { e ->

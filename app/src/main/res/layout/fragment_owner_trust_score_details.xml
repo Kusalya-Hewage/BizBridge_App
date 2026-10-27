@@ -88,17 +88,18 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="84 / 100"
+                    android:text="— / 100"
                     android:textColor="@color/text_primary"
                     android:textSize="32sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tv_trust_score_caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Read-only sample score. Not a verified badge."
+                    android:text="Platform Quality &amp; Verification Rating"
                     android:textColor="@color/text_muted"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -113,7 +114,7 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- 1. Professional experience -->
+                <!-- 1. Professional qualifications -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
@@ -122,28 +123,30 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Professional experience"
+                        android:text="Professional qualifications"
                         android:textColor="@color/text_primary"
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tv_score_qualifications"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="24/30"
+                        android:text="0/30"
                         android:textColor="@color/primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
 
                 <ProgressBar
+                    android:id="@+id/pb_qualifications"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="6dp"
                     android:layout_marginTop="6dp"
                     android:max="30"
-                    android:progress="24"
+                    android:progress="0"
                     android:progressTint="@color/primary" />
 
                 <!-- 2. Industry experience -->
@@ -161,23 +164,25 @@
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tv_score_experience"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="20/25"
+                        android:text="0/25"
                         android:textColor="@color/primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
 
                 <ProgressBar
+                    android:id="@+id/pb_experience"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="6dp"
                     android:layout_marginTop="6dp"
                     android:max="25"
-                    android:progress="20"
+                    android:progress="0"
                     android:progressTint="@color/primary" />
 
                 <!-- 3. Profile completeness -->
@@ -195,23 +200,25 @@
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tv_score_profile"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="15/15"
+                        android:text="0/15"
                         android:textColor="@color/primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
 
                 <ProgressBar
+                    android:id="@+id/pb_profile"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="6dp"
                     android:layout_marginTop="6dp"
                     android:max="15"
-                    android:progress="15"
+                    android:progress="0"
                     android:progressTint="@color/secondary" />
 
                 <!-- 4. Verified documents -->
@@ -229,23 +236,25 @@
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tv_score_documents"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="15/20"
+                        android:text="0/15"
                         android:textColor="@color/primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
 
                 <ProgressBar
+                    android:id="@+id/pb_documents"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="6dp"
                     android:layout_marginTop="6dp"
-                    android:max="20"
-                    android:progress="15"
+                    android:max="15"
+                    android:progress="0"
                     android:progressTint="@color/primary" />
 
                 <!-- 5. Customer reviews -->
@@ -263,23 +272,25 @@
                         android:textSize="13sp" />
 
                     <TextView
+                        android:id="@+id/tv_score_reviews"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="10/10"
+                        android:text="0/15"
                         android:textColor="@color/primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </RelativeLayout>
 
                 <ProgressBar
+                    android:id="@+id/pb_reviews"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="6dp"
                     android:layout_marginTop="6dp"
-                    android:max="10"
-                    android:progress="10"
+                    android:max="15"
+                    android:progress="0"
                     android:progressTint="@color/secondary" />
             </LinearLayout>
 
@@ -334,11 +345,12 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_qualifications_hint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Qualification points: 24 of 30"
+                        android:text="Qualification points: 0 of 30"
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -429,11 +441,12 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tv_reviews_hint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Recent reviews keep your score up to 10 points."
+                        android:text="Recent reviews contribute up to 15 points."
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
                 </LinearLayout>

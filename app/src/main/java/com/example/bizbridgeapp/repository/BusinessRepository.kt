@@ -18,13 +18,62 @@ object BusinessRepository {
         onComplete(emptyList())
     }
 
+    /** Deduplicate businesses by normalized name and ID, preserving local images/details when remote fields are blank */
+    fun deduplicateBusinesses(local: List<Business>, remote: List<Business>): List<Business> {
+        val distinctList = mutableListOf<Business>()
+        val seenNames = mutableSetOf<String>()
+        val seenIds = mutableSetOf<String>()
+        val localMap = local.associateBy { it.id }
+
+        // Process remote businesses first, enriching with local images/fields if remote is missing them
+        for (biz in remote) {
+            val normName = biz.name.trim().lowercase()
+            val id = biz.id.trim()
+            val matchingLocal = localMap[id] ?: local.firstOrNull { it.name.trim().equals(biz.name.trim(), ignoreCase = true) }
+
+            val effectiveImg = if (!biz.imageUrl.isNullOrBlank()) biz.imageUrl else matchingLocal?.imageUrl
+            val effectiveAddress = if (biz.address.isNotBlank()) biz.address else (matchingLocal?.address ?: "")
+            val effectivePhone = if (biz.contactNumber.isNotBlank()) biz.contactNumber else (matchingLocal?.contactNumber ?: "")
+            val effectiveDesc = if (biz.description.isNotBlank()) biz.description else (matchingLocal?.description ?: "")
+
+            val mergedBiz = biz.copy(
+                imageUrl = effectiveImg,
+                address = effectiveAddress,
+                contactNumber = effectivePhone,
+                description = effectiveDesc
+            )
+
+            if (normName.isNotEmpty() && !seenNames.contains(normName) && !seenIds.contains(id)) {
+                seenNames.add(normName)
+                seenIds.add(id)
+                distinctList.add(mergedBiz)
+            }
+        }
+
+        // Add remaining local-only businesses
+        for (biz in local) {
+            val normName = biz.name.trim().lowercase()
+            val id = biz.id.trim()
+            if (normName.isNotEmpty() && !seenNames.contains(normName) && !seenIds.contains(id)) {
+                seenNames.add(normName)
+                seenIds.add(id)
+                distinctList.add(biz)
+            }
+        }
+        return distinctList
+    }
+
     /** Fetch all approved and active businesses from Firestore and local cache */
     fun getApprovedActiveBusinesses(
         onSuccess: (List<Business>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val sessionBizId = getOwnerBusinessId()
+
         val localApproved = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
-            .filter { it.approved && it.active }
+            .filter { (it.approved && it.active) || (sessionBizId.isNotBlank() && it.id == sessionBizId) || (currentUid != null && it.ownerId == currentUid) }
+            .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
 
         db.collection(COLLECTION)
             .whereEqualTo("approved", true)
@@ -33,12 +82,63 @@ object BusinessRepository {
             .addOnSuccessListener { snapshot ->
                 val firestoreList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Business::class.java)?.copy(id = doc.id)
+                }.filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+                val merged = deduplicateBusinesses(localApproved, firestoreList)
+                if (merged.isNotEmpty()) {
+                    onSuccess(merged)
+                } else {
+                    val fallback = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+                        .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+                    onSuccess(fallback)
                 }
-                val merged = (localApproved + firestoreList).distinctBy { it.id }
-                onSuccess(merged)
             }
             .addOnFailureListener { e ->
-                onSuccess(localApproved)
+                if (localApproved.isNotEmpty()) {
+                    onSuccess(localApproved)
+                } else {
+                    val fallback = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+                        .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+                    onSuccess(fallback)
+                }
+            }
+    }
+
+    /** Fetch businesses specifically for map view, ensuring newly added businesses and owner's business appear */
+    fun getBusinessesForMap(
+        onSuccess: (List<Business>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val sessionBizId = getOwnerBusinessId()
+
+        val allLocal = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+            .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+
+        db.collection(COLLECTION).get()
+            .addOnSuccessListener { snapshot ->
+                val firestoreList = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Business::class.java)?.copy(id = doc.id)
+                }.filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+
+                val combined = deduplicateBusinesses(allLocal, firestoreList)
+
+                val approvedOrOwn = combined.filter { biz ->
+                    (biz.approved && biz.active) ||
+                    (currentUid != null && biz.ownerId == currentUid) ||
+                    (sessionBizId.isNotBlank() && biz.id == sessionBizId)
+                }
+
+                val result = if (approvedOrOwn.isNotEmpty()) approvedOrOwn else combined
+                onSuccess(result)
+            }
+            .addOnFailureListener {
+                val approvedOrOwn = allLocal.filter { biz ->
+                    (biz.approved && biz.active) ||
+                    (currentUid != null && biz.ownerId == currentUid) ||
+                    (sessionBizId.isNotBlank() && biz.id == sessionBizId)
+                }
+                val result = if (approvedOrOwn.isNotEmpty()) approvedOrOwn else allLocal
+                onSuccess(result)
             }
     }
 
@@ -140,7 +240,7 @@ object BusinessRepository {
                                             verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
                                             approved = (sessionProfile["approved"] as? Boolean) ?: false,
                                             active = (sessionProfile["active"] as? Boolean) ?: false,
-                                            trustScore = 80
+                                            trustScore = (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(businessId).totalScore
                                         )
                                     )
                                 } else {
@@ -317,7 +417,7 @@ object BusinessRepository {
                                     verificationStatus = "PENDING",
                                     approved = false,
                                     active = false,
-                                    trustScore = 80
+                                    trustScore = TrustScoreRepository.getLocalTrustScoreBreakdown(effectiveBizId).totalScore
                                 )
                                 db.collection(COLLECTION).document(effectiveBizId).set(newBiz.toMap(), SetOptions.merge())
                                 onUpdate(newBiz)
@@ -363,7 +463,7 @@ object BusinessRepository {
                             active = (sessionProfile["active"] as? Boolean) ?: false,
                             approvalStatus = (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
                             verificationStatus = (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
-                            trustScore = (sessionProfile["trustScore"] as? Int) ?: 80
+                            trustScore = (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(effectiveBizId).totalScore
                         )
                         onUpdate(constructed)
                     } else {
@@ -417,6 +517,8 @@ object BusinessRepository {
 
         // 2. Immediately persist to local Business cache
         val existingBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
+        val defaultLat = existingBiz?.latitude ?: 6.9271
+        val defaultLng = existingBiz?.longitude ?: 79.8612
         val updatedBiz = Business(
             id = targetId,
             ownerId = currentUid ?: existingBiz?.ownerId ?: "owner_bizbridge",
@@ -431,9 +533,11 @@ object BusinessRepository {
             active = existingBiz?.active ?: (sessionProfile["active"] as? Boolean) ?: false,
             approvalStatus = existingBiz?.approvalStatus ?: (sessionProfile["approvalStatus"] as? String) ?: "PENDING",
             verificationStatus = existingBiz?.verificationStatus ?: (sessionProfile["verificationStatus"] as? String) ?: "PENDING",
-            trustScore = existingBiz?.trustScore ?: (sessionProfile["trustScore"] as? Int) ?: 80,
+            trustScore = existingBiz?.trustScore ?: (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(targetId).totalScore,
             rating = existingBiz?.rating ?: 0.0,
-            reviewCount = existingBiz?.reviewCount ?: 0
+            reviewCount = existingBiz?.reviewCount ?: 0,
+            latitude = defaultLat,
+            longitude = defaultLng
         )
         com.example.bizbridgeapp.UserSessionManager.saveBusiness(updatedBiz)
 
@@ -476,6 +580,8 @@ object BusinessRepository {
             "address" to address,
             "contactNumber" to contactNumber,
             "openingHours" to openingHours,
+            "latitude" to defaultLat,
+            "longitude" to defaultLng,
             "updatedAt" to FieldValue.serverTimestamp()
         )
         if (!currentUid.isNullOrBlank()) {
@@ -538,10 +644,20 @@ object BusinessRepository {
     fun listenToApprovedBusinesses(
         onUpdate: (List<Business>) -> Unit
     ): com.google.firebase.firestore.ListenerRegistration {
+        val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        val sessionBizId = getOwnerBusinessId()
+
         val initialLocal = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
-            .filter { it.approved && it.active }
-        if (initialLocal.isNotEmpty()) {
-            onUpdate(initialLocal)
+            .filter { (it.approved && it.active) || (sessionBizId.isNotBlank() && it.id == sessionBizId) || (currentUid != null && it.ownerId == currentUid) }
+            .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+        val fallbackLocal = if (initialLocal.isNotEmpty()) {
+            initialLocal
+        } else {
+            com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+                .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+        }
+        if (fallbackLocal.isNotEmpty()) {
+            onUpdate(fallbackLocal)
         }
 
         return db.collection(COLLECTION)
@@ -549,14 +665,26 @@ object BusinessRepository {
             .whereEqualTo("active", true)
             .addSnapshotListener { snapshot, error ->
                 val localApproved = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
-                    .filter { it.approved && it.active }
+                    .filter { (it.approved && it.active) || (sessionBizId.isNotBlank() && it.id == sessionBizId) || (currentUid != null && it.ownerId == currentUid) }
+                    .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
                 if (error != null || snapshot == null) {
-                    onUpdate(localApproved)
+                    val res = if (localApproved.isNotEmpty()) localApproved else {
+                        com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+                            .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+                    }
+                    onUpdate(res)
                     return@addSnapshotListener
                 }
                 val firestoreList = snapshot.documents.mapNotNull { it.toObject(Business::class.java)?.copy(id = it.id) }
-                val merged = (localApproved + firestoreList).distinctBy { it.id }
-                onUpdate(merged)
+                    .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+                val merged = deduplicateBusinesses(localApproved, firestoreList)
+                val finalResult = if (merged.isNotEmpty()) {
+                    merged
+                } else {
+                    com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+                        .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
+                }
+                onUpdate(finalResult)
             }
     }
 }

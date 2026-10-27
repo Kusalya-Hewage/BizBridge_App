@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BizBridge</string>
-    <string name="shared_auth_demo_tag">AUTHENTICATION PORTAL</string>
+    <string name="shared_auth_demo_tag">SHARED AUTHENTICATION · DEMONSTRATION DATA</string>
     <string name="tagline_connect_book_grow">Connect. Book. Grow.</string>
     <string name="tagline_neighborhood">Your neighborhood, connected.</string>
 
@@ -23,10 +23,14 @@
     <string name="onboarding_2_info">Clear prices and appointment details. No payment processing in BizBridge.</string>
     <string name="btn_back">Back</string>
 
+    <string name="customer_demo_tag">CUSTOMER · DEMONSTRATION DATA</string>
+    <string name="owner_demo_tag">BUSINESS OWNER · DEMONSTRATION DATA</string>
+    <string name="admin_demo_tag">ADMIN · DEMONSTRATION DATA</string>
+
     <string name="onboarding_3_top_title">A little peace of mind</string>
     <string name="onboarding_3_title">Never Miss an Appointment</string>
     <string name="onboarding_3_desc">Stay on top of your plans with booking updates and friendly reminders.</string>
-    <string name="onboarding_3_info">Timely notifications keep you informed every step of the way.</string>
+    <string name="onboarding_3_info">Notification examples are static demonstrations, not live reminders.</string>
     <string name="btn_get_started">Get Started</string>
 
     <!-- Login -->
@@ -79,7 +83,7 @@
     <string name="btn_create_owner_account">Create Owner Account</string>
 
     <!-- Forgot Password -->
-    <string name="forgot_password_title">Forget Password</string>
+    <string name="forgot_password_title">Forgot Password</string>
     <string name="forgot_card_title">Let\'s get you back in.</string>
     <string name="forgot_card_subtitle">Enter the email associated with your account. We\'ll send instructions to reset your password.</string>
     <string name="btn_send_reset_link">Send Reset Link</string>

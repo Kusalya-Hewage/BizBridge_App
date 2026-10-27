@@ -39,7 +39,7 @@
                     android:paddingEnd="8dp"
                     android:paddingTop="4dp"
                     android:paddingBottom="4dp"
-                    android:text="CUSTOMER · REVIEW BOOKING"
+                    android:text="@string/customer_demo_tag"
                     android:textAppearance="@style/TextAppearance.BizBridge.SubheaderTag"
                     android:textSize="10sp" />
 
@@ -170,7 +170,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Signature haircut • $45"
+                    android:text="Signature haircut • Rs. 45"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -413,7 +413,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="$45.00"
+                        android:text="Rs. 45.00"
                         android:textColor="@color/text_primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -437,7 +437,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="$45.00"
+                        android:text="Rs. 45.00"
                         android:textColor="@color/primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />

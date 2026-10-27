@@ -13,6 +13,7 @@ import com.example.bizbridgeapp.model.Booking
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.repository.BookingRepository
 import com.example.bizbridgeapp.repository.BusinessRepository
+import com.example.bizbridgeapp.repository.TrustScoreRepository
 import com.google.firebase.firestore.ListenerRegistration
  
 class OwnerDashboardFragment : Fragment() {
@@ -48,6 +49,17 @@ class OwnerDashboardFragment : Fragment() {
             view.findViewById<TextView>(R.id.tv_owner_subtitle)?.text = "$sessionBizName · $sessionCategory"
         }
 
+        // Dynamically compute and display current Trust Score immediately from local session/cache
+        val initialBreakdown = TrustScoreRepository.getLocalTrustScoreBreakdown(currentBusinessId)
+        view.findViewById<TextView>(R.id.tv_trust_score_value)?.text = "${initialBreakdown.totalScore} / 100"
+
+        // Trigger dynamic Trust Score calculation in background
+        TrustScoreRepository.recalculateTrustScore(currentBusinessId) { updatedScore ->
+            if (isAdded) {
+                view.findViewById<TextView>(R.id.tv_trust_score_value)?.text = "$updatedScore / 100"
+            }
+        }
+
         // Initialize zero metric counts and hide recent request card until real data loads
         view.findViewById<TextView>(R.id.tv_count_pending)?.text = "0"
         view.findViewById<TextView>(R.id.tv_count_today)?.text = "0"
@@ -59,6 +71,13 @@ class OwnerDashboardFragment : Fragment() {
         view.findViewById<View>(R.id.iv_owner_notifications)?.setOnClickListener {
             mainActivity?.navigateTo(NotificationsFragment(), addToBackStack = true)
         }
+
+        // QR Scanner actions
+        val openQrScanner = View.OnClickListener {
+            mainActivity?.navigateTo(OwnerQrVerificationFragment.newInstance(), addToBackStack = true)
+        }
+        view.findViewById<View>(R.id.iv_owner_scan_qr)?.setOnClickListener(openQrScanner)
+        view.findViewById<View>(R.id.card_action_scan_qr)?.setOnClickListener(openQrScanner)
  
         // Manage all requests link -> Manage Bookings
         view.findViewById<TextView>(R.id.tv_manage_all_requests)?.setOnClickListener {
@@ -91,7 +110,7 @@ class OwnerDashboardFragment : Fragment() {
                     OwnerBookingDetailsFragment.newInstance(
                         bookingId = booking.id,
                         customerName = "Customer (${booking.customerId.take(6)})",
-                        serviceName = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
+                        serviceName = "${booking.serviceNameSnapshot} · Rs. ${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
                         dateTime = "${booking.appointmentDate} · ${booking.appointmentTime}",
                         customerNote = booking.customerNotes.ifEmpty { "No special notes provided." }
                     ),

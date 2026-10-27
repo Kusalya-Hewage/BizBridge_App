@@ -36,8 +36,38 @@ object AdminRepository {
     private const val AUDIT_LOGS = "adminAuditLogs"
     private const val BOOKINGS = "bookings"
 
+    /** Return current locally available overview stats synchronously to eliminate initial load flash */
+    fun getLocalOverviewStats(): AdminOverviewStats {
+        val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
+        val totalBiz = localBiz.size
+        val verifiedBiz = localBiz.count { it.verificationStatus == "VERIFIED" || it.approved }
+        val localPendingApps = com.example.bizbridgeapp.UserSessionManager.getAllApplications().count { it.status.equals("PENDING", ignoreCase = true) }
+        val localPendingDocs = com.example.bizbridgeapp.UserSessionManager.getAllQualificationDocuments().count { it.verificationStatus.equals("PENDING", ignoreCase = true) }
+        val localUsers = maxOf(com.example.bizbridgeapp.UserSessionManager.getAllRegisteredAccounts().size, if (totalBiz > 0) 1 else 0)
+        return AdminOverviewStats(
+            totalUsers = localUsers,
+            totalBusinesses = totalBiz,
+            pendingApplications = localPendingApps,
+            verifiedBusinesses = verifiedBiz,
+            openReports = 0,
+            reviewReportsCount = 0,
+            listingReportsCount = 0,
+            totalBookings = 0,
+            pendingBookings = 0,
+            confirmedBookings = 0,
+            completedBookings = 0,
+            cancelledBookings = 0,
+            pendingDocuments = localPendingDocs
+        )
+    }
+
     /** Listen to real-time Admin Overview statistics */
     fun listenToOverviewStats(onUpdate: (AdminOverviewStats) -> Unit): ListenerRegistration {
+        // Emit local stats immediately so no placeholder or delay is visible
+        try {
+            onUpdate(getLocalOverviewStats())
+        } catch (_: Exception) {}
+
         return db.collection(BUSINESSES).addSnapshotListener { bizSnap, _ ->
             val firestoreBiz = bizSnap?.documents?.mapNotNull { it.toObject(Business::class.java) } ?: emptyList()
             val localBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
@@ -282,29 +312,13 @@ object AdminRepository {
                     contactNumber = finalApp.contactNumber
                 )
 
-                // Also auto-verify all attached qualification documents for this business in the same approval!
-                val attachedDocs = com.example.bizbridgeapp.UserSessionManager.getQualificationsForBusiness(targetBizId, finalApp.ownerId)
-                for (doc in attachedDocs) {
-                    com.example.bizbridgeapp.UserSessionManager.updateQualificationStatus(doc.id, "VERIFIED")
-                }
+                // Business application approved; qualification documents remain pending independent verification
                 TrustScoreRepository.recalculateTrustScore(targetBizId)
 
                 val appRef = db.collection(APPLICATIONS).document(finalApp.id)
                 val bizRef = db.collection(BUSINESSES).document(targetBizId)
 
                 val batch = db.batch()
-                for (doc in attachedDocs) {
-                    val qDocRef = db.collection("qualificationVerifications").document(doc.id)
-                    batch.set(
-                        qDocRef,
-                        mapOf(
-                            "verificationStatus" to "VERIFIED",
-                            "verifiedAt" to FieldValue.serverTimestamp(),
-                            "verifiedBy" to adminEmail
-                        ),
-                        com.google.firebase.firestore.SetOptions.merge()
-                    )
-                }
                 batch.set(
                     appRef,
                     mapOf(
