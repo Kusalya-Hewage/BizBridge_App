@@ -59,7 +59,7 @@
                 android:background="@drawable/bg_card_lavender"
                 android:fontFamily="@font/inter_variable"
                 android:padding="14dp"
-                android:text="Official credentials and certifications. Uploaded documentation will be examined during platform review."
+                android:text="Demonstration documentation only. Upload and verification are not connected to a live service."
                 android:textColor="@color/primary"
                 android:textSize="12sp" />
 
@@ -81,7 +81,7 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
-                android:hint="e.g. Advanced Hair Design Certificate"
+                android:hint="Advanced Hair Design Certificate"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:textColor="@color/text_primary"
@@ -105,7 +105,7 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
-                android:hint="e.g. California Beauty Academy"
+                android:hint="California Beauty Academy"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:textColor="@color/text_primary"
@@ -129,57 +129,44 @@
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_input_field"
                 android:fontFamily="@font/inter_variable"
-                android:hint="e.g. 5 years · Industry Experience"
+                android:hint="8 years · Stylist since 2018"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
-            <!-- Optional File Attachment Section -->
-            <LinearLayout
+            <!-- Optional File Attachment Section (hidden/seamless) -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_select_doc_file"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:orientation="vertical">
+                android:visibility="gone" />
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btn_select_doc_file"
-                    android:layout_width="match_parent"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_button_secondary"
-                    android:fontFamily="@font/inter_variable"
-                    android:stateListAnimator="@null"
-                    android:text="📎 Attach Certificate Photo (Optional)"
-                    android:textAllCaps="false"
-                    android:textColor="@color/primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tv_attached_file_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="No file attached · PDF, JPG or PNG up to 10 MB"
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <!-- Submit Qualification / Document Button -->
+            <!-- Upload Certificate / Document Button -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_upload_document"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="20dp"
                 android:background="@drawable/bg_button_primary"
                 android:fontFamily="@font/inter_variable"
                 android:stateListAnimator="@null"
-                android:text="Submit Qualification for Review"
+                android:text="Upload Certificate / Document"
                 android:textAllCaps="false"
                 android:textColor="@color/surface_white"
                 android:textSize="14sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_attached_file_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="6dp"
+                android:fontFamily="@font/inter_variable"
+                android:text="PDF, JPG or PNG · Up to 10MB"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp" />
 
             <!-- Section: Your submitted documents -->
             <TextView
