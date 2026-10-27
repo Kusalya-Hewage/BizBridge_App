@@ -104,12 +104,12 @@
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
-            <!-- Scan Customer QR Action Banner -->
+            <!-- Scan Customer QR Action Banner (Hidden to match Figma Dashboard layout) -->
             <LinearLayout
                 android:id="@+id/card_action_scan_qr"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:visibility="gone"
                 android:background="@drawable/bg_card_lavender"
                 android:clickable="true"
                 android:elevation="1dp"
