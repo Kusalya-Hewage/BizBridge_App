@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:overScrollMode="never"
-        android:paddingBottom="170dp">
+        android:paddingBottom="180dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -72,79 +72,91 @@
                 </RelativeLayout>
             </LinearLayout>
 
-            <!-- Step Progress Indicator -->
+            <!-- Step Progress Indicator matching screenshot -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/surface_white"
                 android:elevation="1dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:paddingBottom="14dp">
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="12dp">
 
-                <!-- Step 1: Done -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Service"
-                    android:textColor="@color/primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1.5dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:background="@color/primary" />
-
-                <!-- Step 2: Active -->
+                <!-- 3 Top Bars -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
                     android:orientation="horizontal">
+
+                    <!-- Bar 1: Service (Completed) -->
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="3dp"
+                        android:layout_weight="1"
+                        android:background="@color/primary" />
 
                     <View
                         android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/bg_score_badge" />
+                        android:layout_height="3dp" />
+
+                    <!-- Bar 2: Date & time (Active) -->
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="3dp"
+                        android:layout_weight="1"
+                        android:background="@color/primary" />
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="3dp" />
+
+                    <!-- Bar 3: Review (Upcoming) -->
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="3dp"
+                        android:layout_weight="1"
+                        android:background="@color/border_subtle" />
+                </LinearLayout>
+
+                <!-- Labels below bars -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Service"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:fontFamily="@font/inter_variable"
                         android:text="Date &amp; time"
                         android:textColor="@color/primary"
-                        android:textSize="12sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Review"
+                        android:textColor="@color/text_muted"
+                        android:textSize="11sp" />
                 </LinearLayout>
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1.5dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:background="@color/border_subtle" />
-
-                <!-- Step 3: Inactive -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Review"
-                    android:textColor="@color/text_muted"
-                    android:textSize="12sp" />
-
             </LinearLayout>
 
-            <!-- Service Subtitle -->
+            <!-- Service Summary Title -->
             <TextView
                 android:id="@+id/tv_choose_service_summary"
                 android:layout_width="match_parent"
@@ -153,190 +165,253 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/inter_variable"
-                android:text="Service • 45 min • Rs. 45"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
+                android:text="Signature haircut · 45 min · $45"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <!-- Dynamic Date Picker Card -->
-            <LinearLayout
+            <!-- Calendar Card matching screenshot -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card_white"
-                android:elevation="1dp"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/surface_white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <TextView
-                        android:id="@+id/tv_calendar_month"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:fontFamily="@font/inter_variable"
-                        android:text="Select Date"
-                        android:textColor="@color/text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                    <!-- Pick from calendar button -->
-                    <LinearLayout
-                        android:id="@+id/btn_open_calendar_picker"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:background="@drawable/bg_badge_confirmed"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp">
-
-                        <ImageView
-                            android:layout_width="14dp"
-                            android:layout_height="14dp"
-                            android:src="@drawable/ic_calendar"
-                            app:tint="@color/badge_confirmed_text" />
+                    <!-- Month and Navigation Row -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
 
                         <TextView
+                            android:id="@+id/tv_calendar_month_year"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
                             android:fontFamily="@font/inter_variable"
-                            android:text="Calendar 📅"
-                            android:textColor="@color/badge_confirmed_text"
+                            android:text="October 2026"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/btn_prev_month"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:text="‹"
+                                android:textColor="@color/primary"
+                                android:textSize="22sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/btn_next_month"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginStart="6dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:text="›"
+                                android:textColor="@color/primary"
+                                android:textSize="22sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </RelativeLayout>
+
+                    <!-- Days of Week Header Row (M T W T F S S) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="M"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="T"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="W"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="T"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="F"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="S"
+                            android:textColor="@color/text_muted"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/inter_variable"
+                            android:gravity="center"
+                            android:text="S"
+                            android:textColor="@color/text_muted"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-                </RelativeLayout>
 
-                <!-- Horizontal scrollable row of upcoming days -->
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:scrollbars="none">
-
+                    <!-- Dynamic Calendar Grid Container (Rows of 7 days) -->
                     <LinearLayout
-                        android:id="@+id/ll_dates_container"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/ll_calendar_grid_container"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
-                </HorizontalScrollView>
-            </LinearLayout>
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical" />
 
-            <!-- Time Slots Section -->
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Time Slots Section matching screenshot -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="20dp"
                 android:orientation="vertical">
 
+                <!-- Header row: Selected Date + Timezone -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/tv_selected_date_title"
+                        android:id="@+id/tv_selected_date_header"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Available Slots"
+                        android:text="Saturday, October 24"
                         android:textColor="@color/text_primary"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tv_timezone_hint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <!-- Custom Time Picker Button -->
-                        <LinearLayout
-                            android:id="@+id/btn_custom_time_picker"
-                            android:layout_width="wrap_content"
-                            android:layout_height="28dp"
-                            android:layout_marginEnd="8dp"
-                            android:background="@drawable/bg_chip_selected"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp">
-
-                            <ImageView
-                                android:layout_width="12dp"
-                                android:layout_height="12dp"
-                                android:src="@drawable/ic_clock"
-                                app:tint="@color/white" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="4dp"
-                                android:fontFamily="@font/inter_variable"
-                                android:text="Custom Time"
-                                android:textColor="@color/white"
-                                android:textSize="11sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/tv_business_hours_hint"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/inter_variable"
-                            android:text="9:00 AM - 7:00 PM"
-                            android:textColor="@color/primary"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
+                        android:fontFamily="@font/inter_variable"
+                        android:text="Pacific Time"
+                        android:textColor="@color/primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
                 </RelativeLayout>
 
-                <!-- Dynamic slots container (generated from business hours & service duration) -->
+                <!-- Dynamic Slots Container (Rendered as pill buttons) -->
                 <LinearLayout
                     android:id="@+id/ll_dynamic_slots_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="12dp"
                     android:orientation="vertical" />
 
-                <!-- Selected Confirmation Pill -->
+                <!-- Explanatory note matching screenshot -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/inter_variable"
+                    android:text="Struck-through times are unavailable. Past dates are disabled."
+                    android:textColor="@color/text_muted"
+                    android:textSize="12sp" />
+
+                <!-- Green Mint Confirmation Banner matching screenshot -->
                 <LinearLayout
+                    android:id="@+id/ll_selected_confirmation_banner"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_tag_verified"
+                    android:background="@drawable/bg_selected_banner"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp">
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp">
 
                     <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:src="@drawable/ic_verified"
-                        app:tint="@color/secondary_dark" />
+                        app:tint="#16A34A" />
 
                     <TextView
                         android:id="@+id/tv_selected_pill"
@@ -344,28 +419,18 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Selected: Sat, Oct 24 • 10:00–10:45 AM"
-                        android:textColor="@color/secondary_dark"
-                        android:textSize="12sp"
+                        android:text="Selected: Sat, Oct 24 · 10:00–10:45 AM"
+                        android:textColor="#166534"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
-
                 </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:fontFamily="@font/inter_variable"
-                    android:text="Direct-through times are unavailable. Past dates are blocked."
-                    android:textColor="@color/text_muted"
-                    android:textSize="11sp" />
 
             </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Actions: Back & Continue Buttons -->
+    <!-- Bottom Actions: Back & Continue Buttons matching screenshot -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -381,20 +446,20 @@
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_action_back"
             android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:background="@android:color/transparent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_button_secondary_outlined"
             android:fontFamily="@font/inter_variable"
             android:text="Back"
             android:textAllCaps="false"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
+            android:textColor="@color/primary"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btn_continue"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_button_primary"
             android:fontFamily="@font/inter_variable"
             android:text="Continue"
