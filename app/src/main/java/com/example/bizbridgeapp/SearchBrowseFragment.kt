@@ -261,7 +261,17 @@ class SearchBrowseFragment : Fragment() {
             // Click navigate to BusinessDetailsFragment with actual document ID
             cardView.setOnClickListener {
                 (activity as? MainActivity)?.navigateTo(
-                    BusinessDetailsFragment.newInstance(biz.id),
+                    BusinessDetailsFragment.newInstance(
+                        businessId = biz.id,
+                        businessName = biz.name,
+                        category = biz.category,
+                        address = biz.address,
+                        imageUrl = biz.imageUrl,
+                        rating = biz.rating,
+                        reviewCount = biz.reviewCount,
+                        trustScore = biz.trustScore,
+                        description = biz.description
+                    ),
                     addToBackStack = true
                 )
             }
