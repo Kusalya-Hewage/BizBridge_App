@@ -483,6 +483,7 @@ object UserSessionManager {
             val hash = Math.abs(businessId.hashCode())
             val defaultLat = 6.9271 + ((hash % 100) - 50) * 0.0003
             val defaultLng = 79.8612 + (((hash / 100) % 100) - 50) * 0.0003
+            val existing = currentList.firstOrNull { it.id == businessId || (name.isNotBlank() && it.name.trim().equals(name.trim(), ignoreCase = true)) }
             currentList.add(
                 0,
                 Business(
@@ -496,9 +497,9 @@ object UserSessionManager {
                     active = active,
                     approvalStatus = approvalStatus,
                     verificationStatus = verificationStatus,
-                    trustScore = 85,
-                    rating = 5.0,
-                    reviewCount = 0,
+                    trustScore = existing?.trustScore ?: 0,
+                    rating = existing?.rating ?: 0.0,
+                    reviewCount = existing?.reviewCount ?: 0,
                     latitude = defaultLat,
                     longitude = defaultLng
                 )
@@ -539,8 +540,14 @@ object UserSessionManager {
     /** Update business trust score across session, stored businesses, and registered accounts */
     fun updateBusinessTrustScore(businessId: String, trustScore: Int) {
         if (!::prefs.isInitialized) return
-        val businesses = getAllBusinesses().map {
-            if (it.id == businessId) it.copy(trustScore = trustScore) else it
+        val currentBusinesses = getAllBusinesses()
+        val targetName = currentBusinesses.firstOrNull { it.id == businessId }?.name?.trim()?.lowercase()
+            ?: (getProfile()?.get("businessName") as? String)?.trim()?.lowercase()
+
+        val businesses = currentBusinesses.map {
+            val matchesId = it.id == businessId
+            val matchesName = !targetName.isNullOrBlank() && it.name.trim().lowercase() == targetName
+            if (matchesId || matchesName) it.copy(trustScore = trustScore) else it
         }
         val array = JSONArray()
         for (b in businesses) {
@@ -551,7 +558,8 @@ object UserSessionManager {
         val activeProfile = getProfile()
         if (activeProfile != null) {
             val currentBizId = activeProfile["businessId"] as? String
-            if (currentBizId == businessId) {
+            val profName = (activeProfile["businessName"] as? String)?.trim()?.lowercase()
+            if (currentBizId == businessId || (!targetName.isNullOrBlank() && profName == targetName)) {
                 val updated = activeProfile.toMutableMap()
                 updated["trustScore"] = trustScore
                 saveProfile(updated)
