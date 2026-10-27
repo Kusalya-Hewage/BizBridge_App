@@ -107,7 +107,8 @@ class OwnerCreatePromotionFragment : Fragment() {
             btnPublish?.isEnabled = false
             btnPublish?.text = if (status == "ACTIVE") "Publishing…" else "Saving Draft…"
 
-            val businessName = BusinessRepository.getOwnerBusiness()?.name?.ifEmpty { "My Business" } ?: "My Business"
+            val sessionProfile = UserSessionManager.getProfile()
+            val businessName = (sessionProfile?.get("businessName") as? String)?.takeIf { it.isNotBlank() } ?: "My Business"
             val targetId = if (isEditMode && promoId.isNotBlank()) promoId else "promo_${System.currentTimeMillis()}"
 
             val promotion = Promotion(
