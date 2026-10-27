@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/inter_variable"
                     android:letterSpacing="0.08"
-                    android:text="ADMIN CONSOLE · OPERATIONS"
+                    android:text="@string/admin_demo_tag"
                     android:textColor="@color/admin_badge_demo_text"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -67,7 +67,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Platform Operations &amp; Moderation"
+                        android:text="Alex Morgan · Platform administrator"
                         android:textColor="@color/admin_text_muted"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -107,7 +107,7 @@
                     android:layout_weight="1"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="2dp"
-                    android:text="Privileged access · Platform Administration Console. Review and moderate businesses in real time."
+                    android:text="Privileged access · Demonstration workspace. Administrative actions are demonstration."
                     android:textColor="@color/admin_primary"
                     android:textSize="12sp" />
             </LinearLayout>
