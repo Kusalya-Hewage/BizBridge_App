@@ -255,7 +255,8 @@
                     android:layout_marginTop="12dp"
                     android:fontFamily="@font/inter_variable"
                     android:lineSpacingExtra="4dp"
-                    android:id="@+id/txt_description" android:text="Thoughtful cuts, natural color and a warm calmness. Rosa and her team make good hair feel effortless."
+                    android:id="@+id/txt_description"
+                    android:text="Thoughtful cuts, natural color and a warm welcome. Rosa and her team make great hair feel effortless."
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
                     <TextView
@@ -296,7 +297,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
                             android:letterSpacing="0.06"
-                            android:text="TRUST SCORE &amp; CREDENTIALS"
+                            android:text="Trust Score : demonstration"
                             android:textColor="@color/primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -307,7 +308,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="— / 100"
+                            android:text="84 / 100"
                             android:textColor="@color/text_primary"
                             android:textSize="28sp"
                             android:textStyle="bold" />
@@ -318,7 +319,7 @@
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_alignParentEnd="true"
-                        android:src="@drawable/ic_shield_check"
+                        android:src="@drawable/ic_analytics"
                         app:tint="@color/primary" />
                 </RelativeLayout>
 
@@ -328,7 +329,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Verified platform trust rating"
+                    android:text="Business is sample assets. Not verified locally."
                     android:textColor="@color/text_muted"
                     android:textSize="12sp" />
 
@@ -356,7 +357,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="0/30"
+                        android:text="24/30"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -380,7 +381,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="0/25"
+                        android:text="20/20"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -404,7 +405,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="0/15"
+                        android:text="15/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -428,7 +429,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="0/15"
+                        android:text="15/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -452,7 +453,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="0/15"
+                        android:text="10/20"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
