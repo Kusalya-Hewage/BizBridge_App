@@ -101,11 +101,15 @@ class ChooseDateTimeFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // Service summary text
+        // Service summary text formatted dynamically with exact duration & price
         val tvServiceSummary = view.findViewById<TextView>(R.id.tv_choose_service_summary)
-        val priceDisplay = if (servicePrice > 0) "$${servicePrice.toInt()}" else "$45"
-        val nameDisplay = if (serviceName.isNotBlank()) serviceName else "Signature haircut"
-        tvServiceSummary?.text = "$nameDisplay · $serviceDuration min · $priceDisplay"
+        val priceDisplay = if (servicePrice > 0) "Rs. ${servicePrice.toInt()}" else ""
+        val nameDisplay = if (serviceName.isNotBlank()) serviceName else "Service"
+        tvServiceSummary?.text = if (priceDisplay.isNotBlank()) {
+            "$nameDisplay · $serviceDuration min · $priceDisplay"
+        } else {
+            "$nameDisplay · $serviceDuration min"
+        }
 
         // Setup Month Navigation (< and >)
         val btnPrevMonth = view.findViewById<TextView>(R.id.btn_prev_month)
@@ -154,6 +158,9 @@ class ChooseDateTimeFragment : Fragment() {
             )
             (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
+
+        // Immediate render with initial state so calendar & slots appear instantly
+        renderCalendar(view)
 
         // Fetch Business Hours & Active Bookings to detect slot conflicts in real-time
         loadBusinessAndBookings(view)
