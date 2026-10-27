@@ -127,6 +127,15 @@ class OwnerPromotionsFragment : Fragment() {
                 badgeStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.badge_cancelled_text))
             }
 
+            val ivBanner = rootView.findViewById<ImageView>(R.id.iv_promotion_banner)
+            if (ivBanner != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(
+                    ivBanner,
+                    activePromo.imageUrl,
+                    R.drawable.img_salon_interior
+                )
+            }
+
             // Edit Promotion
             rootView.findViewById<View>(R.id.btn_edit_promotion)?.setOnClickListener {
                 mainActivity?.navigateTo(
@@ -135,7 +144,8 @@ class OwnerPromotionsFragment : Fragment() {
                         promoId = activePromo.id,
                         title = activePromo.title,
                         description = activePromo.description,
-                        offer = activePromo.discountText
+                        offer = activePromo.discountText,
+                        imageUrl = activePromo.imageUrl
                     ),
                     addToBackStack = true
                 )
