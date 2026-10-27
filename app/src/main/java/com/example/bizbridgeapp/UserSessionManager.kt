@@ -102,6 +102,35 @@ object UserSessionManager {
             }
             prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
         }
+
+        // Recalibrate trust scores for businesses with 0 reviews to eliminate legacy inflated scores
+        val storedBiz = getAllBusinesses()
+        var bizUpdated = false
+        val recalibrated = storedBiz.map { b ->
+            if (b.reviewCount == 0 && b.trustScore > 20) {
+                bizUpdated = true
+                val realScore = com.example.bizbridgeapp.repository.TrustScoreRepository.getLocalTrustScoreBreakdown(b.id).totalScore
+                b.copy(trustScore = realScore)
+            } else {
+                b
+            }
+        }
+        if (bizUpdated) {
+            val array = JSONArray()
+            for (b in recalibrated) {
+                array.put(businessToJson(b))
+            }
+            prefs.edit().putString(KEY_BUSINESSES, array.toString()).apply()
+        }
+
+        val currentProfile = getProfile()
+        if (currentProfile != null && (currentProfile["trustScore"] as? Int ?: 0) > 20) {
+            val bId = (currentProfile["businessId"] as? String) ?: ""
+            val realScore = com.example.bizbridgeapp.repository.TrustScoreRepository.getLocalTrustScoreBreakdown(bId).totalScore
+            val updated = currentProfile.toMutableMap()
+            updated["trustScore"] = realScore
+            saveProfile(updated)
+        }
     }
 
     /** Save a map (profile) as a JSON string. */
