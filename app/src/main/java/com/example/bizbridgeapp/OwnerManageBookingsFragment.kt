@@ -162,7 +162,7 @@ class OwnerManageBookingsFragment : Fragment() {
 
                 val displayName = if (booking.customerId.isNotBlank()) "Customer (${booking.customerId.take(6)})" else "Appointment #${booking.qrReference}"
                 tvCustomer?.text = displayName
-                tvService?.text = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min"
+                tvService?.text = "${booking.serviceNameSnapshot} · Rs. ${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min"
                 tvDateTime?.text = "${booking.appointmentDate} · ${booking.appointmentTime}"
 
                 // Card Click -> Booking Details
@@ -173,7 +173,7 @@ class OwnerManageBookingsFragment : Fragment() {
                             customerName = displayName,
                             customerEmail = "customer@bizbridge.example",
                             customerPhone = "+1 (555) 019-2834",
-                            serviceName = "${booking.serviceNameSnapshot} · $${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
+                            serviceName = "${booking.serviceNameSnapshot} · Rs. ${booking.priceAtBooking.toInt()} · ${booking.durationMinutes} min",
                             dateTime = "${booking.appointmentDate} · ${booking.appointmentTime}",
                             customerNote = booking.customerNotes.ifEmpty { "Customer notes: None provided." }
                         ),
