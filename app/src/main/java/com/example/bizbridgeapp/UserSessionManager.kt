@@ -29,6 +29,9 @@ object UserSessionManager {
     private const val KEY_PROMOTIONS = "local_promotions"
     private const val KEY_NOTIFICATIONS = "local_notifications"
     private const val KEY_BOOKINGS = "local_bookings"
+    private const val KEY_LAST_KNOWN_LOCATION_NAME = "last_known_location_name"
+    private const val KEY_LAST_KNOWN_LAT = "last_known_lat"
+    private const val KEY_LAST_KNOWN_LNG = "last_known_lng"
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
