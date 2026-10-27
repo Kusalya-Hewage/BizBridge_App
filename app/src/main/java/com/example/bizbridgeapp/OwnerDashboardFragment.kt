@@ -101,6 +101,11 @@ class OwnerDashboardFragment : Fragment() {
         view.findViewById<View>(R.id.card_owner_trust_score)?.setOnClickListener {
             mainActivity?.navigateTo(OwnerTrustScoreDetailsFragment(), addToBackStack = true)
         }
+
+        // Promotions Action Card -> Owner Promotions
+        view.findViewById<View>(R.id.card_action_promotions)?.setOnClickListener {
+            mainActivity?.navigateTo(OwnerPromotionsFragment(), addToBackStack = true)
+        }
  
         // Request Card Click -> Booking Details
         view.findViewById<View>(R.id.card_recent_request_1)?.setOnClickListener {

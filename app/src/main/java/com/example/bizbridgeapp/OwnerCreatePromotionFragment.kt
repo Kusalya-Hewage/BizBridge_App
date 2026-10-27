@@ -17,13 +17,49 @@ import com.example.bizbridgeapp.repository.PromotionRepository
 class OwnerCreatePromotionFragment : Fragment() {
 
     private var isEditMode: Boolean = false
+    private var promoId: String = ""
+    private var initialTitle: String = ""
+    private var initialDesc: String = ""
+    private var initialOffer: String = ""
+    private var initialImageUrl: String = ""
+    private var selectedImageUrl: String = ""
     private var currentBusinessId: String = ""
 
+    private val imagePicker = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null && context != null) {
+            val base64 = com.example.bizbridgeapp.utils.ImageLoader.uriToBase64(requireContext(), uri, maxDim = 800)
+            val localPath = com.example.bizbridgeapp.utils.ImageLoader.saveImageLocally(requireContext(), uri, "promo_${System.currentTimeMillis()}")
+            selectedImageUrl = base64 ?: localPath ?: uri.toString()
+
+            val ivPreview = view?.findViewById<ImageView>(R.id.iv_promo_banner_preview)
+            val tvPrompt = view?.findViewById<TextView>(R.id.tv_upload_promo_image_text)
+            if (ivPreview != null) {
+                ivPreview.visibility = View.VISIBLE
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPreview, selectedImageUrl)
+            }
+            tvPrompt?.text = "Change promotion banner"
+            Toast.makeText(requireContext(), "Banner image selected!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     companion object {
-        fun newInstance(isEditMode: Boolean = false): OwnerCreatePromotionFragment {
+        fun newInstance(
+            isEditMode: Boolean = false,
+            promoId: String = "",
+            title: String = "",
+            description: String = "",
+            offer: String = "",
+            imageUrl: String = ""
+        ): OwnerCreatePromotionFragment {
             val fragment = OwnerCreatePromotionFragment()
-            val args = Bundle()
-            args.putBoolean("isEditMode", isEditMode)
+            val args = Bundle().apply {
+                putBoolean("isEditMode", isEditMode)
+                putString("promoId", promoId)
+                putString("title", title)
+                putString("description", description)
+                putString("offer", offer)
+                putString("imageUrl", imageUrl)
+            }
             fragment.arguments = args
             return fragment
         }
@@ -32,6 +68,12 @@ class OwnerCreatePromotionFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         isEditMode = arguments?.getBoolean("isEditMode", false) ?: false
+        promoId = arguments?.getString("promoId").orEmpty()
+        initialTitle = arguments?.getString("title").orEmpty()
+        initialDesc = arguments?.getString("description").orEmpty()
+        initialOffer = arguments?.getString("offer").orEmpty()
+        initialImageUrl = arguments?.getString("imageUrl").orEmpty()
+        selectedImageUrl = initialImageUrl
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
     }
 
@@ -54,9 +96,9 @@ class OwnerCreatePromotionFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // Image picker
+        // Image picker click
         view.findViewById<View>(R.id.box_upload_promo_image)?.setOnClickListener {
-            Toast.makeText(requireContext(), "Banner image picker ready via Storage.", Toast.LENGTH_SHORT).show()
+            imagePicker.launch("image/*")
         }
 
         val etTitle = view.findViewById<EditText>(R.id.et_promo_title)
@@ -64,8 +106,18 @@ class OwnerCreatePromotionFragment : Fragment() {
         val etOffer = view.findViewById<EditText>(R.id.et_promo_offer_details)
         val btnPublish = view.findViewById<Button>(R.id.btn_publish_promotion)
         val btnDraft = view.findViewById<Button>(R.id.btn_save_promo_draft)
+        val ivPreview = view.findViewById<ImageView>(R.id.iv_promo_banner_preview)
 
-        if (!isEditMode) {
+        if (isEditMode) {
+            etTitle?.setText(initialTitle)
+            etDesc?.setText(initialDesc)
+            etOffer?.setText(initialOffer)
+            if (initialImageUrl.isNotBlank()) {
+                ivPreview?.visibility = View.VISIBLE
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPreview, initialImageUrl)
+                view.findViewById<TextView>(R.id.tv_upload_promo_image_text)?.text = "Change promotion banner"
+            }
+        } else {
             etTitle?.setText("")
             etDesc?.setText("")
             etOffer?.setText("")
@@ -84,13 +136,18 @@ class OwnerCreatePromotionFragment : Fragment() {
             btnPublish?.isEnabled = false
             btnPublish?.text = if (status == "ACTIVE") "Publishing…" else "Saving Draft…"
 
+            val sessionProfile = UserSessionManager.getProfile()
+            val businessName = (sessionProfile?.get("businessName") as? String)?.takeIf { it.isNotBlank() } ?: "My Business"
+            val targetId = if (isEditMode && promoId.isNotBlank()) promoId else "promo_${System.currentTimeMillis()}"
+
             val promotion = Promotion(
-                id = if (isEditMode) "promo_season_finish" else "",
+                id = targetId,
                 businessId = currentBusinessId,
-                businessName = "Juniper Studio",
+                businessName = businessName,
                 title = title,
                 description = desc,
                 discountText = offer.ifEmpty { "Limited offer" },
+                imageUrl = selectedImageUrl,
                 status = status
             )
 
@@ -98,7 +155,23 @@ class OwnerCreatePromotionFragment : Fragment() {
                 promotion = promotion,
                 onSuccess = {
                     if (isAdded) {
-                        Toast.makeText(requireContext(), "Promotion $status in Firestore.", Toast.LENGTH_SHORT).show()
+                        // If active, dispatch a notification to customers
+                        if (status == "ACTIVE") {
+                            com.example.bizbridgeapp.repository.NotificationRepository.createNotification(
+                                notification = com.example.bizbridgeapp.model.NotificationItem(
+                                    id = "notif_promo_${System.currentTimeMillis()}",
+                                    userId = "",
+                                    title = "Special Offer: ${promotion.title}",
+                                    message = "${promotion.businessName} has a new deal: ${promotion.discountText}",
+                                    category = "PROMOTION",
+                                    relatedBusinessId = currentBusinessId
+                                ),
+                                onSuccess = {},
+                                onFailure = {}
+                            )
+                        }
+
+                        Toast.makeText(requireContext(), "Promotion $status successfully.", Toast.LENGTH_SHORT).show()
                         parentFragmentManager.popBackStack()
                     }
                 },

@@ -230,6 +230,9 @@ class OwnerProfileFragment : Fragment() {
         view.findViewById<View>(R.id.row_owner_qualifications)?.setOnClickListener {
             mainActivity?.navigateTo(OwnerQualificationsDocumentsFragment(), addToBackStack = true)
         }
+        view.findViewById<View>(R.id.row_owner_promotions)?.setOnClickListener {
+            mainActivity?.navigateTo(OwnerPromotionsFragment(), addToBackStack = true)
+        }
         view.findViewById<View>(R.id.row_owner_notifications)?.setOnClickListener {
             mainActivity?.navigateTo(NotificationsFragment(), addToBackStack = true)
         }

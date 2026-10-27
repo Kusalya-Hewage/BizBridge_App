@@ -66,7 +66,7 @@ class OwnerPromotionsFragment : Fragment() {
             mainActivity?.navigateTo(OwnerCreatePromotionFragment.newInstance(isEditMode = false), addToBackStack = true)
         }
 
-        // Initial render so promo card is hidden if 0 promotions
+        // Initial render
         renderPromotions(view)
 
         // Real-time listener for Promotions
@@ -78,18 +78,44 @@ class OwnerPromotionsFragment : Fragment() {
     }
 
     private fun renderPromotions(rootView: View) {
-        val promoCard = rootView.findViewById<View>(R.id.card_promotion_sample) ?: return
-        val activePromo = allPromotions.firstOrNull {
+        val tabActive = rootView.findViewById<TextView>(R.id.tab_promo_active)
+        val tabScheduled = rootView.findViewById<TextView>(R.id.tab_promo_scheduled)
+        val tabExpired = rootView.findViewById<TextView>(R.id.tab_promo_expired)
+
+        val activeCount = allPromotions.count { it.status == "ACTIVE" }
+        val scheduledCount = allPromotions.count { it.status == "SCHEDULED" || it.status == "DRAFT" }
+        val expiredCount = allPromotions.count { it.status == "EXPIRED" || it.status == "PAUSED" }
+
+        tabActive?.text = "Active · $activeCount"
+        tabScheduled?.text = "Scheduled · $scheduledCount"
+        tabExpired?.text = "Expired · $expiredCount"
+
+        val promoCard = rootView.findViewById<View>(R.id.card_promotion_sample)
+        val emptyLayout = rootView.findViewById<View>(R.id.layout_promo_empty_state)
+        val tvEmptyTitle = rootView.findViewById<TextView>(R.id.tv_promo_empty_title)
+        val tvEmptyDesc = rootView.findViewById<TextView>(R.id.tv_promo_empty_desc)
+
+        val filteredPromos = allPromotions.filter {
             if (activeFilter == "ACTIVE") it.status == "ACTIVE"
             else if (activeFilter == "SCHEDULED") it.status == "SCHEDULED" || it.status == "DRAFT"
             else it.status == "EXPIRED" || it.status == "PAUSED"
-        } ?: allPromotions.firstOrNull()
+        }
+        val activePromo = filteredPromos.firstOrNull()
 
         val mainActivity = activity as? MainActivity
 
         if (activePromo != null) {
-            promoCard.visibility = View.VISIBLE
+            promoCard?.visibility = View.VISIBLE
+            emptyLayout?.visibility = View.GONE
+
+            val tvTitle = rootView.findViewById<TextView>(R.id.tv_promotion_title)
+            val tvDesc = rootView.findViewById<TextView>(R.id.tv_promotion_description)
+            val tvDates = rootView.findViewById<TextView>(R.id.tv_promotion_dates)
             val badgeStatus = rootView.findViewById<TextView>(R.id.badge_promo_active)
+
+            tvTitle?.text = activePromo.title.ifEmpty { "Special Promotion" }
+            tvDesc?.text = activePromo.description.ifEmpty { activePromo.discountText }
+            tvDates?.text = "${activePromo.discountText} · ${activePromo.businessName.ifEmpty { "BizBridge Partner" }}"
 
             if (activePromo.status == "ACTIVE") {
                 badgeStatus?.text = "Active"
@@ -101,9 +127,28 @@ class OwnerPromotionsFragment : Fragment() {
                 badgeStatus?.setTextColor(ContextCompat.getColor(requireContext(), R.color.badge_cancelled_text))
             }
 
+            val ivBanner = rootView.findViewById<ImageView>(R.id.iv_promotion_banner)
+            if (ivBanner != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(
+                    ivBanner,
+                    activePromo.imageUrl,
+                    R.drawable.img_salon_interior
+                )
+            }
+
             // Edit Promotion
             rootView.findViewById<View>(R.id.btn_edit_promotion)?.setOnClickListener {
-                mainActivity?.navigateTo(OwnerCreatePromotionFragment.newInstance(isEditMode = true), addToBackStack = true)
+                mainActivity?.navigateTo(
+                    OwnerCreatePromotionFragment.newInstance(
+                        isEditMode = true,
+                        promoId = activePromo.id,
+                        title = activePromo.title,
+                        description = activePromo.description,
+                        offer = activePromo.discountText,
+                        imageUrl = activePromo.imageUrl
+                    ),
+                    addToBackStack = true
+                )
             }
 
             // Deactivate promotion with confirmation dialog
@@ -134,7 +179,22 @@ class OwnerPromotionsFragment : Fragment() {
                 )
             }
         } else {
-            promoCard.visibility = View.GONE
+            promoCard?.visibility = View.GONE
+            emptyLayout?.visibility = View.VISIBLE
+            when (activeFilter) {
+                "ACTIVE" -> {
+                    tvEmptyTitle?.text = "No active promotions"
+                    tvEmptyDesc?.text = "You don't have any active promotions running. Create one below to attract customers!"
+                }
+                "SCHEDULED" -> {
+                    tvEmptyTitle?.text = "No scheduled promotions"
+                    tvEmptyDesc?.text = "Save promotions as drafts or scheduled campaigns to launch them later."
+                }
+                else -> {
+                    tvEmptyTitle?.text = "No expired or paused promotions"
+                    tvEmptyDesc?.text = "Deactivated or ended promotions will be kept here for your records."
+                }
+            }
         }
     }
 

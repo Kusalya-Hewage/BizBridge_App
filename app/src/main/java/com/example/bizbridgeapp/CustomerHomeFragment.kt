@@ -220,6 +220,40 @@ class CustomerHomeFragment : Fragment() {
             tvNoApt?.visibility = View.VISIBLE
         }
 
+        // ─── Active Promotions on Customer Dashboard ──────────────────
+        val sectionPromotions = view.findViewById<View>(R.id.section_home_promotions)
+        val tvPromoTitle = view.findViewById<TextView>(R.id.tv_home_promo_title)
+        val tvPromoDesc = view.findViewById<TextView>(R.id.tv_home_promo_desc)
+        val tvPromoBusiness = view.findViewById<TextView>(R.id.tv_home_promo_business)
+        val ivPromoBanner = view.findViewById<ImageView>(R.id.iv_home_promo_banner)
+        val cardPromo = view.findViewById<View>(R.id.card_home_promotion)
+
+        com.example.bizbridgeapp.repository.PromotionRepository.getActivePromotions(
+            onSuccess = { promos ->
+                if (!isAdded) return@getActivePromotions
+                val activePromo = promos.firstOrNull { it.status == "ACTIVE" }
+                if (activePromo != null) {
+                    sectionPromotions?.visibility = View.VISIBLE
+                    tvPromoTitle?.text = activePromo.title.ifEmpty { "Special Deal" }
+                    tvPromoDesc?.text = activePromo.description.ifEmpty { activePromo.discountText }
+                    tvPromoBusiness?.text = "By ${activePromo.businessName.ifEmpty { "BizBridge Partner" }}"
+                    if (ivPromoBanner != null) {
+                        com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPromoBanner, activePromo.imageUrl, R.drawable.img_salon_interior)
+                    }
+                    cardPromo?.setOnClickListener {
+                        if (activePromo.businessId.isNotBlank()) {
+                            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(activePromo.businessId), addToBackStack = true)
+                        }
+                    }
+                } else {
+                    sectionPromotions?.visibility = View.GONE
+                }
+            },
+            onFailure = {
+                sectionPromotions?.visibility = View.GONE
+            }
+        )
+
         // ─── Map button click ──────────────────────────────────────────
         val btnMap = view.findViewById<LinearLayout>(R.id.btn_map)
         btnMap?.setOnClickListener {

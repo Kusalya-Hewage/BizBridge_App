@@ -278,8 +278,21 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
             val toSelect = selectedBusiness?.takeIf { b -> businesses.any { it.id == b.id } } ?: businesses.first()
             displayBusinessCard(toSelect)
             if (userLocation == null) {
-                val pos = getEffectiveCoordinates(toSelect)
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 14f))
+                if (businesses.size > 1) {
+                    val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
+                    for (b in businesses) {
+                        builder.include(getEffectiveCoordinates(b))
+                    }
+                    try {
+                        map.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 120))
+                    } catch (_: Exception) {
+                        val pos = getEffectiveCoordinates(toSelect)
+                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 13f))
+                    }
+                } else {
+                    val pos = getEffectiveCoordinates(toSelect)
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 14f))
+                }
             }
         }
     }

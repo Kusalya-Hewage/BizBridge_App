@@ -57,6 +57,14 @@ class BusinessDetailsFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
 
+        // Reset views immediately so no wrong business data flashes
+        view.findViewById<TextView>(R.id.txt_business_name)?.text = ""
+        view.findViewById<TextView>(R.id.txt_business_name_main)?.text = "Loading..."
+        view.findViewById<TextView>(R.id.txt_category)?.text = ""
+        view.findViewById<TextView>(R.id.txt_rating)?.text = ""
+        view.findViewById<TextView>(R.id.txt_address)?.text = ""
+        view.findViewById<TextView>(R.id.txt_description)?.text = ""
+
         // Load business details
         val bId = arguments?.getString("businessId")
         if (!bId.isNullOrBlank()) {
