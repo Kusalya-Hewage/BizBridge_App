@@ -153,7 +153,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="From $30"
+                    android:text="From Rs. 30"
                     android:textColor="@color/primary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
