@@ -35,9 +35,10 @@ class OwnerProfileFragment : Fragment() {
             val profile = UserSessionManager.getProfile()
             val uid = currentUser?.uid ?: (profile?.get("uid") as? String) ?: "owner"
 
-            // 2. Save locally into persistent internal storage
+            // 2. Save locally into persistent internal storage and Base64
             val localPath = com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), uri, uid)
-            val effectivePath = localPath ?: uri.toString()
+            val base64Data = com.example.bizbridgeapp.utils.ImageLoader.uriToBase64(requireContext(), uri, 600)
+            val effectivePath = base64Data ?: localPath ?: uri.toString()
 
             // 3. Immediately update local session
             UserSessionManager.updateProfileImage(effectivePath)
