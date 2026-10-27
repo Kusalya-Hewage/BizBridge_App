@@ -267,6 +267,39 @@ object BookingRepository {
     }
 
     /**
+     * Retrieve all active (PENDING or CONFIRMED) bookings for a specific business to prevent double bookings.
+     */
+    fun getActiveBookingsForBusiness(
+        businessId: String,
+        onSuccess: (List<Booking>) -> Unit,
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        val targetBizId = businessId.trim()
+        val localActive = (localBookingsCache + com.example.bizbridgeapp.UserSessionManager.getAllBookings())
+            .filter { (it.businessId == targetBizId || it.businessNameSnapshot.equals(targetBizId, ignoreCase = true)) && (it.status == "PENDING" || it.status == "CONFIRMED") }
+
+        if (targetBizId.isBlank()) {
+            onSuccess(localActive)
+            return
+        }
+
+        db.collection(BOOKINGS)
+            .whereEqualTo("businessId", targetBizId)
+            .whereIn("status", listOf("PENDING", "CONFIRMED"))
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val cloudList = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Booking::class.java)?.copy(id = doc.id)
+                }
+                val merged = (cloudList + localActive).distinctBy { it.id }
+                onSuccess(merged)
+            }
+            .addOnFailureListener {
+                onSuccess(localActive)
+            }
+    }
+
+    /**
      * Real-time listener for business owner bookings.
      */
     fun listenToBookingsForBusiness(
