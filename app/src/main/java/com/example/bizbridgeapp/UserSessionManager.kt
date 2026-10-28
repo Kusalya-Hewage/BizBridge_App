@@ -231,6 +231,10 @@ object UserSessionManager {
             val trustScore = (data["trustScore"] as? Int) ?: existingBiz?.trustScore ?: 0
             val imageUrl = (data["imageUrl"] as? String)?.ifBlank { null } ?: existingBiz?.imageUrl
 
+            val effectiveAddr = (data["address"] as? String)?.takeIf { it.isNotBlank() }
+                ?: existingBiz?.address?.takeIf { it.isNotBlank() }
+                ?: "Colombo, Sri Lanka"
+
             saveApplication(
                 BusinessApplication(
                     id = appId,
@@ -239,9 +243,8 @@ object UserSessionManager {
                     businessName = bizName,
                     ownerName = ownerName,
                     email = normalizedEmail,
-                    contactNumber = phone,
                     category = category,
-                    val effectiveAddr = existingBiz?.address?.ifBlank { (profileData["address"] as? String)?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka" } ?: ((profileData["address"] as? String)?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka")
+                    contactNumber = phone,
                     address = effectiveAddr,
                     status = approvalStatus
                 )
@@ -249,8 +252,8 @@ object UserSessionManager {
 
             val (defaultLat, defaultLng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(
                 address = effectiveAddr,
-                existingLat = existingBiz?.latitude ?: (profileData["latitude"] as? Double),
-                existingLng = existingBiz?.longitude ?: (profileData["longitude"] as? Double)
+                existingLat = existingBiz?.latitude ?: (data["latitude"] as? Double),
+                existingLng = existingBiz?.longitude ?: (data["longitude"] as? Double)
             )
 
             saveBusiness(
