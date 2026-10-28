@@ -351,6 +351,7 @@ class ChooseDateTimeFragment : Fragment() {
             orientation = LinearLayout.HORIZONTAL
         }
 
+
         // Check if currently selected slot is still valid and not blocked
         var firstAvailableSlot: SlotInfo? = null
 
