@@ -1,59 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <group
-        android:pivotX="54"
-        android:pivotY="54"
-        android:scaleX="0.65"
-        android:scaleY="0.65"
-        android:translateX="4"
-        android:translateY="4">
-        <!-- Gradient Squircle Base -->
-        <path
-            android:pathData="M 28,6 C 14,6 6,14 6,28 L 6,72 C 6,86 14,94 28,94 L 72,94 C 86,94 94,86 94,72 L 94,28 C 94,14 86,6 72,6 Z">
-            <aapt:attr name="android:fillColor">
-                <gradient
-                    android:angle="135"
-                    android:endColor="#00C2A8"
-                    android:startColor="#1E6BEB"
-                    android:type="linear" />
-            </aapt:attr>
-        </path>
-
-        <!-- Left Figure Head -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M 33,35 A 7,7 0 1,1 33,21 A 7,7 0 1,1 33,35 Z" />
-
-        <!-- Left Figure Body -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M 20,53 C 20,44 26,41 33,41 C 40,41 46,44 46,53 Z" />
-
-        <!-- Right Figure Head -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M 67,35 A 7,7 0 1,1 67,21 A 7,7 0 1,1 67,35 Z" />
-
-        <!-- Right Figure Body / Shopkeeper -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M 54,53 C 54,44 60,41 67,41 C 74,41 80,44 80,53 Z" />
-
-        <!-- Bridge Arch in Foreground -->
-        <path
-            android:pathData="M 18,65 C 32,46 68,46 82,65 C 72,55 28,55 18,65 Z">
-            <aapt:attr name="android:fillColor">
-                <gradient
-                    android:angle="0"
-                    android:endColor="#20B8A6"
-                    android:startColor="#3B82F6"
-                    android:type="linear" />
-            </aapt:attr>
-        </path>
-    </group>
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="64dp"
+        android:height="64dp"
+        android:gravity="center"
+        android:drawable="@drawable/bizbridge_logo_full" />
+</layer-list>
