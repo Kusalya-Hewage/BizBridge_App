@@ -20,6 +20,10 @@ import com.google.firebase.auth.FirebaseAuth
 class NotificationsFragment : Fragment() {
 
     private var userNotifications: List<NotificationItem> = emptyList()
+    private var currentTab = "ALL"
+    private var containerNotifications: LinearLayout? = null
+    private var layoutEmptyNotifications: LinearLayout? = null
+    private var notificationsListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,101 +49,8 @@ class NotificationsFragment : Fragment() {
             Toast.makeText(requireContext(), "Notifications are up to date.", Toast.LENGTH_SHORT).show()
         }
 
-        // Active tab state
-        var currentTab = "ALL"
-
-        val container = view.findViewById<LinearLayout>(R.id.container_notifications)
-        val layoutEmpty = view.findViewById<LinearLayout>(R.id.layout_empty_notifications)
-
-        fun renderNotifications() {
-            if (!isAdded) return
-            val filtered = when (currentTab) {
-                "BOOKING" -> userNotifications.filter { it.category.equals("BOOKING", ignoreCase = true) }
-                "OFFER" -> userNotifications.filter { it.category.equals("OFFER", ignoreCase = true) || it.category.equals("PROMOTION", ignoreCase = true) }
-                else -> userNotifications
-            }
-
-            container?.removeAllViews()
-
-            if (filtered.isEmpty()) {
-                container?.visibility = View.GONE
-                layoutEmpty?.visibility = View.VISIBLE
-                return
-            }
-
-            container?.visibility = View.VISIBLE
-            layoutEmpty?.visibility = View.GONE
-
-            val inflater = LayoutInflater.from(requireContext())
-            for (item in filtered) {
-                val itemView = inflater.inflate(R.layout.item_notification_card, container, false)
-
-                val tvTitle = itemView.findViewById<TextView>(R.id.tv_notif_title)
-                val tvMessage = itemView.findViewById<TextView>(R.id.tv_notif_message)
-                val tvTime = itemView.findViewById<TextView>(R.id.tv_notif_time)
-                val viewUnreadDot = itemView.findViewById<View>(R.id.view_unread_dot)
-                val frameIcon = itemView.findViewById<FrameLayout>(R.id.frame_notif_icon)
-                val ivIcon = itemView.findViewById<ImageView>(R.id.iv_notif_icon)
-
-                tvTitle.text = item.title
-                tvMessage.text = item.message
-                viewUnreadDot.visibility = if (!item.isRead) View.VISIBLE else View.GONE
-
-                val timeStr = item.createdAt?.toDate()?.let { date ->
-                    val diffMs = java.lang.System.currentTimeMillis() - date.time
-                    val hours = diffMs / (1000 * 60 * 60)
-                    when {
-                        hours < 1 -> "Just now"
-                        hours < 24 -> "$hours hours ago"
-                        hours < 48 -> "Yesterday"
-                        else -> java.text.SimpleDateFormat("MMM d", java.util.Locale.US).format(date)
-                    }
-                } ?: "Recent"
-                tvTime.text = timeStr
-
-                val isOffer = item.category.equals("OFFER", ignoreCase = true) || item.category.equals("PROMOTION", ignoreCase = true)
-                val isCancelled = item.title.contains("cancel", ignoreCase = true) || item.message.contains("cancel", ignoreCase = true)
-                val isReminder = item.title.contains("reminder", ignoreCase = true) || item.message.contains("reminder", ignoreCase = true)
-
-                when {
-                    isOffer -> {
-                        frameIcon.setBackgroundResource(R.drawable.bg_tag_verified)
-                        ivIcon.setImageResource(R.drawable.ic_sparkle)
-                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.secondary_dark))
-                    }
-                    isCancelled -> {
-                        frameIcon.setBackgroundColor(android.graphics.Color.parseColor("#FEE2E2"))
-                        ivIcon.setImageResource(R.drawable.ic_cancel)
-                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.error_text))
-                    }
-                    isReminder -> {
-                        frameIcon.setBackgroundResource(R.drawable.bg_card_lavender)
-                        ivIcon.setImageResource(R.drawable.ic_clock)
-                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary))
-                    }
-                    else -> {
-                        frameIcon.setBackgroundResource(R.drawable.bg_card_lavender)
-                        ivIcon.setImageResource(R.drawable.ic_calendar)
-                        ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary))
-                    }
-                }
-
-                itemView.setOnClickListener {
-                    if (!item.isRead) {
-                        NotificationRepository.markAsRead(item.id, onSuccess = {}, onFailure = {})
-                        viewUnreadDot.visibility = View.GONE
-                    }
-
-                    if (item.relatedBookingId.isNotBlank()) {
-                        (activity as? MainActivity)?.navigateTo(BookingDetailsFragment.newInstance(item.relatedBookingId), addToBackStack = true)
-                    } else if (item.relatedBusinessId.isNotBlank()) {
-                        (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(item.relatedBusinessId), addToBackStack = true)
-                    }
-                }
-
-                container?.addView(itemView)
-            }
-        }
+        containerNotifications = view.findViewById<LinearLayout>(R.id.container_notifications)
+        layoutEmptyNotifications = view.findViewById<LinearLayout>(R.id.layout_empty_notifications)
 
         // Mark all as read
         val btnMarkAll = view.findViewById<TextView>(R.id.btn_mark_all_read)
@@ -166,7 +77,6 @@ class NotificationsFragment : Fragment() {
                 }
             )
         }
-
 
         // Tabs
         val tabAll = view.findViewById<LinearLayout>(R.id.tab_all)
@@ -223,7 +133,98 @@ class NotificationsFragment : Fragment() {
         }
     }
 
-    private var notificationsListener: com.google.firebase.firestore.ListenerRegistration? = null
+    private fun renderNotifications() {
+        if (!isAdded) return
+        val filtered = when (currentTab) {
+            "BOOKING" -> userNotifications.filter { it.category.equals("BOOKING", ignoreCase = true) }
+            "OFFER" -> userNotifications.filter { it.category.equals("OFFER", ignoreCase = true) || it.category.equals("PROMOTION", ignoreCase = true) }
+            else -> userNotifications
+        }
+
+        val container = containerNotifications ?: return
+        val layoutEmpty = layoutEmptyNotifications
+
+        container.removeAllViews()
+
+        if (filtered.isEmpty()) {
+            container.visibility = View.GONE
+            layoutEmpty?.visibility = View.VISIBLE
+            return
+        }
+
+        container.visibility = View.VISIBLE
+        layoutEmpty?.visibility = View.GONE
+
+        val inflater = LayoutInflater.from(requireContext())
+        for (item in filtered) {
+            val itemView = inflater.inflate(R.layout.item_notification_card, container, false)
+
+            val tvTitle = itemView.findViewById<TextView>(R.id.tv_notif_title)
+            val tvMessage = itemView.findViewById<TextView>(R.id.tv_notif_message)
+            val tvTime = itemView.findViewById<TextView>(R.id.tv_notif_time)
+            val viewUnreadDot = itemView.findViewById<View>(R.id.view_unread_dot)
+            val frameIcon = itemView.findViewById<FrameLayout>(R.id.frame_notif_icon)
+            val ivIcon = itemView.findViewById<ImageView>(R.id.iv_notif_icon)
+
+            tvTitle.text = item.title
+            tvMessage.text = item.message
+            viewUnreadDot.visibility = if (!item.isRead) View.VISIBLE else View.GONE
+
+            val timeStr = item.createdAt?.toDate()?.let { date ->
+                val diffMs = java.lang.System.currentTimeMillis() - date.time
+                val hours = diffMs / (1000 * 60 * 60)
+                when {
+                    hours < 1 -> "Just now"
+                    hours < 24 -> "$hours hours ago"
+                    hours < 48 -> "Yesterday"
+                    else -> java.text.SimpleDateFormat("MMM d", java.util.Locale.US).format(date)
+                }
+            } ?: "Recent"
+            tvTime.text = timeStr
+
+            val isOffer = item.category.equals("OFFER", ignoreCase = true) || item.category.equals("PROMOTION", ignoreCase = true)
+            val isCancelled = item.title.contains("cancel", ignoreCase = true) || item.message.contains("cancel", ignoreCase = true)
+            val isReminder = item.title.contains("reminder", ignoreCase = true) || item.message.contains("reminder", ignoreCase = true)
+
+            when {
+                isOffer -> {
+                    frameIcon.setBackgroundResource(R.drawable.bg_tag_verified)
+                    ivIcon.setImageResource(R.drawable.ic_sparkle)
+                    ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.secondary_dark))
+                }
+                isCancelled -> {
+                    frameIcon.setBackgroundColor(android.graphics.Color.parseColor("#FEE2E2"))
+                    ivIcon.setImageResource(R.drawable.ic_cancel)
+                    ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.error_text))
+                }
+                isReminder -> {
+                    frameIcon.setBackgroundResource(R.drawable.bg_card_lavender)
+                    ivIcon.setImageResource(R.drawable.ic_clock)
+                    ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary))
+                }
+                else -> {
+                    frameIcon.setBackgroundResource(R.drawable.bg_card_lavender)
+                    ivIcon.setImageResource(R.drawable.ic_calendar)
+                    ivIcon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary))
+                }
+            }
+
+            itemView.setOnClickListener {
+                if (!item.isRead) {
+                    NotificationRepository.markAsRead(item.id, onSuccess = {}, onFailure = {})
+                    viewUnreadDot.visibility = View.GONE
+                }
+
+                if (item.relatedBookingId.isNotBlank()) {
+                    (activity as? MainActivity)?.navigateTo(BookingDetailsFragment.newInstance(item.relatedBookingId), addToBackStack = true)
+                } else if (item.relatedBusinessId.isNotBlank()) {
+                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(item.relatedBusinessId), addToBackStack = true)
+                }
+            }
+
+            container.addView(itemView)
+        }
+    }
 
     private fun loadNotifications(uid: String, onLoaded: () -> Unit = {}) {
         notificationsListener?.remove()
@@ -231,6 +232,7 @@ class NotificationsFragment : Fragment() {
             if (!isAdded) return@listenToNotificationsForUser
             userNotifications = list
             renderNotifications()
+            onLoaded()
             if (list.isEmpty() && uid.isNotBlank()) {
                 // If there are real customer bookings, automatically generate corresponding notifications
                 BookingRepository.getBookingsForCustomer(uid,
@@ -256,12 +258,13 @@ class NotificationsFragment : Fragment() {
                     onFailure = {}
                 )
             }
-            onLoaded()
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         notificationsListener?.remove()
+        containerNotifications = null
+        layoutEmptyNotifications = null
     }
 }
