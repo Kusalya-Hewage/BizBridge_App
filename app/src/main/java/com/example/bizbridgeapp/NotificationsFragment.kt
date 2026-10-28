@@ -216,7 +216,18 @@ class NotificationsFragment : Fragment() {
                 }
 
                 if (item.relatedBookingId.isNotBlank()) {
-                    (activity as? MainActivity)?.navigateTo(BookingDetailsFragment.newInstance(item.relatedBookingId), addToBackStack = true)
+                    if (item.title.contains("Completed", ignoreCase = true) || item.message.contains("completed", ignoreCase = true) || item.message.contains("review", ignoreCase = true)) {
+                        (activity as? MainActivity)?.navigateTo(
+                            WriteReviewFragment.newInstance(
+                                bookingId = item.relatedBookingId,
+                                businessId = item.relatedBusinessId,
+                                businessName = ""
+                            ),
+                            addToBackStack = true
+                        )
+                    } else {
+                        (activity as? MainActivity)?.navigateTo(BookingDetailsFragment.newInstance(item.relatedBookingId), addToBackStack = true)
+                    }
                 } else if (item.relatedBusinessId.isNotBlank()) {
                     (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(item.relatedBusinessId), addToBackStack = true)
                 }
@@ -245,7 +256,7 @@ class NotificationsFragment : Fragment() {
                                     id = "notif_bk_${b.id}",
                                     userId = uid,
                                     title = "Booking $statusLabel",
-                                    message = "${b.businessNameSnapshot} • ${b.serviceNameSnapshot} on ${b.appointmentDate} at ${b.appointmentTime}",
+                                    message = "${b.businessNameSnapshot} â€¢ ${b.serviceNameSnapshot} on ${b.appointmentDate} at ${b.appointmentTime}",
                                     category = "BOOKING",
                                     relatedBookingId = b.id,
                                     relatedBusinessId = b.businessId,
