@@ -1,4 +1,4 @@
-package com.example.bizbridgeapp
+﻿package com.example.bizbridgeapp
 
 import android.os.Bundle
 import android.text.Editable
@@ -58,7 +58,7 @@ class WriteReviewFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // ─── Bind Real Business & Booking Details ──────────────────────
+        // â”€â”€â”€ Bind Real Business & Booking Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         val tvBusinessName = view.findViewById<TextView>(R.id.tv_business_name)
         val tvBusinessInitials = view.findViewById<TextView>(R.id.tv_business_initials)
         val tvServiceDateTime = view.findViewById<TextView>(R.id.tv_service_datetime)
@@ -90,7 +90,7 @@ class WriteReviewFragment : Fragment() {
                     if (!isAdded || b == null) return@getBookingById
                     businessId = b.businessId.ifEmpty { businessId }
                     businessName = b.businessNameSnapshot.ifEmpty { businessName }
-                    val dt = "${b.serviceNameSnapshot} • ${b.appointmentDate}"
+                    val dt = "${b.serviceNameSnapshot} â€¢ ${b.appointmentDate}"
                     val ref = b.qrReference.ifEmpty { b.id }
                     updateBusinessUI(b.businessNameSnapshot, dt, ref, b.status)
                 },
@@ -108,7 +108,7 @@ class WriteReviewFragment : Fragment() {
                             bookingId = latest.id
                             businessId = latest.businessId
                             businessName = latest.businessNameSnapshot
-                            val dt = "${latest.serviceNameSnapshot} • ${latest.appointmentDate}"
+                            val dt = "${latest.serviceNameSnapshot} â€¢ ${latest.appointmentDate}"
                             val ref = latest.qrReference.ifEmpty { latest.id }
                             updateBusinessUI(latest.businessNameSnapshot, dt, ref, latest.status)
                         }
@@ -118,7 +118,7 @@ class WriteReviewFragment : Fragment() {
             }
         }
 
-        // ─── Star Rating Setup ─────────────────────────────────────────
+        // â”€â”€â”€ Star Rating Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         val star1 = view.findViewById<ImageView>(R.id.star_1)
         val star2 = view.findViewById<ImageView>(R.id.star_2)
         val star3 = view.findViewById<ImageView>(R.id.star_3)
@@ -140,7 +140,7 @@ class WriteReviewFragment : Fragment() {
                     star?.setImageResource(R.drawable.ic_star_outline)
                 }
             }
-            val labels = listOf("1 out of 5 · Poor", "2 out of 5 · Fair", "3 out of 5 · Good", "4 out of 5 · Excellent", "5 out of 5 · Outstanding")
+            val labels = listOf("1 out of 5 Â· Poor", "2 out of 5 Â· Fair", "3 out of 5 Â· Good", "4 out of 5 Â· Excellent", "5 out of 5 Â· Outstanding")
             tvRatingLabel?.text = labels.getOrElse(rating - 1) { "$rating out of 5" }
         }
 
@@ -150,7 +150,7 @@ class WriteReviewFragment : Fragment() {
             star?.setOnClickListener { updateRating(index + 1) }
         }
 
-        // ─── Character Counter Setup ───────────────────────────────────
+        // â”€â”€â”€ Character Counter Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         tvCharCount?.text = "${etReview?.text?.length ?: 0} / 500 characters"
         etReview?.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -160,7 +160,7 @@ class WriteReviewFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // ─── Submit Review Button ──────────────────────────────────────
+        // â”€â”€â”€ Submit Review Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         btnSubmit?.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
             if (user == null) {
