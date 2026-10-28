@@ -119,7 +119,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:fontFamily="@font/inter_variable"
-                        android:text="MC"
+                        android:text="G"
                         android:textColor="@color/white"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -140,7 +140,7 @@
                     android:layout_marginTop="10dp"
                     android:fontFamily="@font/inter_variable"
                     android:id="@+id/tv_profile_name"
-                    android:text="Maya Chen"
+                    android:text="Guest Customer"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -151,7 +151,7 @@
                     android:layout_marginTop="2dp"
                     android:fontFamily="@font/inter_variable"
                     android:id="@+id/tv_profile_email"
-                    android:text="maya.chen@example.com"
+                    android:text="Sign in to access your profile"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp" />
 
@@ -161,7 +161,7 @@
                     android:layout_marginTop="2dp"
                     android:fontFamily="@font/inter_variable"
                     android:id="@+id/tv_profile_phone"
-                    android:text="(415) 555-0192"
+                    android:text=""
                     android:textColor="@color/text_muted"
                     android:textSize="12sp" />
 
