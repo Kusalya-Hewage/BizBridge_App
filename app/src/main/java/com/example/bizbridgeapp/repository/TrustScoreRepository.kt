@@ -110,11 +110,13 @@ object TrustScoreRepository {
     }
 
     private fun getRelevantLocalDocs(targetId: String): List<QualificationDocument> {
+        if (targetId.isNotBlank()) {
+            return UserSessionManager.getAllQualificationDocuments().filter { it.businessId == targetId }
+        }
         val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
             ?: (UserSessionManager.getProfile()?.get("uid") as? String)
         val sessionBizName = (UserSessionManager.getProfile()?.get("businessName") as? String)?.trim()?.lowercase()
         return UserSessionManager.getAllQualificationDocuments().filter {
-            it.businessId == targetId ||
             (!currentUid.isNullOrBlank() && it.ownerId == currentUid) ||
             (!sessionBizName.isNullOrBlank() && it.businessName.trim().lowercase() == sessionBizName)
         }
@@ -122,25 +124,31 @@ object TrustScoreRepository {
 
     fun getLocalTrustScoreBreakdown(businessId: String): TrustScoreBreakdown {
         val targetId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
-        val localBiz = UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
-            ?: UserSessionManager.getAllBusinesses().firstOrNull {
-                val sessionName = (UserSessionManager.getProfile()?.get("businessName") as? String)?.trim()?.lowercase()
+        val localBiz = if (targetId.isNotBlank()) {
+            UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
+        } else {
+            val sessionName = (UserSessionManager.getProfile()?.get("businessName") as? String)?.trim()?.lowercase()
+            UserSessionManager.getAllBusinesses().firstOrNull {
                 !sessionName.isNullOrBlank() && it.name.trim().lowercase() == sessionName
             }
+        }
         val localDocs = getRelevantLocalDocs(targetId)
         return computeBreakdown(localBiz, localDocs)
     }
 
     fun getTrustScoreBreakdown(businessId: String, onComplete: (TrustScoreBreakdown) -> Unit) {
         val targetId = if (businessId.isNotBlank()) businessId else BusinessRepository.getOwnerBusinessId()
-        val localBreakdown = getLocalTrustScoreBreakdown(targetId)
-        onComplete(localBreakdown)
+        val localBiz = if (targetId.isNotBlank()) {
+            UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
+        } else null
 
-        val localBiz = UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
-            ?: UserSessionManager.getAllBusinesses().firstOrNull {
-                val sessionName = (UserSessionManager.getProfile()?.get("businessName") as? String)?.trim()?.lowercase()
-                !sessionName.isNullOrBlank() && it.name.trim().lowercase() == sessionName
-            }
+        // Only emit fast-path local breakdown if we genuinely have this business cached locally
+        if (localBiz != null) {
+            val localDocs = getRelevantLocalDocs(targetId)
+            val localBreakdown = computeBreakdown(localBiz, localDocs)
+            onComplete(localBreakdown)
+        }
+
         val localDocs = getRelevantLocalDocs(targetId)
         val currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
             ?: (UserSessionManager.getProfile()?.get("uid") as? String)
@@ -175,7 +183,7 @@ object TrustScoreRepository {
                     val remoteDocs = docSnap.documents.mapNotNull { it.toObject(QualificationDocument::class.java)?.copy(id = it.id) }
                     val combinedDocs = (localDocs + remoteDocs).distinctBy { it.id }
 
-                    if (combinedDocs.isEmpty() && !currentUid.isNullOrBlank()) {
+                    if (combinedDocs.isEmpty() && targetId.isBlank() && !currentUid.isNullOrBlank()) {
                         db.collection("qualificationVerifications")
                             .whereEqualTo("ownerId", currentUid)
                             .get()

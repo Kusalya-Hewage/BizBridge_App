@@ -242,7 +242,15 @@ class CustomerHomeFragment : Fragment() {
                     }
                     cardPromo?.setOnClickListener {
                         if (activePromo.businessId.isNotBlank()) {
-                            (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(activePromo.businessId), addToBackStack = true)
+                            (activity as? MainActivity)?.navigateTo(
+                                BusinessDetailsFragment.newInstance(
+                                    businessId = activePromo.businessId,
+                                    businessName = activePromo.businessName,
+                                    imageUrl = activePromo.imageUrl,
+                                    description = activePromo.description
+                                ),
+                                addToBackStack = true
+                            )
                         }
                     }
                 } else {
@@ -306,7 +314,20 @@ class CustomerHomeFragment : Fragment() {
             }
 
             cardNearby?.setOnClickListener {
-                (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(b0.id), addToBackStack = true)
+                (activity as? MainActivity)?.navigateTo(
+                    BusinessDetailsFragment.newInstance(
+                        businessId = b0.id,
+                        businessName = b0.name,
+                        category = b0.category,
+                        address = b0.address,
+                        imageUrl = b0.imageUrl,
+                        rating = b0.rating,
+                        reviewCount = b0.reviewCount,
+                        trustScore = b0.trustScore,
+                        description = b0.description
+                    ),
+                    addToBackStack = true
+                )
             }
 
             // Bind Popular cards dynamically
@@ -338,7 +359,20 @@ class CustomerHomeFragment : Fragment() {
                 tvReviews?.text = "(${biz.reviewCount})"
 
                 cardView.setOnClickListener {
-                    (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(biz.id), addToBackStack = true)
+                    (activity as? MainActivity)?.navigateTo(
+                        BusinessDetailsFragment.newInstance(
+                            businessId = biz.id,
+                            businessName = biz.name,
+                            category = biz.category,
+                            address = biz.address,
+                            imageUrl = biz.imageUrl,
+                            rating = biz.rating,
+                            reviewCount = biz.reviewCount,
+                            trustScore = biz.trustScore,
+                            description = biz.description
+                        ),
+                        addToBackStack = true
+                    )
                 }
             }
 
@@ -542,23 +576,18 @@ class CustomerHomeFragment : Fragment() {
         val b0 = activeBusinesses[0]
         val tvNearbyDistance = view?.findViewById<TextView>(R.id.tv_nearby_distance) ?: return
 
-        val lat = b0.latitude
-        val lng = b0.longitude
-        if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
-            val bizLoc = Location("").apply {
-                latitude = lat
-                longitude = lng
-            }
-            val meters = location.distanceTo(bizLoc)
-            val distStr = if (meters < 1000) {
-                "${meters.toInt()}m away"
-            } else {
-                String.format(Locale.US, "%.1f km away", meters / 1000f)
-            }
-            tvNearbyDistance.text = if (b0.address.isNotBlank()) "${b0.address} · $distStr" else distStr
-        } else if (b0.address.isNotBlank()) {
-            tvNearbyDistance.text = b0.address
+        val (lat, lng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(b0.address, b0.latitude, b0.longitude)
+        val bizLoc = Location("").apply {
+            latitude = lat
+            longitude = lng
         }
+        val meters = location.distanceTo(bizLoc)
+        val distStr = if (meters < 1000) {
+            "${meters.toInt()}m away"
+        } else {
+            String.format(Locale.US, "%.1f km away", meters / 1000f)
+        }
+        tvNearbyDistance.text = if (b0.address.isNotBlank()) "${b0.address} · $distStr" else distStr
     }
 
     override fun onDestroyView() {

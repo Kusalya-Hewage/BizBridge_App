@@ -64,7 +64,7 @@
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="Juniper Studio"
+                        android:text=""
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -259,7 +259,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/inter_variable"
                             android:letterSpacing="0.06"
-                            android:text="Trust Score : demonstration"
+                            android:text="TRUST SCORE"
                             android:textColor="@color/primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
@@ -270,7 +270,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:fontFamily="@font/inter_variable"
-                            android:text="84 / 100"
+                            android:text="— / 100"
                             android:textColor="@color/text_primary"
                             android:textSize="28sp"
                             android:textStyle="bold" />
@@ -291,7 +291,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:fontFamily="@font/inter_variable"
-                    android:text="Business is sample assets. Not verified locally."
+                    android:text="Verified Trust Score standing"
                     android:textColor="@color/text_muted"
                     android:textSize="12sp" />
 
@@ -319,7 +319,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="24/30"
+                        android:text="—/30"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -343,7 +343,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="20/20"
+                        android:text="—/25"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -367,7 +367,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="15/15"
+                        android:text="—/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -391,7 +391,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="15/15"
+                        android:text="—/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -415,7 +415,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="@font/inter_variable"
-                        android:text="10/20"
+                        android:text="—/15"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />

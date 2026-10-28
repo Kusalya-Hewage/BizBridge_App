@@ -76,6 +76,7 @@ class RegisterOwnerFragment : Fragment() {
         val etBusinessName = view.findViewById<EditText>(R.id.et_business_name)
         val etBusinessEmail = view.findViewById<EditText>(R.id.et_business_email)
         val etPhone = view.findViewById<EditText>(R.id.et_phone)
+        val etAddress = view.findViewById<EditText>(R.id.et_business_address)
         val etPassword = view.findViewById<EditText>(R.id.et_password)
         val btnTogglePassword = view.findViewById<ImageView>(R.id.btn_toggle_password)
         val btnCreateOwnerAccount = view.findViewById<Button>(R.id.btn_create_owner_account)
@@ -131,6 +132,7 @@ class RegisterOwnerFragment : Fragment() {
             val businessName = etBusinessName?.text?.toString()?.trim().orEmpty()
             val email = etBusinessEmail?.text?.toString()?.trim().orEmpty()
             val phone = etPhone?.text?.toString()?.trim().orEmpty()
+            val address = etAddress?.text?.toString()?.trim()?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka"
             val password = etPassword?.text?.toString().orEmpty()
             val docTitleInput = etDocTitle?.text?.toString()?.trim().orEmpty()
             val docIssuerInput = etDocIssuer?.text?.toString()?.trim().orEmpty()
@@ -169,18 +171,21 @@ class RegisterOwnerFragment : Fragment() {
             } else null
             val effectiveOwnerPhoto = localOwnerPhotoPath ?: ownerPhotoUri?.toString() ?: ""
 
+            val (lat, lng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(address)
+
             val initialProfile = mapOf(
                 "uid" to localUid,
                 "fullName" to ownerName,
                 "email" to email,
                 "phone" to phone,
+                "address" to address,
                 "role" to "BUSINESS_OWNER",
                 "profileImageUrl" to effectiveOwnerPhoto,
                 "businessId" to localBizId,
                 "businessName" to businessName,
                 "category" to category,
-                "latitude" to 6.9271,
-                "longitude" to 79.8612,
+                "latitude" to lat,
+                "longitude" to lng,
                 "accountStatus" to "ACTIVE"
             )
             // Pre-save account locally so the user can always log in immediately
@@ -227,13 +232,14 @@ class RegisterOwnerFragment : Fragment() {
                     "fullName" to ownerName,
                     "email" to email,
                     "phone" to phone,
+                    "address" to address,
                     "role" to "BUSINESS_OWNER",
                     "profileImageUrl" to effectiveOwnerPhoto,
                     "businessId" to finalBizId,
                     "businessName" to businessName,
                     "category" to category,
-                    "latitude" to 6.9271,
-                    "longitude" to 79.8612,
+                    "latitude" to lat,
+                    "longitude" to lng,
                     "accountStatus" to "ACTIVE"
                 )
                 UserSessionManager.saveRegisteredAccount(email, password, finalProfile)
@@ -261,6 +267,7 @@ class RegisterOwnerFragment : Fragment() {
                 businessName = businessName,
                 category = category,
                 phone = phone,
+                address = address,
                 email = email,
                 password = password,
                 profileImageUri = ownerPhotoUri,

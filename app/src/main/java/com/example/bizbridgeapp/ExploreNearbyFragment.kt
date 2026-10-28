@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.bizbridgeapp.model.Business
 import com.example.bizbridgeapp.repository.BusinessRepository
+import com.example.bizbridgeapp.utils.LocationUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -99,9 +100,22 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
 
         // View Details button & card click
         val openDetails = View.OnClickListener {
-            val bizId = selectedBusiness?.id
-            if (!bizId.isNullOrBlank()) {
-                (activity as? MainActivity)?.navigateTo(BusinessDetailsFragment.newInstance(bizId), addToBackStack = true)
+            val biz = selectedBusiness
+            if (biz != null && biz.id.isNotBlank()) {
+                (activity as? MainActivity)?.navigateTo(
+                    BusinessDetailsFragment.newInstance(
+                        businessId = biz.id,
+                        businessName = biz.name,
+                        category = biz.category,
+                        address = biz.address,
+                        imageUrl = biz.imageUrl,
+                        rating = biz.rating,
+                        reviewCount = biz.reviewCount,
+                        trustScore = biz.trustScore,
+                        description = biz.description
+                    ),
+                    addToBackStack = true
+                )
             }
         }
         view.findViewById<Button>(R.id.btn_view_details)?.setOnClickListener(openDetails)
@@ -195,17 +209,33 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
                 if (!isAdded) return@addOnSuccessListener
                 if (loc != null) {
                     userLocation = loc
-                    val userLatLng = LatLng(loc.latitude, loc.longitude)
-                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 14f))
+                    // Check if location is in Sri Lanka (avoid emulator defaulting to Mountain View, California)
+                    if (LocationUtils.isWithinSriLanka(loc.latitude, loc.longitude)) {
+                        val userLatLng = LatLng(loc.latitude, loc.longitude)
+                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 14f))
+                    } else {
+                        focusOnBusinessesOrSriLanka()
+                    }
                     if (allBusinesses.isNotEmpty()) {
                         updateMarkers(allBusinesses)
                     }
                 } else {
-                    zoomToColombo()
+                    focusOnBusinessesOrSriLanka()
                 }
             }.addOnFailureListener {
-                zoomToColombo()
+                focusOnBusinessesOrSriLanka()
             }
+        }
+    }
+
+    private fun focusOnBusinessesOrSriLanka() {
+        val map = googleMap ?: return
+        if (allBusinesses.isNotEmpty()) {
+            val toSelect = selectedBusiness?.takeIf { b -> allBusinesses.any { it.id == b.id } } ?: allBusinesses.first()
+            val pos = getEffectiveCoordinates(toSelect)
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 14f))
+        } else {
+            zoomToColombo()
         }
     }
 
@@ -229,26 +259,15 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun getEffectiveCoordinates(biz: Business): LatLng {
-        val lat = biz.latitude
-        val lng = biz.longitude
-        if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
-            return LatLng(lat, lng)
-        }
-        val addr = biz.address.lowercase(Locale.ROOT)
-        val baseCoords = when {
-            addr.contains("kandy") -> LatLng(7.2906, 80.6337)
-            addr.contains("galle") -> LatLng(6.0535, 80.2210)
-            addr.contains("negombo") -> LatLng(7.2008, 79.8736)
-            addr.contains("matara") -> LatLng(5.9549, 80.5550)
-            addr.contains("jaffna") -> LatLng(9.6615, 80.0255)
-            addr.contains("kurunegala") -> LatLng(7.4863, 80.3623)
-            addr.contains("gampaha") -> LatLng(7.0840, 79.9925)
-            else -> LatLng(6.9271, 79.8612) // Colombo default
-        }
+        val (baseLat, baseLng) = LocationUtils.resolveCoordinates(
+            address = biz.address,
+            existingLat = biz.latitude,
+            existingLng = biz.longitude
+        )
         val hash = Math.abs(biz.id.ifBlank { biz.name }.hashCode())
         val offsetLat = ((hash % 100) - 50) * 0.0003
         val offsetLng = (((hash / 100) % 100) - 50) * 0.0003
-        return LatLng(baseCoords.latitude + offsetLat, baseCoords.longitude + offsetLng)
+        return LatLng(baseLat + offsetLat, baseLng + offsetLng)
     }
 
     private fun updateMarkers(businesses: List<Business>) {
@@ -311,12 +330,12 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         tvName?.text = biz.name
 
         val coords = getEffectiveCoordinates(biz)
-        val distanceText = userLocation?.let { loc ->
+        val distanceText = userLocation?.takeIf { LocationUtils.isWithinSriLanka(it.latitude, it.longitude) }?.let { loc ->
             val results = FloatArray(1)
             Location.distanceBetween(loc.latitude, loc.longitude, coords.latitude, coords.longitude, results)
             val km = results[0] / 1000f
             String.format(Locale.US, "%.1f km away", km)
-        } ?: "Colombo"
+        } ?: (biz.address.split(",").lastOrNull()?.trim()?.takeIf { it.isNotBlank() } ?: biz.address.takeIf { it.isNotBlank() } ?: "Sri Lanka")
 
         tvCategoryDist?.text = "${biz.category} • $distanceText"
         val ratingVal = if (biz.rating != null && biz.rating > 0.0) String.format(Locale.US, "%.1f", biz.rating) else "5.0"

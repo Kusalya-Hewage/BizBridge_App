@@ -137,7 +137,7 @@ class AdminBusinessListingsFragment : Fragment() {
             .setTitle("Moderate Business: $bizName")
             .setItems(arrayOf("View Details", "Approve & Activate Listing", "Suspend Listing")) { _, which ->
                 when (which) {
-                    0 -> mainActivity?.navigateTo(BusinessDetailsFragment.newInstance(bizId), addToBackStack = true)
+                    0 -> mainActivity?.navigateTo(BusinessDetailsFragment.newInstance(bizId, businessName = bizName), addToBackStack = true)
                     1 -> {
                         AdminRepository.updateBusinessStatus(
                             businessId = bizId,

@@ -23,10 +23,29 @@ class BusinessDetailsFragment : Fragment() {
     private var currentBusinessAddress: String? = null
 
     companion object {
-        fun newInstance(businessId: String): BusinessDetailsFragment {
+        fun newInstance(
+            businessId: String,
+            businessName: String? = null,
+            category: String? = null,
+            address: String? = null,
+            imageUrl: String? = null,
+            rating: Double? = null,
+            reviewCount: Int? = null,
+            trustScore: Int? = null,
+            description: String? = null
+        ): BusinessDetailsFragment {
             val fragment = BusinessDetailsFragment()
-            val args = Bundle()
-            args.putString("businessId", businessId)
+            val args = Bundle().apply {
+                putString("businessId", businessId)
+                if (!businessName.isNullOrBlank()) putString("businessName", businessName)
+                if (!category.isNullOrBlank()) putString("category", category)
+                if (!address.isNullOrBlank()) putString("address", address)
+                if (!imageUrl.isNullOrBlank()) putString("imageUrl", imageUrl)
+                if (rating != null) putDouble("rating", rating)
+                if (reviewCount != null) putInt("reviewCount", reviewCount)
+                if (trustScore != null) putInt("trustScore", trustScore)
+                if (!description.isNullOrBlank()) putString("description", description)
+            }
             fragment.arguments = args
             return fragment
         }
@@ -43,6 +62,9 @@ class BusinessDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val bId = arguments?.getString("businessId").orEmpty()
+        currentBusinessId = bId
+
         // Back button
         view.findViewById<ImageView>(R.id.btn_back)?.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -57,20 +79,74 @@ class BusinessDetailsFragment : Fragment() {
             (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
 
-        // Reset views immediately so no wrong business data flashes
-        view.findViewById<TextView>(R.id.txt_business_name)?.text = ""
-        view.findViewById<TextView>(R.id.txt_business_name_main)?.text = "Loading..."
-        view.findViewById<TextView>(R.id.txt_category)?.text = ""
-        view.findViewById<TextView>(R.id.txt_rating)?.text = ""
-        view.findViewById<TextView>(R.id.txt_address)?.text = ""
-        view.findViewById<TextView>(R.id.txt_description)?.text = ""
+        // Check for passed argument data or exact local business cache
+        val argName = arguments?.getString("businessName")
+        val argCat = arguments?.getString("category")
+        val argAddr = arguments?.getString("address")
+        val argImg = arguments?.getString("imageUrl")
+        val argRating = if (arguments?.containsKey("rating") == true) arguments?.getDouble("rating") else null
+        val argReviews = if (arguments?.containsKey("reviewCount") == true) arguments?.getInt("reviewCount") else null
+        val argTrust = if (arguments?.containsKey("trustScore") == true) arguments?.getInt("trustScore") else null
+        val argDesc = arguments?.getString("description")
 
-        // Load business details
-        val bId = arguments?.getString("businessId")
-        if (!bId.isNullOrBlank()) {
+        val localMatch = if (bId.isNotBlank()) {
+            com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == bId }
+        } else null
+
+        val initialName = argName ?: localMatch?.name
+        val initialCategory = argCat ?: localMatch?.category
+        val initialAddress = argAddr ?: localMatch?.address
+        val initialImg = argImg ?: localMatch?.imageUrl
+        val initialRating = argRating ?: localMatch?.rating
+        val initialReviews = argReviews ?: localMatch?.reviewCount ?: 0
+        val initialTrust = argTrust ?: localMatch?.trustScore
+        val initialDesc = argDesc ?: localMatch?.description
+
+        // Bind initial known data or clean loading state immediately (prevents flashing demo/other business)
+        if (!initialName.isNullOrBlank()) {
+            currentBusinessName = initialName
+            view.findViewById<TextView>(R.id.txt_business_name)?.text = initialName
+            view.findViewById<TextView>(R.id.txt_business_name_main)?.text = initialName
+        } else {
+            view.findViewById<TextView>(R.id.txt_business_name)?.text = ""
+            view.findViewById<TextView>(R.id.txt_business_name_main)?.text = "Loading..."
+        }
+
+        view.findViewById<TextView>(R.id.txt_category)?.text = initialCategory ?: ""
+        view.findViewById<TextView>(R.id.txt_address)?.text = if (!initialAddress.isNullOrBlank()) initialAddress else ""
+        view.findViewById<TextView>(R.id.txt_description)?.text = if (!initialDesc.isNullOrBlank()) initialDesc else ""
+
+        if (initialRating != null && initialRating > 0) {
+            val ratingStr = String.format(java.util.Locale.US, "%.1f", initialRating)
+            view.findViewById<TextView>(R.id.txt_rating)?.text = "$ratingStr ($initialReviews reviews)"
+        } else {
+            view.findViewById<TextView>(R.id.txt_rating)?.text = ""
+        }
+
+        if (initialTrust != null && initialTrust > 0) {
+            view.findViewById<TextView>(R.id.txt_trust_score)?.text = "$initialTrust / 100"
+            view.findViewById<TextView>(R.id.txt_trust_score_caption)?.text = "Verified Trust Score standing"
+        } else {
+            view.findViewById<TextView>(R.id.txt_trust_score)?.text = "— / 100"
+            view.findViewById<TextView>(R.id.txt_trust_score_caption)?.text = "Verified Trust Score standing"
+        }
+
+        // Reset metrics cleanly to neutral placeholders
+        view.findViewById<TextView>(R.id.txt_metric_qualifications)?.text = "—/30"
+        view.findViewById<TextView>(R.id.txt_metric_experience)?.text = "—/25"
+        view.findViewById<TextView>(R.id.txt_metric_profile)?.text = "—/15"
+        view.findViewById<TextView>(R.id.txt_metric_documents)?.text = "—/15"
+        view.findViewById<TextView>(R.id.txt_metric_reviews)?.text = "—/15"
+
+        val imgView = view.findViewById<ImageView>(R.id.img_business)
+        if (imgView != null && !initialImg.isNullOrBlank()) {
+            com.example.bizbridgeapp.utils.ImageLoader.loadImage(imgView, initialImg, R.drawable.img_salon_interior)
+        }
+
+        // Load complete business details from repository
+        if (bId.isNotBlank()) {
             loadBusiness(bId)
         } else {
-            // Load first available approved active business as fallback
             BusinessRepository.getApprovedActiveBusinesses(
                 onSuccess = { list ->
                     list.firstOrNull()?.let { b ->
@@ -88,6 +164,9 @@ class BusinessDetailsFragment : Fragment() {
             onSuccess = { business ->
                 business?.let {
                     if (!isAdded) return@let
+                    if (it.id != businessId && !it.name.equals(businessId, ignoreCase = true)) {
+                        return@let
+                    }
                     currentBusinessName = it.name
                     currentBusinessAddress = it.address
                     view?.findViewById<TextView>(R.id.txt_business_name)?.text = it.name
@@ -98,7 +177,7 @@ class BusinessDetailsFragment : Fragment() {
                     view?.findViewById<TextView>(R.id.txt_description)?.text = if (it.description.isNotBlank()) it.description else "Welcome to ${it.name}! Professional services tailored for you."
                     view?.findViewById<TextView>(R.id.txt_address)?.text = if (it.address.isNotBlank()) it.address else "Colombo, Sri Lanka"
 
-                    // Dynamically load Trust Score and all 5 breakdown metrics
+                    // Dynamically load Trust Score and all 5 breakdown metrics specifically for this business
                     TrustScoreRepository.getTrustScoreBreakdown(businessId) { breakdown ->
                         if (!isAdded) return@getTrustScoreBreakdown
                         view?.findViewById<TextView>(R.id.txt_trust_score)?.text = "${breakdown.totalScore} / 100"
@@ -118,13 +197,13 @@ class BusinessDetailsFragment : Fragment() {
                     // Dynamically load services for this business
                     loadServices(businessId, it.name)
                 } ?: run {
-                    if (isAdded) {
+                    if (isAdded && currentBusinessName.isNullOrBlank()) {
                         android.widget.Toast.makeText(requireContext(), "Business not found or not accessible", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 }
             },
             onFailure = { e ->
-                if (isAdded) {
+                if (isAdded && currentBusinessName.isNullOrBlank()) {
                     android.widget.Toast.makeText(requireContext(), "Error loading business: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                 }
             }

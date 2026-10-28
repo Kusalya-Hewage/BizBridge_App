@@ -1,5 +1,7 @@
 package com.example.bizbridgeapp
 
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -9,8 +11,11 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.example.bizbridgeapp.model.Booking
+import com.example.bizbridgeapp.repository.BookingRepository
 import com.example.bizbridgeapp.repository.BusinessRepository
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -22,21 +27,19 @@ class ChooseDateTimeFragment : Fragment() {
     private var businessName: String = ""
     private var serviceId: String = ""
     private var serviceName: String = ""
-    private var servicePrice: Double = 0.0
+    private var servicePrice: Double = 45.0
     private var serviceDuration: Int = 45
-    private var selectedDate: String = ""
-    private var selectedTime: String = ""
 
-    private val calendarDates = mutableListOf<CalendarDateItem>()
-    private var selectedDateIndex = 0
-    private val slotViews = mutableListOf<TextView>()
+    // Calendar state
+    private val calendarViewMonth = Calendar.getInstance()
+    private var selectedYear: Int = 0
+    private var selectedMonth: Int = 0
+    private var selectedDay: Int = 0
+    private var selectedTimeSlot: String = ""
 
-    data class CalendarDateItem(
-        val fullDateString: String,
-        val dayOfWeek: String,
-        val dayOfMonth: String,
-        val monthShort: String
-    )
+    // Bookings to check slot conflicts
+    private var activeBookings: List<Booking> = emptyList()
+    private var openingHoursString: String = "9:00 AM - 7:00 PM"
 
     companion object {
         fun newInstance(
@@ -48,13 +51,14 @@ class ChooseDateTimeFragment : Fragment() {
             serviceDuration: Int
         ): ChooseDateTimeFragment {
             val frag = ChooseDateTimeFragment()
-            val args = Bundle()
-            args.putString("businessId", businessId)
-            args.putString("businessName", businessName)
-            args.putString("serviceId", serviceId)
-            args.putString("serviceName", serviceName)
-            args.putDouble("servicePrice", servicePrice)
-            args.putInt("serviceDuration", serviceDuration)
+            val args = Bundle().apply {
+                putString("businessId", businessId)
+                putString("businessName", businessName)
+                putString("serviceId", serviceId)
+                putString("serviceName", serviceName)
+                putDouble("servicePrice", servicePrice)
+                putInt("serviceDuration", serviceDuration)
+            }
             frag.arguments = args
             return frag
         }
@@ -69,7 +73,7 @@ class ChooseDateTimeFragment : Fragment() {
         businessName = arguments?.getString("businessName").orEmpty()
         serviceId = arguments?.getString("serviceId").orEmpty()
         serviceName = arguments?.getString("serviceName").orEmpty()
-        servicePrice = arguments?.getDouble("servicePrice") ?: 0.0
+        servicePrice = arguments?.getDouble("servicePrice") ?: 45.0
         serviceDuration = arguments?.getInt("serviceDuration") ?: 45
         return inflater.inflate(R.layout.fragment_choose_date_time, container, false)
     }
@@ -77,103 +81,71 @@ class ChooseDateTimeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Header back
+        // Initialize selected date to today (or default to current day)
+        val today = Calendar.getInstance()
+        selectedYear = today.get(Calendar.YEAR)
+        selectedMonth = today.get(Calendar.MONTH)
+        selectedDay = today.get(Calendar.DAY_OF_MONTH)
+
+        calendarViewMonth.set(Calendar.YEAR, selectedYear)
+        calendarViewMonth.set(Calendar.MONTH, selectedMonth)
+        calendarViewMonth.set(Calendar.DAY_OF_MONTH, 1)
+
+        // Header back button
         view.findViewById<ImageView>(R.id.btn_back)?.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
-        // Action back
+        // Bottom action back button
         view.findViewById<Button>(R.id.btn_action_back)?.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
-        view.findViewById<TextView>(R.id.tv_choose_service_summary)?.text =
-            "$serviceName • $serviceDuration min • $${servicePrice.toInt()}"
-
-        // Generate upcoming 10 days starting from today
-        generateUpcomingDates()
-        setupDatePicker(view)
-
-        // Date Picker Dialog from Calendar button
-        view.findViewById<View>(R.id.btn_open_calendar_picker)?.setOnClickListener {
-            val cal = Calendar.getInstance()
-            val dpd = android.app.DatePickerDialog(
-                requireContext(),
-                { _, year, month, dayOfMonth ->
-                    val chosenCal = Calendar.getInstance().apply {
-                        set(year, month, dayOfMonth)
-                    }
-                    val fullFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
-                    val dayOfWeekFormat = SimpleDateFormat("EEE", Locale.US)
-                    val dayOfMonthFormat = SimpleDateFormat("d", Locale.US)
-                    val monthFormat = SimpleDateFormat("MMM", Locale.US)
-
-                    val full = fullFormat.format(chosenCal.time)
-                    val dow = dayOfWeekFormat.format(chosenCal.time)
-                    val dom = dayOfMonthFormat.format(chosenCal.time)
-                    val mon = monthFormat.format(chosenCal.time)
-
-                    val existingIndex = calendarDates.indexOfFirst { it.fullDateString == full }
-                    if (existingIndex >= 0) {
-                        selectedDateIndex = existingIndex
-                        setupDatePicker(view)
-                    } else {
-                        calendarDates.add(0, CalendarDateItem(full, dow, dom, mon))
-                        selectedDateIndex = 0
-                        setupDatePicker(view)
-                    }
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            )
-            dpd.datePicker.minDate = System.currentTimeMillis() - 1000
-            dpd.show()
+        // Service summary text formatted dynamically with exact duration & price
+        val tvServiceSummary = view.findViewById<TextView>(R.id.tv_choose_service_summary)
+        val priceDisplay = if (servicePrice > 0) "Rs. ${servicePrice.toInt()}" else ""
+        val nameDisplay = if (serviceName.isNotBlank()) serviceName else "Service"
+        tvServiceSummary?.text = if (priceDisplay.isNotBlank()) {
+            "$nameDisplay · $serviceDuration min · $priceDisplay"
+        } else {
+            "$nameDisplay · $serviceDuration min"
         }
 
-        // Custom Time Picker
-        view.findViewById<View>(R.id.btn_custom_time_picker)?.setOnClickListener {
-            val cal = Calendar.getInstance()
-            val tpd = android.app.TimePickerDialog(
-                requireContext(),
-                { _, hourOfDay, minute ->
-                    val startCal = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, hourOfDay)
-                        set(Calendar.MINUTE, minute)
-                    }
-                    val endCal = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, hourOfDay)
-                        set(Calendar.MINUTE, minute + serviceDuration)
-                    }
-                    val timeFormat = SimpleDateFormat("h:mm a", Locale.US)
-                    val customSlot = "${timeFormat.format(startCal.time)}–${timeFormat.format(endCal.time)}"
-                    selectedTime = customSlot
+        // Setup Month Navigation (< and >)
+        val btnPrevMonth = view.findViewById<TextView>(R.id.btn_prev_month)
+        val btnNextMonth = view.findViewById<TextView>(R.id.btn_next_month)
 
-                    for (tv in slotViews) {
-                        tv.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
-                        tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-                        tv.setTypeface(tv.typeface, android.graphics.Typeface.NORMAL)
-                    }
-                    updateSelectedPill(view)
-                    android.widget.Toast.makeText(requireContext(), "Selected custom time: $customSlot", android.widget.Toast.LENGTH_SHORT).show()
-                },
-                cal.get(Calendar.HOUR_OF_DAY),
-                cal.get(Calendar.MINUTE),
-                false
-            )
-            tpd.show()
+        btnPrevMonth?.setOnClickListener {
+            val minCal = Calendar.getInstance()
+            if (calendarViewMonth.get(Calendar.YEAR) > minCal.get(Calendar.YEAR) ||
+                calendarViewMonth.get(Calendar.MONTH) > minCal.get(Calendar.MONTH)
+            ) {
+                calendarViewMonth.add(Calendar.MONTH, -1)
+                renderCalendar(view)
+            } else {
+                Toast.makeText(requireContext(), "Past months cannot be selected.", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        // Fetch business opening hours and generate dynamic slots
-        loadBusinessAndGenerateSlots(view)
+        btnNextMonth?.setOnClickListener {
+            calendarViewMonth.add(Calendar.MONTH, 1)
+            renderCalendar(view)
+        }
 
-        // Continue button
+        // Continue Button
         val btnContinue = view.findViewById<Button>(R.id.btn_continue)
         btnContinue?.setOnClickListener {
-            if (selectedDate.isBlank() || selectedTime.isBlank()) {
-                android.widget.Toast.makeText(requireContext(), "Please select an available date and time slot.", android.widget.Toast.LENGTH_SHORT).show()
+            if (selectedTimeSlot.isBlank()) {
+                Toast.makeText(requireContext(), "Please select an available time slot.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+
+            val chosenCal = Calendar.getInstance().apply {
+                set(selectedYear, selectedMonth, selectedDay)
+            }
+            val fullDateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
+            val formattedDate = fullDateFormat.format(chosenCal.time)
+
             val frag = ReviewBookingFragment.newInstance(
                 businessId = businessId,
                 businessName = businessName,
@@ -181,245 +153,245 @@ class ChooseDateTimeFragment : Fragment() {
                 serviceName = serviceName,
                 servicePrice = servicePrice,
                 serviceDuration = serviceDuration,
-                appointmentDate = selectedDate,
-                appointmentTime = selectedTime
+                appointmentDate = formattedDate,
+                appointmentTime = selectedTimeSlot
             )
             (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
         }
+
+        // Immediate render with initial state so calendar & slots appear instantly
+        renderCalendar(view)
+
+        // Fetch Business Hours & Active Bookings to detect slot conflicts in real-time
+        loadBusinessAndBookings(view)
     }
 
-    private fun generateUpcomingDates() {
-        calendarDates.clear()
-        val cal = Calendar.getInstance()
-        val fullFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US)
-        val dayOfWeekFormat = SimpleDateFormat("EEE", Locale.US)
-        val dayOfMonthFormat = SimpleDateFormat("d", Locale.US)
-        val monthFormat = SimpleDateFormat("MMM", Locale.US)
-
-        for (i in 0 until 10) {
-            val full = fullFormat.format(cal.time)
-            val dow = if (i == 0) "Today" else if (i == 1) "Tmrw" else dayOfWeekFormat.format(cal.time)
-            val dom = dayOfMonthFormat.format(cal.time)
-            val mon = monthFormat.format(cal.time)
-            calendarDates.add(CalendarDateItem(full, dow, dom, mon))
-            cal.add(Calendar.DAY_OF_YEAR, 1)
-        }
-    }
-
-    private fun setupDatePicker(rootView: View) {
-        val container = rootView.findViewById<LinearLayout>(R.id.ll_dates_container) ?: return
-        val tvCalendarMonth = rootView.findViewById<TextView>(R.id.tv_calendar_month)
-        val tvSelectedDateTitle = rootView.findViewById<TextView>(R.id.tv_selected_date_title)
-        val density = resources.displayMetrics.density
-
-        container.removeAllViews()
-
-        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.US)
-        tvCalendarMonth?.text = monthFormat.format(Calendar.getInstance().time)
-
-        val pillViews = mutableListOf<LinearLayout>()
-
-        fun selectDate(index: Int) {
-            selectedDateIndex = index
-            val item = calendarDates[index]
-            selectedDate = item.fullDateString
-            tvSelectedDateTitle?.text = item.fullDateString
-
-            for (i in pillViews.indices) {
-                val pill = pillViews[i]
-                val tvDay = pill.getChildAt(0) as? TextView
-                val tvDate = pill.getChildAt(1) as? TextView
-                val tvMonth = pill.getChildAt(2) as? TextView
-
-                if (i == index) {
-                    pill.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_selected)
-                    tvDay?.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                    tvDate?.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                    tvMonth?.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                } else {
-                    pill.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
-                    tvDay?.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary))
-                    tvDate?.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-                    tvMonth?.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
-                }
-            }
-
-            updateSelectedPill(rootView)
-        }
-
-        for ((index, item) in calendarDates.withIndex()) {
-            val pill = LinearLayout(requireContext()).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    (68 * density).toInt(),
-                    (80 * density).toInt()
-                ).apply {
-                    marginEnd = (10 * density).toInt()
-                }
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
-                background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
-                elevation = (1 * density)
-                val pad = (6 * density).toInt()
-                setPadding(pad, pad, pad, pad)
-                isClickable = true
-                isFocusable = true
-            }
-
-            val tvDay = TextView(requireContext()).apply {
-                text = item.dayOfWeek.uppercase()
-                textSize = 10f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(ContextCompat.getColor(requireContext(), R.color.primary))
-            }
-
-            val tvDate = TextView(requireContext()).apply {
-                text = item.dayOfMonth
-                textSize = 18f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-            }
-
-            val tvMonth = TextView(requireContext()).apply {
-                text = item.monthShort
-                textSize = 11f
-                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
-            }
-
-            pill.addView(tvDay)
-            pill.addView(tvDate)
-            pill.addView(tvMonth)
-
-            pill.setOnClickListener {
-                selectDate(index)
-            }
-
-            pillViews.add(pill)
-            container.addView(pill)
-        }
-
-        if (calendarDates.isNotEmpty()) {
-            selectDate(0)
-        }
-    }
-
-    private fun loadBusinessAndGenerateSlots(rootView: View) {
-        val tvHint = rootView.findViewById<TextView>(R.id.tv_business_hours_hint)
-
+    private fun loadBusinessAndBookings(rootView: View) {
+        // Fetch opening hours
         if (businessId.isNotBlank()) {
             BusinessRepository.getBusinessById(businessId,
                 onSuccess = { biz ->
                     if (!isAdded) return@getBusinessById
-                    val hours = biz?.openingHours?.ifBlank { "9:00 AM - 7:00 PM" } ?: "9:00 AM - 7:00 PM"
-                    tvHint?.text = hours
-                    generateTimeSlots(rootView, hours, serviceDuration)
+                    openingHoursString = biz?.openingHours?.ifBlank { "9:00 AM - 7:00 PM" } ?: "9:00 AM - 7:00 PM"
+                    fetchActiveBookings(rootView)
                 },
                 onFailure = {
-                    val defaultHours = "9:00 AM - 7:00 PM"
-                    tvHint?.text = defaultHours
-                    generateTimeSlots(rootView, defaultHours, serviceDuration)
+                    fetchActiveBookings(rootView)
                 }
             )
         } else {
-            val defaultHours = "9:00 AM - 7:00 PM"
-            tvHint?.text = defaultHours
-            generateTimeSlots(rootView, defaultHours, serviceDuration)
+            fetchActiveBookings(rootView)
         }
     }
 
+    private fun fetchActiveBookings(rootView: View) {
+        BookingRepository.getActiveBookingsForBusiness(businessId,
+            onSuccess = { bookings ->
+                if (!isAdded) return@getActiveBookingsForBusiness
+                activeBookings = bookings
+                renderCalendar(rootView)
+            },
+            onFailure = {
+                if (!isAdded) return@getActiveBookingsForBusiness
+                activeBookings = emptyList()
+                renderCalendar(rootView)
+            }
+        )
+    }
+
     /**
-     * Dynamically generates booking time slots based on business open/close hours and service duration.
-     * Decided by the business owner!
+     * Renders the calendar month view with 7 weekday columns matching the screenshot.
      */
-    private fun generateTimeSlots(rootView: View, openingHours: String, durationMin: Int) {
+    private fun renderCalendar(rootView: View) {
+        val tvMonthYear = rootView.findViewById<TextView>(R.id.tv_calendar_month_year)
+        val gridContainer = rootView.findViewById<LinearLayout>(R.id.ll_calendar_grid_container) ?: return
+        gridContainer.removeAllViews()
+
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.US)
+        tvMonthYear?.text = monthFormat.format(calendarViewMonth.time)
+
+        val density = resources.displayMetrics.density
+        val todayCal = Calendar.getInstance()
+        val currentYear = todayCal.get(Calendar.YEAR)
+        val currentMonth = todayCal.get(Calendar.MONTH)
+        val currentDay = todayCal.get(Calendar.DAY_OF_MONTH)
+
+        val workingCal = calendarViewMonth.clone() as Calendar
+        workingCal.set(Calendar.DAY_OF_MONTH, 1)
+
+        // Monday-based offset (0 = Mon, 1 = Tue, ..., 6 = Sun)
+        val firstDayOfWeek = workingCal.get(Calendar.DAY_OF_WEEK)
+        val leadingEmptyCells = (firstDayOfWeek + 5) % 7
+
+        val maxDaysInMonth = workingCal.getActualMaximum(Calendar.DAY_OF_MONTH)
+        var dayCounter = 1
+        val totalCells = leadingEmptyCells + maxDaysInMonth
+        val numRows = (totalCells + 6) / 7
+
+        val viewYear = workingCal.get(Calendar.YEAR)
+        val viewMonth = workingCal.get(Calendar.MONTH)
+
+        for (row in 0 until numRows) {
+            val rowLayout = LinearLayout(requireContext()).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    (40 * density).toInt()
+                ).apply {
+                    topMargin = (2 * density).toInt()
+                }
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
+            for (col in 0 until 7) {
+                val cellIndex = row * 7 + col
+                if (cellIndex < leadingEmptyCells || dayCounter > maxDaysInMonth) {
+                    // Empty spacer cell
+                    val spacer = View(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                    }
+                    rowLayout.addView(spacer)
+                } else {
+                    val dayNum = dayCounter
+                    val isPast = (viewYear < currentYear) ||
+                            (viewYear == currentYear && viewMonth < currentMonth) ||
+                            (viewYear == currentYear && viewMonth == currentMonth && dayNum < currentDay)
+
+                    val isSelected = (viewYear == selectedYear && viewMonth == selectedMonth && dayNum == selectedDay)
+
+                    val dayContainer = LinearLayout(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                        gravity = Gravity.CENTER
+                    }
+
+                    val tvDay = TextView(requireContext()).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            (34 * density).toInt(),
+                            (34 * density).toInt()
+                        )
+                        gravity = Gravity.CENTER
+                        text = dayNum.toString()
+                        textSize = 14f
+
+                        if (isSelected) {
+                            background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_calendar_selected)
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                            setTypeface(typeface, Typeface.BOLD)
+                        } else if (isPast) {
+                            background = null
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_placeholder))
+                            setTypeface(typeface, Typeface.NORMAL)
+                        } else {
+                            background = null
+                            setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                            setTypeface(typeface, Typeface.BOLD)
+                        }
+                    }
+
+                    if (!isPast) {
+                        dayContainer.isClickable = true
+                        dayContainer.isFocusable = true
+                        dayContainer.setOnClickListener {
+                            selectedYear = viewYear
+                            selectedMonth = viewMonth
+                            selectedDay = dayNum
+                            renderCalendar(rootView)
+                        }
+                    }
+
+                    dayContainer.addView(tvDay)
+                    rowLayout.addView(dayContainer)
+                    dayCounter++
+                }
+            }
+            gridContainer.addView(rowLayout)
+        }
+
+        // Update selected date header and available/blocked time slots
+        updateDateAndSlots(rootView)
+    }
+
+    /**
+     * Updates the date title and regenerates time slots with conflict blocking.
+     */
+    private fun updateDateAndSlots(rootView: View) {
+        val tvSelectedDateHeader = rootView.findViewById<TextView>(R.id.tv_selected_date_header)
+
+        val chosenCal = Calendar.getInstance().apply {
+            set(selectedYear, selectedMonth, selectedDay)
+        }
+        val headerFormat = SimpleDateFormat("EEEE, MMMM d", Locale.US)
+        tvSelectedDateHeader?.text = headerFormat.format(chosenCal.time)
+
+        renderTimeSlots(rootView)
+    }
+
+    /**
+     * Generates slot times and marks any slot booked by another customer as blocked / struck-through.
+     */
+    private fun renderTimeSlots(rootView: View) {
         val container = rootView.findViewById<LinearLayout>(R.id.ll_dynamic_slots_container) ?: return
         container.removeAllViews()
 
-        val safeDuration = durationMin.coerceIn(15, 240)
         val density = resources.displayMetrics.density
 
-        // Determine start and end hours (default 9:00 AM to 6:30 PM)
-        var startMin = 9 * 60 // 9:00 AM in minutes
-        var endMin = 18 * 60 + 30 // 6:30 PM in minutes
+        // Generate base slots based on business hours
+        val generatedSlots = generateSlotList(openingHoursString, serviceDuration)
 
-        val timePattern = "(\\d{1,2}):?(\\d{2})?\\s*(AM|PM|am|pm)?".toRegex()
-        val matches = timePattern.findAll(openingHours).toList()
-        if (matches.size >= 2) {
-            fun parseToMinutes(m: MatchResult): Int {
-                val hour = m.groupValues[1].toIntOrNull() ?: 9
-                val min = m.groupValues[2].toIntOrNull() ?: 0
-                val ampm = m.groupValues[3].uppercase()
-                var total = hour % 12 * 60 + min
-                if (ampm == "PM") total += 12 * 60
-                return total
-            }
-            try {
-                val parsedStart = parseToMinutes(matches[0])
-                val parsedEnd = parseToMinutes(matches[1])
-                if (parsedEnd > parsedStart && (parsedEnd - parsedStart) >= safeDuration) {
-                    startMin = parsedStart
-                    endMin = parsedEnd
-                }
-            } catch (_: Exception) {}
-        }
-
-        // Generate dynamic slots list
-        val slotsList = mutableListOf<String>()
-        var current = startMin
-        val timeFormat = SimpleDateFormat("h:mm a", Locale.US)
-        val cal = Calendar.getInstance()
-
-        while (current + safeDuration <= endMin) {
-            cal.set(Calendar.HOUR_OF_DAY, current / 60)
-            cal.set(Calendar.MINUTE, current % 60)
-            val startStr = timeFormat.format(cal.time)
-
-            cal.set(Calendar.HOUR_OF_DAY, (current + safeDuration) / 60)
-            cal.set(Calendar.MINUTE, (current + safeDuration) % 60)
-            val endStr = timeFormat.format(cal.time)
-
-            slotsList.add("$startStr–$endStr")
-            current += safeDuration
-        }
-
-        if (slotsList.isEmpty()) {
-            slotsList.add("9:00–9:45 AM")
-            slotsList.add("10:00–10:45 AM")
-            slotsList.add("11:00–11:45 AM")
-            slotsList.add("2:00–2:45 PM")
-            slotsList.add("3:00–3:45 PM")
-        }
-
-        // Render slots in rows of 2 or 3
-        slotViews.clear()
-        val columnsPerRow = if (safeDuration > 60) 2 else 3
-
-        fun selectSlot(slotText: String, clickedView: TextView) {
-            selectedTime = slotText
-            for (tv in slotViews) {
-                if (tv == clickedView) {
-                    tv.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_selected)
-                    tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                    tv.setTypeface(tv.typeface, android.graphics.Typeface.BOLD)
-                } else {
-                    tv.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
-                    tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-                    tv.setTypeface(tv.typeface, android.graphics.Typeface.NORMAL)
-                }
-            }
-            updateSelectedPill(rootView)
-        }
+        val slotViews = mutableListOf<TextView>()
+        val columnsPerRow = 3
 
         var currentRow = LinearLayout(requireContext()).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                bottomMargin = (10 * density).toInt()
+                bottomMargin = (8 * density).toInt()
             }
             orientation = LinearLayout.HORIZONTAL
         }
 
-        for ((index, slot) in slotsList.withIndex()) {
+
+        // Check if currently selected slot is still valid and not blocked
+        var firstAvailableSlot: SlotInfo? = null
+
+        for (slot in generatedSlots) {
+            val isBooked = isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, slot.startMin, slot.endMin)
+            if (!isBooked && firstAvailableSlot == null) {
+                firstAvailableSlot = slot
+            }
+        }
+
+        val currentSlotStillValid = generatedSlots.any {
+            it.displaySlot == selectedTimeSlot && !isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, it.startMin, it.endMin)
+        }
+
+        if (selectedTimeSlot.isBlank() || !currentSlotStillValid) {
+            selectedTimeSlot = firstAvailableSlot?.displaySlot.orEmpty()
+        }
+
+        fun updateSlotSelection(clickedSlot: String, clickedView: TextView) {
+            selectedTimeSlot = clickedSlot
+            for (tv in slotViews) {
+                val tagSlot = tv.tag as? String ?: continue
+                val booked = !tv.isEnabled
+
+                if (booked) continue
+
+                if (tagSlot == clickedSlot) {
+                    tv.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_selected)
+                    tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                    tv.setTypeface(tv.typeface, Typeface.BOLD)
+                } else {
+                    tv.background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
+                    tv.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                    tv.setTypeface(tv.typeface, Typeface.NORMAL)
+                }
+            }
+            updateConfirmationBanner(rootView)
+        }
+
+        for ((index, slot) in generatedSlots.withIndex()) {
             if (index > 0 && index % columnsPerRow == 0) {
                 container.addView(currentRow)
                 currentRow = LinearLayout(requireContext()).apply {
@@ -427,11 +399,14 @@ class ChooseDateTimeFragment : Fragment() {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                     ).apply {
-                        bottomMargin = (10 * density).toInt()
+                        bottomMargin = (8 * density).toInt()
                     }
                     orientation = LinearLayout.HORIZONTAL
                 }
             }
+
+            val isBooked = isSlotBooked(activeBookings, selectedYear, selectedMonth, selectedDay, slot.startMin, slot.endMin)
+            val isSelected = (!isBooked && selectedTimeSlot == slot.displaySlot)
 
             val tvSlot = TextView(requireContext()).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -441,26 +416,49 @@ class ChooseDateTimeFragment : Fragment() {
                 ).apply {
                     if (index % columnsPerRow > 0) marginStart = (8 * density).toInt()
                 }
-                background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
                 gravity = Gravity.CENTER
-                text = slot
+                text = slot.startStr // e.g. "9:00 AM", "9:45 AM", "10:30 AM" dynamic start time
                 textSize = 12f
-                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-                isClickable = true
-                isFocusable = true
-            }
+                tag = slot.displaySlot
 
-            tvSlot.setOnClickListener {
-                selectSlot(slot, tvSlot)
+                if (isBooked) {
+                    // BLOCKED / UNAVAILABLE: Struck-through text and disabled background
+                    background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_unavailable)
+                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_muted))
+                    paintFlags = paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                    isEnabled = false
+                    isClickable = false
+                } else if (isSelected) {
+                    // SELECTED: Solid purple pill with white bold text
+                    background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_selected)
+                    setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
+                    setTypeface(typeface, Typeface.BOLD)
+                    paintFlags = paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                    isEnabled = true
+                    isClickable = true
+                } else {
+                    // AVAILABLE: White pill with subtle border
+                    background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_time_slot_default)
+                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                    setTypeface(typeface, Typeface.NORMAL)
+                    paintFlags = paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                    isEnabled = true
+                    isClickable = true
+                }
+
+                if (!isBooked) {
+                    setOnClickListener {
+                        updateSlotSelection(slot.displaySlot, this)
+                    }
+                }
             }
 
             slotViews.add(tvSlot)
             currentRow.addView(tvSlot)
         }
 
-        // Add remaining row
+        // Fill remaining spaces for row alignment
         if (currentRow.childCount > 0) {
-            // Fill empty cells if needed for alignment
             while (currentRow.childCount < columnsPerRow) {
                 val spacer = View(requireContext()).apply {
                     layoutParams = LinearLayout.LayoutParams(0, (42 * density).toInt(), 1f).apply {
@@ -472,19 +470,223 @@ class ChooseDateTimeFragment : Fragment() {
             container.addView(currentRow)
         }
 
-        // Default select first available slot
-        if (slotViews.isNotEmpty()) {
-            selectSlot(slotsList[0], slotViews[0])
+        updateConfirmationBanner(rootView)
+    }
+
+    private fun updateConfirmationBanner(rootView: View) {
+        val tvSelectedPill = rootView.findViewById<TextView>(R.id.tv_selected_pill)
+        val banner = rootView.findViewById<LinearLayout>(R.id.ll_selected_confirmation_banner)
+
+        if (selectedTimeSlot.isNotBlank()) {
+            banner?.visibility = View.VISIBLE
+            val chosenCal = Calendar.getInstance().apply {
+                set(selectedYear, selectedMonth, selectedDay)
+            }
+            val shortDateFormat = SimpleDateFormat("EEE, MMM d", Locale.US)
+            val dateStr = shortDateFormat.format(chosenCal.time)
+            tvSelectedPill?.text = "Selected: $dateStr · $selectedTimeSlot"
+        } else {
+            banner?.visibility = View.VISIBLE
+            tvSelectedPill?.text = "No available slots on this date. Please choose another date."
         }
     }
 
-    private fun updateSelectedPill(rootView: View) {
-        val tvSelectedPill = rootView.findViewById<TextView>(R.id.tv_selected_pill)
-        if (selectedDate.isNotBlank() && selectedTime.isNotBlank()) {
-            val shortDate = calendarDates.getOrNull(selectedDateIndex)?.let {
-                "${it.dayOfWeek}, ${it.monthShort} ${it.dayOfMonth}"
-            } ?: selectedDate
-            tvSelectedPill?.text = "Selected: $shortDate • $selectedTime"
+    data class SlotInfo(
+        val startStr: String,
+        val endStr: String,
+        val displaySlot: String,
+        val startMin: Int,
+        val endMin: Int
+    )
+
+    /**
+     * Generates slots strictly adhering to the service duration and business operating hours.
+     * E.g. for a 45 min service: 9:00 AM, 9:45 AM, 10:30 AM, 11:15 AM...
+     * E.g. for a 30 min service: 9:00 AM, 9:30 AM, 10:00 AM, 10:30 AM...
+     */
+    private fun generateSlotList(openingHours: String, durationMin: Int): List<SlotInfo> {
+        val safeDuration = durationMin.coerceIn(15, 240)
+        var startMin = 9 * 60 // 9:00 AM
+        var endMin = 19 * 60  // 7:00 PM
+
+        val timePattern = "(\\d{1,2}):?(\\d{2})?\\s*(AM|PM|am|pm)?".toRegex()
+        val matches = timePattern.findAll(openingHours).toList()
+        if (matches.size >= 2) {
+            fun parseToMin(m: MatchResult): Int {
+                val hour = m.groupValues[1].toIntOrNull() ?: 9
+                val min = m.groupValues[2].toIntOrNull() ?: 0
+                val ampm = m.groupValues[3].uppercase()
+                var total = (hour % 12) * 60 + min
+                if (ampm == "PM") total += 12 * 60
+                return total
+            }
+            try {
+                val pStart = parseToMin(matches[0])
+                val pEnd = parseToMin(matches[1])
+                if (pEnd > pStart && (pEnd - pStart) >= safeDuration) {
+                    startMin = pStart
+                    endMin = pEnd
+                }
+            } catch (_: Exception) {}
+        }
+
+        val slots = mutableListOf<SlotInfo>()
+        var current = startMin
+        val timeFormat = SimpleDateFormat("h:mm a", Locale.US)
+        val cal = Calendar.getInstance()
+
+        while (current + safeDuration <= endMin) {
+            val sMin = current
+            val eMin = current + safeDuration
+
+            cal.set(Calendar.HOUR_OF_DAY, sMin / 60)
+            cal.set(Calendar.MINUTE, sMin % 60)
+            val startStr = timeFormat.format(cal.time)
+
+            cal.set(Calendar.HOUR_OF_DAY, eMin / 60)
+            cal.set(Calendar.MINUTE, eMin % 60)
+            val endStr = timeFormat.format(cal.time)
+
+            slots.add(SlotInfo(
+                startStr = startStr,
+                endStr = endStr,
+                displaySlot = "$startStr–$endStr",
+                startMin = sMin,
+                endMin = eMin
+            ))
+
+            // Step dynamically by the exact service duration
+            current += safeDuration
+        }
+
+        if (slots.isEmpty()) {
+            var c = 9 * 60
+            while (c + safeDuration <= 18 * 60) {
+                val sMin = c
+                val eMin = c + safeDuration
+                cal.set(Calendar.HOUR_OF_DAY, sMin / 60)
+                cal.set(Calendar.MINUTE, sMin % 60)
+                val sStr = timeFormat.format(cal.time)
+
+                cal.set(Calendar.HOUR_OF_DAY, eMin / 60)
+                cal.set(Calendar.MINUTE, eMin % 60)
+                val eStr = timeFormat.format(cal.time)
+
+                slots.add(SlotInfo(
+                    startStr = sStr,
+                    endStr = eStr,
+                    displaySlot = "$sStr–$eStr",
+                    startMin = sMin,
+                    endMin = eMin
+                ))
+                c += safeDuration
+            }
+        }
+
+        return slots
+    }
+
+    /**
+     * Determines if a slot time interval [slotStartMin, slotEndMin] on a given date
+     * conflicts with any active booking (PENDING or CONFIRMED) or is in the past.
+     */
+    private fun isSlotBooked(
+        bookings: List<Booking>,
+        year: Int,
+        month: Int, // 0-based
+        day: Int,
+        slotStartMin: Int,
+        slotEndMin: Int
+    ): Boolean {
+        val today = Calendar.getInstance()
+        val isToday = (year == today.get(Calendar.YEAR) &&
+                month == today.get(Calendar.MONTH) &&
+                day == today.get(Calendar.DAY_OF_MONTH))
+
+        // If today, block past time slots
+        if (isToday) {
+            val currentMinNow = today.get(Calendar.HOUR_OF_DAY) * 60 + today.get(Calendar.MINUTE)
+            if (slotStartMin <= currentMinNow) {
+                return true
+            }
+        }
+
+        return bookings.any { b ->
+            if (b.status != "PENDING" && b.status != "CONFIRMED") return@any false
+
+            if (!isSameDay(b.appointmentDate, year, month, day)) return@any false
+
+            val (bStart, bEnd) = parseBookingWindow(b.appointmentTime, b.durationMinutes) ?: return@any false
+
+            // Standard interval overlap: [slotStartMin, slotEndMin] overlaps with [bStart, bEnd]
+            (slotStartMin < bEnd && slotEndMin > bStart)
+        }
+    }
+
+    /**
+     * Checks if the booking's appointment date string matches the target year, month, day.
+     */
+    private fun isSameDay(bookingDateStr: String, year: Int, month: Int, day: Int): Boolean {
+        val bLower = bookingDateStr.trim().lowercase(Locale.US)
+        if (bLower.isBlank()) return false
+
+        val cal = Calendar.getInstance().apply { set(year, month, day) }
+        val fullDate = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.US).format(cal.time).lowercase(Locale.US)
+        val medDate = SimpleDateFormat("MMMM d, yyyy", Locale.US).format(cal.time).lowercase(Locale.US)
+        val shortDate = SimpleDateFormat("MMM d, yyyy", Locale.US).format(cal.time).lowercase(Locale.US)
+        val isoDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, day)
+        val slashDate1 = String.format(Locale.US, "%d/%d/%d", month + 1, day, year)
+        val slashDate2 = String.format(Locale.US, "%02d/%02d/%04d", month + 1, day, year)
+
+        if (bLower == fullDate || bLower == medDate || bLower == shortDate || bLower == isoDate || bLower == slashDate1 || bLower == slashDate2) {
+            return true
+        }
+
+        val monthShort = SimpleDateFormat("MMM", Locale.US).format(cal.time).lowercase(Locale.US)
+        val monthFull = SimpleDateFormat("MMMM", Locale.US).format(cal.time).lowercase(Locale.US)
+        val hasMonth = bLower.contains(monthShort) || bLower.contains(monthFull)
+        val hasYear = bLower.contains(year.toString())
+        val dayRegex = "(?:^|\\D)$day(?:\\D|$)".toRegex()
+        val hasDay = dayRegex.containsMatchIn(bLower)
+
+        return (hasMonth && hasDay && hasYear) || bLower.contains(isoDate)
+    }
+
+    /**
+     * Parses an appointment time string (e.g. "10:00–10:45 AM" or "2:30 PM") into start and end minute integers.
+     */
+    private fun parseBookingWindow(appointmentTime: String, durationMinutes: Int): Pair<Int, Int>? {
+        val timePattern = "(\\d{1,2}):(\\d{2})\\s*(AM|PM|am|pm)?".toRegex()
+        val matches = timePattern.findAll(appointmentTime).toList()
+        if (matches.isEmpty()) return null
+
+        val overallAmPm = if (appointmentTime.contains("PM", ignoreCase = true)) "PM" else "AM"
+
+        fun parseMatch(m: MatchResult, fallbackAmPm: String): Int {
+            var h = m.groupValues[1].toIntOrNull() ?: 9
+            val min = m.groupValues[2].toIntOrNull() ?: 0
+            val ampm = m.groupValues[3].ifBlank { fallbackAmPm }.uppercase()
+            if (ampm == "PM" && h < 12) h += 12
+            if (ampm == "AM" && h == 12) h = 0
+            return h * 60 + min
+        }
+
+        val safeDuration = if (durationMinutes > 0) durationMinutes else 30
+
+        if (matches.size >= 2) {
+            val endAmPm = matches[1].groupValues[3].ifBlank { overallAmPm }
+            val startAmPm = matches[0].groupValues[3].ifBlank {
+                val h0 = matches[0].groupValues[1].toIntOrNull() ?: 9
+                val h1 = matches[1].groupValues[1].toIntOrNull() ?: 9
+                if (endAmPm.uppercase() == "PM" && h0 > h1 && h0 != 12) "AM" else endAmPm
+            }
+            val start = parseMatch(matches[0], startAmPm)
+            val end = parseMatch(matches[1], endAmPm)
+            if (end > start) return Pair(start, end)
+            return Pair(start, start + safeDuration)
+        } else {
+            val start = parseMatch(matches[0], overallAmPm)
+            return Pair(start, start + safeDuration)
         }
     }
 }
