@@ -366,11 +366,18 @@ object BookingRepository {
 
             batch.commit().addOnSuccessListener {
                 // Notify customer
+                val notifTitle = if (newStatus.equals("COMPLETED", ignoreCase = true)) "Booking Completed · Rate Service" else "Booking $newStatus"
+                val notifMsg = if (newStatus.equals("COMPLETED", ignoreCase = true)) {
+                    "Your appointment at ${booking.businessNameSnapshot} is completed. Tap here to leave a review and rating!"
+                } else {
+                    "Your appointment at ${booking.businessNameSnapshot} is now ${newStatus.lowercase()}." + if (reason.isNotEmpty()) " Reason: $reason" else ""
+                }
+
                 NotificationRepository.createNotification(
                     NotificationItem(
                         userId = booking.customerId,
-                        title = "Booking $newStatus",
-                        message = "Your appointment at ${booking.businessNameSnapshot} is now ${newStatus.lowercase()}." + if (reason.isNotEmpty()) " Reason: $reason" else "",
+                        title = notifTitle,
+                        message = notifMsg,
                         category = "BOOKING",
                         relatedBookingId = bookingId,
                         relatedBusinessId = booking.businessId
