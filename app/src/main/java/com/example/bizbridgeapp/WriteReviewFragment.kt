@@ -1,4 +1,4 @@
-﻿package com.example.bizbridgeapp
+package com.example.bizbridgeapp
 
 import android.os.Bundle
 import android.text.Editable
@@ -26,6 +26,7 @@ class WriteReviewFragment : Fragment() {
     private var bookingId: String = ""
     private var businessId: String = ""
     private var businessName: String = ""
+    private var bookingStatus: String = ""
 
     companion object {
         fun newInstance(bookingId: String, businessId: String, businessName: String): WriteReviewFragment {
