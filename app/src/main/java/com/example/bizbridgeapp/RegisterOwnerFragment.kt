@@ -232,13 +232,14 @@ class RegisterOwnerFragment : Fragment() {
                     "fullName" to ownerName,
                     "email" to email,
                     "phone" to phone,
+                    "address" to address,
                     "role" to "BUSINESS_OWNER",
                     "profileImageUrl" to effectiveOwnerPhoto,
                     "businessId" to finalBizId,
                     "businessName" to businessName,
                     "category" to category,
-                    "latitude" to 6.9271,
-                    "longitude" to 79.8612,
+                    "latitude" to lat,
+                    "longitude" to lng,
                     "accountStatus" to "ACTIVE"
                 )
                 UserSessionManager.saveRegisteredAccount(email, password, finalProfile)
@@ -266,6 +267,7 @@ class RegisterOwnerFragment : Fragment() {
                 businessName = businessName,
                 category = category,
                 phone = phone,
+                address = address,
                 email = email,
                 password = password,
                 profileImageUri = ownerPhotoUri,
