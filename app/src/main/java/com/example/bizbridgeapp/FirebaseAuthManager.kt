@@ -78,6 +78,7 @@ object FirebaseAuthManager {
         businessName: String,
         category: String,
         phone: String = "",
+        address: String = "Colombo, Sri Lanka",
         email: String,
         password: String,
         profileImageUri: android.net.Uri? = null,
