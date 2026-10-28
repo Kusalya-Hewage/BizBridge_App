@@ -83,6 +83,9 @@ class CustomerHomeFragment : Fragment() {
                 fullName.take(2).uppercase()
             }
             tvHomeInitials?.text = initials
+        } else {
+            view.findViewById<TextView>(R.id.tv_greeting)?.text = "Welcome to BiZBridge ☀️"
+            tvHomeInitials?.text = "G"
         }
 
         val homeImageUrl = (profile?.get("profileImageUrl") as? String)?.ifBlank { null }
@@ -588,6 +591,40 @@ class CustomerHomeFragment : Fragment() {
         val user = FirebaseAuth.getInstance().currentUser
         val uid = user?.uid.orEmpty().ifEmpty { (UserSessionManager.getProfile()?.get("uid") as? String).orEmpty() }
         refreshNotificationBadge(uid)
+
+        // Refresh greeting and avatar
+        val profile = UserSessionManager.getProfile()
+        val fullName = (profile?.get("fullName") as? String).orEmpty()
+        val ivHomeAvatar = view?.findViewById<ImageView>(R.id.iv_home_avatar)
+        val tvHomeInitials = view?.findViewById<TextView>(R.id.tv_avatar_initials)
+        val tvGreeting = view?.findViewById<TextView>(R.id.tv_greeting)
+
+        if (fullName.isNotEmpty()) {
+            val firstName = fullName.split(" ").firstOrNull() ?: fullName
+            tvGreeting?.text = "Good day, $firstName ☀️"
+            val initials = if (fullName.contains(" ")) {
+                val p = fullName.split(" ")
+                "${p[0].take(1)}${p[1].take(1)}".uppercase()
+            } else {
+                fullName.take(2).uppercase()
+            }
+            tvHomeInitials?.text = initials
+        } else {
+            tvGreeting?.text = "Welcome to BiZBridge ☀️"
+            tvHomeInitials?.text = "G"
+        }
+
+        val homeImageUrl = (profile?.get("profileImageUrl") as? String)?.ifBlank { null }
+        if (!homeImageUrl.isNullOrBlank()) {
+            ivHomeAvatar?.visibility = View.VISIBLE
+            tvHomeInitials?.visibility = View.GONE
+            if (ivHomeAvatar != null) {
+                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivHomeAvatar, homeImageUrl, R.drawable.bg_avatar_circle)
+            }
+        } else {
+            ivHomeAvatar?.visibility = View.GONE
+            tvHomeInitials?.visibility = View.VISIBLE
+        }
     }
 
     private fun refreshNotificationBadge(userId: String) {
