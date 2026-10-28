@@ -38,17 +38,24 @@ class SplashFragment : Fragment() {
 
     private fun navigateToOnboarding() {
         if (!isAdded) return
+        UserSessionManager.init(requireContext())
         val currentUser = FirebaseAuthManager.getCurrentUser()
-        if (currentUser != null) {
-            UserSessionManager.init(requireContext())
-            val email = currentUser.email.orEmpty().trim().lowercase()
-            val localAcc = UserSessionManager.getRegisteredAccount(email)
-            val savedProfile = UserSessionManager.getProfile()
+        val savedProfile = UserSessionManager.getProfile()
+
+        val email = currentUser?.email.orEmpty().trim().lowercase()
+            .ifBlank { (savedProfile?.get("email") as? String).orEmpty().trim().lowercase() }
+        val uid = currentUser?.uid.orEmpty()
+            .ifBlank { (savedProfile?.get("uid") as? String).orEmpty() }
+
+        val isLoggedIn = currentUser != null || (!savedProfile.isNullOrEmpty() && email.isNotBlank())
+
+        if (isLoggedIn) {
+            val localAcc = if (email.isNotEmpty()) UserSessionManager.getRegisteredAccount(email) else null
 
             // Resolve authoritative role from registered accounts, session profile, or business ownership
             val role = (localAcc?.get("role") as? String)?.ifBlank { null }
                 ?: (savedProfile?.get("role") as? String)?.ifBlank { null }
-                ?: if (UserSessionManager.getAllBusinesses().any { it.ownerId == currentUser.uid || (email.isNotEmpty() && it.id.contains("aura", ignoreCase = true)) }) "BUSINESS_OWNER" else ""
+                ?: if (UserSessionManager.getAllBusinesses().any { it.ownerId == uid || (email.isNotEmpty() && it.id.contains("aura", ignoreCase = true)) }) "BUSINESS_OWNER" else ""
 
             if (localAcc != null && (savedProfile == null || (savedProfile["email"] as? String)?.lowercase() != email)) {
                 UserSessionManager.saveProfile(localAcc)
