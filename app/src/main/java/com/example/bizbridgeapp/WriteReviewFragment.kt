@@ -26,6 +26,7 @@ class WriteReviewFragment : Fragment() {
     private var bookingId: String = ""
     private var businessId: String = ""
     private var businessName: String = ""
+    private var bookingStatus: String = ""
 
     companion object {
         fun newInstance(bookingId: String, businessId: String, businessName: String): WriteReviewFragment {
@@ -58,7 +59,7 @@ class WriteReviewFragment : Fragment() {
             parentFragmentManager.popBackStack()
         }
 
-        // ─── Bind Real Business & Booking Details ──────────────────────
+        // â”€â”€â”€ Bind Real Business & Booking Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         val tvBusinessName = view.findViewById<TextView>(R.id.tv_business_name)
         val tvBusinessInitials = view.findViewById<TextView>(R.id.tv_business_initials)
         val tvServiceDateTime = view.findViewById<TextView>(R.id.tv_service_datetime)
@@ -90,6 +91,7 @@ class WriteReviewFragment : Fragment() {
                     if (!isAdded || b == null) return@getBookingById
                     businessId = b.businessId.ifEmpty { businessId }
                     businessName = b.businessNameSnapshot.ifEmpty { businessName }
+                    bookingStatus = b.status
                     val dt = "${b.serviceNameSnapshot} • ${b.appointmentDate}"
                     val ref = b.qrReference.ifEmpty { b.id }
                     updateBusinessUI(b.businessNameSnapshot, dt, ref, b.status)
@@ -108,6 +110,7 @@ class WriteReviewFragment : Fragment() {
                             bookingId = latest.id
                             businessId = latest.businessId
                             businessName = latest.businessNameSnapshot
+                            bookingStatus = latest.status
                             val dt = "${latest.serviceNameSnapshot} • ${latest.appointmentDate}"
                             val ref = latest.qrReference.ifEmpty { latest.id }
                             updateBusinessUI(latest.businessNameSnapshot, dt, ref, latest.status)
@@ -118,7 +121,7 @@ class WriteReviewFragment : Fragment() {
             }
         }
 
-        // ─── Star Rating Setup ─────────────────────────────────────────
+        // â”€â”€â”€ Star Rating Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         val star1 = view.findViewById<ImageView>(R.id.star_1)
         val star2 = view.findViewById<ImageView>(R.id.star_2)
         val star3 = view.findViewById<ImageView>(R.id.star_3)
@@ -140,7 +143,7 @@ class WriteReviewFragment : Fragment() {
                     star?.setImageResource(R.drawable.ic_star_outline)
                 }
             }
-            val labels = listOf("1 out of 5 · Poor", "2 out of 5 · Fair", "3 out of 5 · Good", "4 out of 5 · Excellent", "5 out of 5 · Outstanding")
+            val labels = listOf("1 out of 5 Â· Poor", "2 out of 5 Â· Fair", "3 out of 5 Â· Good", "4 out of 5 Â· Excellent", "5 out of 5 Â· Outstanding")
             tvRatingLabel?.text = labels.getOrElse(rating - 1) { "$rating out of 5" }
         }
 
@@ -150,7 +153,7 @@ class WriteReviewFragment : Fragment() {
             star?.setOnClickListener { updateRating(index + 1) }
         }
 
-        // ─── Character Counter Setup ───────────────────────────────────
+        // â”€â”€â”€ Character Counter Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         tvCharCount?.text = "${etReview?.text?.length ?: 0} / 500 characters"
         etReview?.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -165,6 +168,11 @@ class WriteReviewFragment : Fragment() {
             val user = FirebaseAuth.getInstance().currentUser
             if (user == null) {
                 Toast.makeText(requireContext(), "Please log in to submit a review.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (bookingStatus.isNotBlank() && !bookingStatus.equals("COMPLETED", ignoreCase = true)) {
+                Toast.makeText(requireContext(), "Reviews can only be submitted for completed appointments.", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 

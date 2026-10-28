@@ -11,19 +11,28 @@ import androidx.fragment.app.Fragment
 import com.example.bizbridgeapp.repository.BusinessRepository
 import com.google.firebase.firestore.FirebaseFirestore
 
+//Opening hourse manage krnn puluwan
 class OwnerAvailabilityScheduleFragment : Fragment() {
 
     private var currentBusinessId: String = ""
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
+    override fun onCreateView(//parent class eke method ekat call krnw
+        inflater: LayoutInflater,//xml layout eka view eka krnw
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_owner_availability_schedule, container, false)
+        return inflater.inflate(
+            R.layout.fragment_owner_availability_schedule,
+            container,
+            false)//view eka parent container ekktm attach nokarayi
+           //xml layout file eka haduna gnnw
+
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         currentBusinessId = BusinessRepository.getOwnerBusinessId()
