@@ -120,6 +120,10 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         }
         view.findViewById<Button>(R.id.btn_view_details)?.setOnClickListener(openDetails)
         view.findViewById<LinearLayout>(R.id.card_selected_business)?.setOnClickListener(openDetails)
+        view.findViewById<ImageView>(R.id.btn_close_card)?.setOnClickListener {
+            view.findViewById<LinearLayout>(R.id.card_selected_business)?.visibility = View.GONE
+            selectedBusiness = null
+        }
 
         // Search input text watcher
         val etSearch = view.findViewById<EditText>(R.id.et_search_map)
@@ -159,6 +163,12 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         map.uiSettings.isZoomControlsEnabled = false
         map.uiSettings.isMyLocationButtonEnabled = false
         map.uiSettings.isCompassEnabled = true
+
+        map.setOnMapClickListener {
+            val card = view?.findViewById<LinearLayout>(R.id.card_selected_business)
+            card?.visibility = View.GONE
+            selectedBusiness = null
+        }
 
         map.setOnMarkerClickListener { marker ->
             val biz = marker.tag as? Business
