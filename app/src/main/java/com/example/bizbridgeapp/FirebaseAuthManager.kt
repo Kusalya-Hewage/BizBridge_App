@@ -97,16 +97,21 @@ object FirebaseAuthManager {
 
                 fun proceedWithSave(profileImageUrl: String) {
                     val userDoc = firestore.collection("users").document(user.uid)
+                    val (resolvedLat, resolvedLng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(address)
+
                     val userProfile = hashMapOf(
                         "uid" to user.uid,
                         "fullName" to ownerName,
                         "email" to email,
                         "phone" to phone,
+                        "address" to address,
                         "role" to "BUSINESS_OWNER",
                         "profileImageUrl" to profileImageUrl,
                         "businessId" to businessId,
                         "businessName" to businessName,
                         "category" to category,
+                        "latitude" to resolvedLat,
+                        "longitude" to resolvedLng,
                         "accountStatus" to "ACTIVE",
                         "createdAt" to FieldValue.serverTimestamp(),
                         "updatedAt" to FieldValue.serverTimestamp()
@@ -119,7 +124,7 @@ object FirebaseAuthManager {
                         "name" to businessName,
                         "category" to category,
                         "description" to "Welcome to $businessName! Professional services tailored for you.",
-                        "address" to "Colombo, Sri Lanka",
+                        "address" to address,
                         "contactNumber" to phone,
                         "openingHours" to "9:00 AM - 7:00 PM",
                         "approved" to false,
@@ -129,8 +134,8 @@ object FirebaseAuthManager {
                         "trustScore" to com.example.bizbridgeapp.repository.TrustScoreRepository.getLocalTrustScoreBreakdown(businessId).totalScore,
                         "rating" to 5.0,
                         "reviewCount" to 0,
-                        "latitude" to 6.9271,
-                        "longitude" to 79.8612,
+                        "latitude" to resolvedLat,
+                        "longitude" to resolvedLng,
                         "createdAt" to FieldValue.serverTimestamp(),
                         "updatedAt" to FieldValue.serverTimestamp()
                     )
@@ -145,7 +150,9 @@ object FirebaseAuthManager {
                         "email" to email,
                         "contactNumber" to phone,
                         "category" to category,
-                        "address" to "Colombo, Sri Lanka",
+                        "address" to address,
+                        "latitude" to resolvedLat,
+                        "longitude" to resolvedLng,
                         "status" to "PENDING",
                         "submittedAt" to FieldValue.serverTimestamp(),
                         "rejectionReason" to ""
@@ -167,7 +174,7 @@ object FirebaseAuthManager {
                                 email = email,
                                 contactNumber = phone,
                                 category = category,
-                                address = "Colombo, Sri Lanka",
+                                address = address,
                                 status = "PENDING"
                             )
                         )
@@ -178,14 +185,16 @@ object FirebaseAuthManager {
                                 name = businessName,
                                 category = category,
                                 contactNumber = phone,
-                                address = "Colombo, Sri Lanka",
+                                address = address,
                                 approved = false,
                                 active = false,
                                 approvalStatus = "PENDING",
                                 verificationStatus = "PENDING",
                                 trustScore = com.example.bizbridgeapp.repository.TrustScoreRepository.getLocalTrustScoreBreakdown(businessId).totalScore,
                                 rating = 0.0,
-                                reviewCount = 0
+                                reviewCount = 0,
+                                latitude = resolvedLat,
+                                longitude = resolvedLng
                             )
                         )
                     }
