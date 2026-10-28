@@ -137,7 +137,12 @@ class OwnerCreatePromotionFragment : Fragment() {
             btnPublish?.text = if (status == "ACTIVE") "Publishing…" else "Saving Draft…"
 
             val sessionProfile = UserSessionManager.getProfile()
-            val businessName = (sessionProfile?.get("businessName") as? String)?.takeIf { it.isNotBlank() } ?: "My Business"
+            val ownerBiz = UserSessionManager.getAllBusinesses().firstOrNull {
+                it.id == currentBusinessId || it.ownerId == (sessionProfile?.get("uid") as? String)
+            }
+            val businessName = (sessionProfile?.get("businessName") as? String)?.takeIf { it.isNotBlank() }
+                ?: ownerBiz?.name?.takeIf { it.isNotBlank() && it != "My Business" }
+                ?: "BizBridge Partner"
             val targetId = if (isEditMode && promoId.isNotBlank()) promoId else "promo_${System.currentTimeMillis()}"
 
             val promotion = Promotion(
@@ -155,17 +160,10 @@ class OwnerCreatePromotionFragment : Fragment() {
                 promotion = promotion,
                 onSuccess = {
                     if (isAdded) {
-                        // If active, dispatch a notification to customers
+                        // If active, dispatch an OFFER notification to all customers
                         if (status == "ACTIVE") {
-                            com.example.bizbridgeapp.repository.NotificationRepository.createNotification(
-                                notification = com.example.bizbridgeapp.model.NotificationItem(
-                                    id = "notif_promo_${System.currentTimeMillis()}",
-                                    userId = "",
-                                    title = "Special Offer: ${promotion.title}",
-                                    message = "${promotion.businessName} has a new deal: ${promotion.discountText}",
-                                    category = "PROMOTION",
-                                    relatedBusinessId = currentBusinessId
-                                ),
+                            com.example.bizbridgeapp.repository.NotificationRepository.dispatchPromotionNotification(
+                                promotion = promotion,
                                 onSuccess = {},
                                 onFailure = {}
                             )

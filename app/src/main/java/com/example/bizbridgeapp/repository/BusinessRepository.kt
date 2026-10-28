@@ -27,9 +27,19 @@ object BusinessRepository {
 
         // Process remote businesses first, enriching with local images/fields if remote is missing them
         for (biz in remote) {
-            val normName = biz.name.trim().lowercase()
             val id = biz.id.trim()
-            val matchingLocal = localMap[id] ?: local.firstOrNull { it.name.trim().equals(biz.name.trim(), ignoreCase = true) }
+            val matchingLocal = localMap[id] ?: local.firstOrNull { it.id == id || it.name.trim().equals(biz.name.trim(), ignoreCase = true) }
+
+            // If remote or local has generic name "My Business", try to find real business name from session / application
+            val effectiveName = if (biz.name.isBlank() || biz.name.equals("My Business", ignoreCase = true) || biz.name.equals("Business", ignoreCase = true)) {
+                matchingLocal?.name?.takeIf { !it.equals("My Business", ignoreCase = true) }
+                    ?: (com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessName") as? String)?.takeIf { !it.equals("My Business", ignoreCase = true) }
+                    ?: com.example.bizbridgeapp.UserSessionManager.getAllApplications().firstOrNull { it.businessId == id }?.businessName?.takeIf { !it.equals("My Business", ignoreCase = true) }
+                    ?: biz.name
+            } else {
+                biz.name
+            }
+            val normName = effectiveName.trim().lowercase()
 
             val effectiveImg = if (!biz.imageUrl.isNullOrBlank()) biz.imageUrl else matchingLocal?.imageUrl
             val effectiveAddress = if (biz.address.isNotBlank()) biz.address else (matchingLocal?.address ?: "")
@@ -37,6 +47,7 @@ object BusinessRepository {
             val effectiveDesc = if (biz.description.isNotBlank()) biz.description else (matchingLocal?.description ?: "")
 
             val mergedBiz = biz.copy(
+                name = effectiveName,
                 imageUrl = effectiveImg,
                 address = effectiveAddress,
                 contactNumber = effectivePhone,
@@ -52,12 +63,20 @@ object BusinessRepository {
 
         // Add remaining local-only businesses
         for (biz in local) {
-            val normName = biz.name.trim().lowercase()
             val id = biz.id.trim()
+            val effectiveName = if (biz.name.isBlank() || biz.name.equals("My Business", ignoreCase = true)) {
+                (com.example.bizbridgeapp.UserSessionManager.getProfile()?.get("businessName") as? String)?.takeIf { !it.equals("My Business", ignoreCase = true) }
+                    ?: com.example.bizbridgeapp.UserSessionManager.getAllApplications().firstOrNull { it.businessId == id }?.businessName?.takeIf { !it.equals("My Business", ignoreCase = true) }
+                    ?: biz.name
+            } else {
+                biz.name
+            }
+            val normName = effectiveName.trim().lowercase()
+            val finalBiz = biz.copy(name = effectiveName)
             if (normName.isNotEmpty() && !seenNames.contains(normName) && !seenIds.contains(id)) {
                 seenNames.add(normName)
                 seenIds.add(id)
-                distinctList.add(biz)
+                distinctList.add(finalBiz)
             }
         }
         return distinctList
@@ -84,21 +103,28 @@ object BusinessRepository {
                     doc.toObject(Business::class.java)?.copy(id = doc.id)
                 }.filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
                 val merged = deduplicateBusinesses(localApproved, firestoreList)
-                if (merged.isNotEmpty()) {
-                    onSuccess(merged)
+                val nonPlaceholders = merged.filterNot { it.name.trim().equals("My Business", ignoreCase = true) }
+                val finalResult = if (nonPlaceholders.isNotEmpty()) nonPlaceholders else merged
+                if (finalResult.isNotEmpty()) {
+                    onSuccess(finalResult)
                 } else {
                     val fallback = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
                         .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
-                    onSuccess(fallback)
+                    val realFallback = fallback.filterNot { it.name.trim().equals("My Business", ignoreCase = true) }
+                    onSuccess(if (realFallback.isNotEmpty()) realFallback else fallback)
                 }
             }
             .addOnFailureListener { e ->
-                if (localApproved.isNotEmpty()) {
+                val nonPlaceholders = localApproved.filterNot { it.name.trim().equals("My Business", ignoreCase = true) }
+                if (nonPlaceholders.isNotEmpty()) {
+                    onSuccess(nonPlaceholders)
+                } else if (localApproved.isNotEmpty()) {
                     onSuccess(localApproved)
                 } else {
                     val fallback = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses()
                         .filter { it.id != "biz_juniper_studio" && it.id != "biz_oliver_beauty" && it.id != "biz_daily_cut" && it.id != "biz_lotus_wellness" }
-                    onSuccess(fallback)
+                    val realFallback = fallback.filterNot { it.name.trim().equals("My Business", ignoreCase = true) }
+                    onSuccess(if (realFallback.isNotEmpty()) realFallback else fallback)
                 }
             }
     }
@@ -123,12 +149,15 @@ object BusinessRepository {
                 val combined = deduplicateBusinesses(allLocal, firestoreList)
 
                 val validBusinesses = combined.filter { it.approvalStatus != "REJECTED" }
-                val result = if (validBusinesses.isNotEmpty()) validBusinesses else combined
+                // Exclude dummy "My Business" entries if custom businesses exist
+                val realBusinesses = validBusinesses.filterNot { it.name.trim().equals("My Business", ignoreCase = true) }
+                val result = if (realBusinesses.isNotEmpty()) realBusinesses else validBusinesses
                 onSuccess(result)
             }
             .addOnFailureListener {
                 val validLocal = allLocal.filter { it.approvalStatus != "REJECTED" }
-                val result = if (validLocal.isNotEmpty()) validLocal else allLocal
+                val realLocal = validLocal.filterNot { it.name.trim().equals("My Business", ignoreCase = true) }
+                val result = if (realLocal.isNotEmpty()) realLocal else validLocal
                 onSuccess(result)
             }
     }

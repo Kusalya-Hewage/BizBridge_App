@@ -120,6 +120,10 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         }
         view.findViewById<Button>(R.id.btn_view_details)?.setOnClickListener(openDetails)
         view.findViewById<LinearLayout>(R.id.card_selected_business)?.setOnClickListener(openDetails)
+        view.findViewById<ImageView>(R.id.btn_close_card)?.setOnClickListener {
+            view.findViewById<LinearLayout>(R.id.card_selected_business)?.visibility = View.GONE
+            selectedBusiness = null
+        }
 
         // Search input text watcher
         val etSearch = view.findViewById<EditText>(R.id.et_search_map)
@@ -159,6 +163,12 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         map.uiSettings.isZoomControlsEnabled = false
         map.uiSettings.isMyLocationButtonEnabled = false
         map.uiSettings.isCompassEnabled = true
+
+        map.setOnMapClickListener {
+            val card = view?.findViewById<LinearLayout>(R.id.card_selected_business)
+            card?.visibility = View.GONE
+            selectedBusiness = null
+        }
 
         map.setOnMarkerClickListener { marker ->
             val biz = marker.tag as? Business
@@ -294,9 +304,15 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
             card?.visibility = View.GONE
             selectedBusiness = null
         } else {
-            val toSelect = selectedBusiness?.takeIf { b -> businesses.any { it.id == b.id } } ?: businesses.first()
-            displayBusinessCard(toSelect)
-            if (userLocation == null) {
+            val toSelect = selectedBusiness?.takeIf { b -> businesses.any { it.id == b.id } }
+            if (toSelect != null) {
+                displayBusinessCard(toSelect)
+            } else {
+                card?.visibility = View.GONE
+            }
+
+            if (userLocation == null || !LocationUtils.isWithinSriLanka(userLocation!!.latitude, userLocation!!.longitude)) {
+                val focusBiz = toSelect ?: businesses.first()
                 if (businesses.size > 1) {
                     val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
                     for (b in businesses) {
@@ -305,11 +321,11 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
                     try {
                         map.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 120))
                     } catch (_: Exception) {
-                        val pos = getEffectiveCoordinates(toSelect)
+                        val pos = getEffectiveCoordinates(focusBiz)
                         map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 13f))
                     }
                 } else {
-                    val pos = getEffectiveCoordinates(toSelect)
+                    val pos = getEffectiveCoordinates(focusBiz)
                     map.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 14f))
                 }
             }
@@ -324,8 +340,10 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         val tvName = view?.findViewById<TextView>(R.id.tv_business_name)
         val tvCategoryDist = view?.findViewById<TextView>(R.id.tv_business_category_dist)
         val tvRating = view?.findViewById<TextView>(R.id.tv_business_rating)
+        val tvTrust = view?.findViewById<TextView>(R.id.tv_business_trust_score)
         val tvPrice = view?.findViewById<TextView>(R.id.tv_business_price)
         val badgeVerified = view?.findViewById<View>(R.id.badge_verified)
+        val ivThumb = view?.findViewById<ImageView>(R.id.iv_business_thumb)
 
         tvName?.text = biz.name
 
@@ -335,12 +353,29 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
             Location.distanceBetween(loc.latitude, loc.longitude, coords.latitude, coords.longitude, results)
             val km = results[0] / 1000f
             String.format(Locale.US, "%.1f km away", km)
-        } ?: (biz.address.split(",").lastOrNull()?.trim()?.takeIf { it.isNotBlank() } ?: biz.address.takeIf { it.isNotBlank() } ?: "Sri Lanka")
+        } ?: (biz.address.takeIf { it.isNotBlank() } ?: "Sri Lanka")
 
         tvCategoryDist?.text = "${biz.category} • $distanceText"
+
         val ratingVal = if (biz.rating != null && biz.rating > 0.0) String.format(Locale.US, "%.1f", biz.rating) else "5.0"
-        tvRating?.text = "$ratingVal (${biz.reviewCount} reviews)"
-        tvPrice?.text = biz.price ?: "From $25"
+        val reviewCountStr = if (biz.reviewCount > 0) "(${biz.reviewCount} reviews)" else "(New)"
+        tvRating?.text = "$ratingVal $reviewCountStr"
+
+        tvTrust?.text = "Trust: ${biz.trustScore}/100"
+
+        val services = com.example.bizbridgeapp.UserSessionManager.getServicesForBusiness(biz.id)
+        val minPrice = services.map { it.price }.filter { it > 0.0 }.minOrNull()
+        val priceText = when {
+            minPrice != null && minPrice > 0 -> "From Rs. ${minPrice.toInt()}"
+            !biz.price.isNullOrBlank() -> if (biz.price.startsWith("Rs") || biz.price.startsWith("From")) biz.price else "From ${biz.price}"
+            else -> "Services Available"
+        }
+        tvPrice?.text = priceText
+
+        if (ivThumb != null) {
+            com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivThumb, biz.imageUrl, R.drawable.img_salon_interior)
+        }
+
         badgeVerified?.visibility = if (biz.approved || biz.verificationStatus.equals("VERIFIED", ignoreCase = true)) View.VISIBLE else View.GONE
     }
 }

@@ -27,6 +27,15 @@ class CustomerProfileFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         imagePickerHelper = ImagePickerHelper(this) { uri ->
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val cachedProfile = UserSessionManager.getProfile()
+            val isUserLoggedIn = currentUser != null || (!cachedProfile.isNullOrEmpty() && (cachedProfile["email"] as? String).orEmpty().isNotBlank())
+
+            if (!isUserLoggedIn) {
+                Toast.makeText(requireContext(), "Please log in to upload a profile photo.", Toast.LENGTH_SHORT).show()
+                return@ImagePickerHelper
+            }
+
             val ivPhoto = view?.findViewById<ImageView>(R.id.iv_profile_photo)
             val tvInitials = view?.findViewById<TextView>(R.id.tv_avatar_initials)
             val progressBar = view?.findViewById<ProgressBar>(R.id.profile_progress)
@@ -36,8 +45,7 @@ class CustomerProfileFragment : Fragment() {
             tvInitials?.visibility = View.GONE
             ivPhoto?.setImageURI(uri)
 
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            val uid = currentUser?.uid ?: (UserSessionManager.getProfile()?.get("uid") as? String) ?: "customer"
+            val uid = currentUser?.uid ?: (cachedProfile?.get("uid") as? String) ?: "customer_${System.currentTimeMillis()}"
 
             // 2. Save locally into persistent internal storage and Base64
             val localPath = com.example.bizbridgeapp.utils.ImageLoader.saveProfileImageLocally(requireContext(), uri, uid)
@@ -47,30 +55,34 @@ class CustomerProfileFragment : Fragment() {
             // 3. Immediately update local session
             UserSessionManager.updateProfileImage(effectivePath)
 
-            // 4. Upload to Firebase Storage and update Firestore
-            progressBar?.visibility = View.VISIBLE
-            FirebaseAuthManager.uploadProfileImage(
-                uid = uid,
-                uri = uri,
-                onSuccess = { downloadUrl ->
-                    activity?.runOnUiThread {
-                        progressBar?.visibility = View.GONE
-                        UserSessionManager.updateProfileImage(downloadUrl)
-                        if (ivPhoto != null && isAdded) {
-                            com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, downloadUrl, R.drawable.bg_score_badge)
+            // 4. Upload to Firebase Storage and update Firestore if user exists in Firebase
+            if (currentUser != null) {
+                progressBar?.visibility = View.VISIBLE
+                FirebaseAuthManager.uploadProfileImage(
+                    uid = uid,
+                    uri = uri,
+                    onSuccess = { downloadUrl ->
+                        activity?.runOnUiThread {
+                            progressBar?.visibility = View.GONE
+                            UserSessionManager.updateProfileImage(downloadUrl)
+                            if (ivPhoto != null && isAdded) {
+                                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, downloadUrl, R.drawable.bg_score_badge)
+                            }
+                            FirebaseAuthManager.updateUserProfileImage(uid, downloadUrl)
+                            Toast.makeText(requireContext(), "Profile photo updated successfully!", Toast.LENGTH_SHORT).show()
                         }
-                        FirebaseAuthManager.updateUserProfileImage(uid, downloadUrl)
-                        Toast.makeText(requireContext(), "Profile photo updated successfully!", Toast.LENGTH_SHORT).show()
+                    },
+                    onFailure = {
+                        activity?.runOnUiThread {
+                            progressBar?.visibility = View.GONE
+                            FirebaseAuthManager.updateUserProfileImage(uid, effectivePath)
+                            Toast.makeText(requireContext(), "Profile photo updated!", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                },
-                onFailure = {
-                    activity?.runOnUiThread {
-                        progressBar?.visibility = View.GONE
-                        FirebaseAuthManager.updateUserProfileImage(uid, effectivePath)
-                        Toast.makeText(requireContext(), "Profile photo updated!", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
+                )
+            } else {
+                Toast.makeText(requireContext(), "Profile photo updated!", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -87,103 +99,250 @@ class CustomerProfileFragment : Fragment() {
 
         val ivPhoto = view.findViewById<ImageView>(R.id.iv_profile_photo)
         val tvInitials = view.findViewById<TextView>(R.id.tv_avatar_initials)
+        val tvName = view.findViewById<TextView>(R.id.tv_profile_name)
+        val tvEmail = view.findViewById<TextView>(R.id.tv_profile_email)
+        val tvPhone = view.findViewById<TextView>(R.id.tv_profile_phone)
+        val btnEditProfile = view.findViewById<Button>(R.id.btn_edit_profile)
+        val btnLogout = view.findViewById<TextView>(R.id.btn_logout)
+        val progressBar = view.findViewById<ProgressBar>(R.id.profile_progress)
+        val rowPasswordSecurity = view.findViewById<LinearLayout>(R.id.row_password_security)
+        val rowAdminWorkspace = view.findViewById<LinearLayout>(R.id.row_admin_workspace)
 
-        // Instant bind from local session cache
+        // Determine if user is logged in via Firebase Auth or session
+        val currentUser = FirebaseAuth.getInstance().currentUser
         val cachedProfile = UserSessionManager.getProfile()
-        val cachedName = (cachedProfile?.get("fullName") as? String).orEmpty()
-        if (cachedName.isNotEmpty()) {
-            view.findViewById<TextView>(R.id.tv_profile_name)?.text = cachedName
-            val initials = cachedName.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase()
-            tvInitials?.text = if (initials.isNotEmpty()) initials else "MC"
-        }
-        val cachedEmail = (cachedProfile?.get("email") as? String).orEmpty()
-        if (cachedEmail.isNotEmpty()) {
-            view.findViewById<TextView>(R.id.tv_profile_email)?.text = cachedEmail
-        }
-        val cachedPhone = (cachedProfile?.get("phone") as? String).orEmpty()
-        if (cachedPhone.isNotEmpty()) {
-            view.findViewById<TextView>(R.id.tv_profile_phone)?.text = cachedPhone
-        }
-        val cachedImageUrl = (cachedProfile?.get("profileImageUrl") as? String)?.ifBlank { null }
-        if (!cachedImageUrl.isNullOrBlank()) {
-            ivPhoto?.visibility = View.VISIBLE
-            tvInitials?.visibility = View.GONE
-            if (ivPhoto != null) {
-                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, cachedImageUrl, R.drawable.bg_score_badge)
+        val isUserLoggedIn = currentUser != null || (!cachedProfile.isNullOrEmpty() && (cachedProfile["email"] as? String).orEmpty().isNotBlank())
+
+        // Header buttons
+        view.findViewById<ImageView>(R.id.btn_back)?.setOnClickListener {
+            if (parentFragmentManager.backStackEntryCount > 0) {
+                parentFragmentManager.popBackStack()
+            } else {
+                (activity as? MainActivity)?.navigateTo(CustomerHomeFragment(), addToBackStack = false)
             }
-        } else {
-            ivPhoto?.visibility = View.GONE
-            tvInitials?.visibility = View.VISIBLE
         }
 
-        // Profile Avatar Click -> Choose Camera or Gallery
-        view.findViewById<View>(R.id.btn_edit_avatar)?.setOnClickListener {
-            imagePickerHelper.showImageSourceDialog("Update Profile Photo")
-        }
-
-        // Bell
         view.findViewById<ImageView>(R.id.btn_bell)?.setOnClickListener {
             (activity as? MainActivity)?.navigateTo(NotificationsFragment(), addToBackStack = true)
         }
 
-        // Edit Profile
-        view.findViewById<Button>(R.id.btn_edit_profile)?.setOnClickListener {
-            val currentUser = FirebaseAuth.getInstance().currentUser ?: return@setOnClickListener
-            val context = requireContext()
+        if (isUserLoggedIn) {
+            // ─── LOGGED IN STATE ──────────────────────────────────────────
+            val cachedName = (cachedProfile?.get("fullName") as? String).orEmpty()
+                .ifEmpty { currentUser?.displayName.orEmpty().ifEmpty { "Customer" } }
+            val cachedEmail = (cachedProfile?.get("email") as? String).orEmpty()
+                .ifEmpty { currentUser?.email.orEmpty() }
+            val cachedPhone = (cachedProfile?.get("phone") as? String).orEmpty()
+            val cachedImageUrl = (cachedProfile?.get("profileImageUrl") as? String)?.ifBlank { null }
 
-            val layout = LinearLayout(context).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(50, 40, 50, 10)
+            tvName?.text = cachedName
+            val initials = if (cachedName.contains(" ")) {
+                cachedName.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase()
+            } else {
+                cachedName.take(2).uppercase()
             }
-            val inputName = android.widget.EditText(context).apply {
-                hint = "Full Name"
-                setText(view.findViewById<TextView>(R.id.tv_profile_name)?.text)
-            }
-            val inputPhone = android.widget.EditText(context).apply {
-                hint = "Phone Number"
-                setText(view.findViewById<TextView>(R.id.tv_profile_phone)?.text)
-            }
-            layout.addView(inputName)
-            layout.addView(inputPhone)
+            tvInitials?.text = if (initials.isNotEmpty()) initials else "CU"
 
-            androidx.appcompat.app.AlertDialog.Builder(context)
-                .setTitle("Edit Profile")
-                .setView(layout)
-                .setPositiveButton("Save") { _, _ ->
-                    val newName = inputName.text.toString().trim()
-                    val newPhone = inputPhone.text.toString().trim()
-                    if (newName.isEmpty()) {
-                        Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
-                        return@setPositiveButton
-                    }
-                    val existingImg = (UserSessionManager.getProfile()?.get("profileImageUrl") as? String).orEmpty()
-                    val sessionRole = (UserSessionManager.getProfile()?.get("role") as? String)?.ifBlank { "CUSTOMER" } ?: "CUSTOMER"
-                    val updated = com.example.bizbridgeapp.model.UserProfile(
-                        uid = currentUser.uid,
-                        fullName = newName,
-                        email = currentUser.email.orEmpty(),
-                        phone = newPhone,
-                        role = sessionRole,
-                        profileImageUrl = existingImg,
-                        accountStatus = "ACTIVE"
-                    )
-                    UserRepository.createOrUpdate(updated,
-                        onSuccess = {
-                            view.findViewById<TextView>(R.id.tv_profile_name)?.text = newName
-                            view.findViewById<TextView>(R.id.tv_profile_phone)?.text = newPhone
-                            UserSessionManager.saveProfile(updated.toMap())
-                            Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-                        },
-                        onFailure = { e ->
-                            Toast.makeText(context, "Update failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    )
+            tvEmail?.text = cachedEmail
+
+            if (cachedPhone.isNotEmpty()) {
+                tvPhone?.visibility = View.VISIBLE
+                tvPhone?.text = cachedPhone
+            } else {
+                tvPhone?.visibility = View.GONE
+            }
+
+            if (!cachedImageUrl.isNullOrBlank()) {
+                ivPhoto?.visibility = View.VISIBLE
+                tvInitials?.visibility = View.GONE
+                if (ivPhoto != null) {
+                    com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, cachedImageUrl, R.drawable.bg_score_badge)
                 }
-                .setNegativeButton("Cancel", null)
-                .show()
+            } else {
+                ivPhoto?.visibility = View.GONE
+                tvInitials?.visibility = View.VISIBLE
+            }
+
+            view.findViewById<View>(R.id.btn_edit_avatar)?.setOnClickListener {
+                imagePickerHelper.showImageSourceDialog("Update Profile Photo")
+            }
+
+            btnEditProfile?.text = "Edit Profile"
+            btnEditProfile?.setOnClickListener {
+                val context = requireContext()
+                val effectiveUid = currentUser?.uid ?: (cachedProfile?.get("uid") as? String).orEmpty()
+                    .ifEmpty { "cust_${System.currentTimeMillis()}" }
+
+                val layout = LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(50, 40, 50, 10)
+                }
+                val inputName = android.widget.EditText(context).apply {
+                    hint = "Full Name"
+                    setText(tvName?.text)
+                }
+                val inputPhone = android.widget.EditText(context).apply {
+                    hint = "Phone Number"
+                    setText(if (tvPhone?.visibility == View.VISIBLE) tvPhone?.text else "")
+                }
+                layout.addView(inputName)
+                layout.addView(inputPhone)
+
+                androidx.appcompat.app.AlertDialog.Builder(context)
+                    .setTitle("Edit Profile")
+                    .setView(layout)
+                    .setPositiveButton("Save") { _, _ ->
+                        val newName = inputName.text.toString().trim()
+                        val newPhone = inputPhone.text.toString().trim()
+                        if (newName.isEmpty()) {
+                            Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
+                            return@setPositiveButton
+                        }
+                        val existingImg = (UserSessionManager.getProfile()?.get("profileImageUrl") as? String).orEmpty()
+                        val sessionRole = (UserSessionManager.getProfile()?.get("role") as? String)?.ifBlank { "CUSTOMER" } ?: "CUSTOMER"
+                        val updated = com.example.bizbridgeapp.model.UserProfile(
+                            uid = effectiveUid,
+                            fullName = newName,
+                            email = cachedEmail,
+                            phone = newPhone,
+                            role = sessionRole,
+                            profileImageUrl = existingImg,
+                            accountStatus = "ACTIVE"
+                        )
+                        tvName?.text = newName
+                        if (newPhone.isNotEmpty()) {
+                            tvPhone?.visibility = View.VISIBLE
+                            tvPhone?.text = newPhone
+                        } else {
+                            tvPhone?.visibility = View.GONE
+                        }
+                        UserSessionManager.saveProfile(updated.toMap())
+                        val registered = UserSessionManager.getRegisteredAccount(cachedEmail)
+                        if (registered != null) {
+                            val pass = registered["password"] as? String ?: ""
+                            UserSessionManager.saveRegisteredAccount(cachedEmail, pass, updated.toMap())
+                        }
+
+                        if (currentUser != null) {
+                            UserRepository.createOrUpdate(updated, onSuccess = {}, onFailure = {})
+                        }
+                        Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+
+            btnLogout?.visibility = View.VISIBLE
+            btnLogout?.text = "Log Out"
+            btnLogout?.setOnClickListener {
+                FirebaseAuthManager.signOut()
+                UserSessionManager.clear()
+                // Clear entire Fragment backstack so pressing Back does not reload logged-in session
+                activity?.supportFragmentManager?.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+                Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
+                (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = false)
+            }
+
+            rowPasswordSecurity?.visibility = if (cachedEmail.isNotEmpty()) View.VISIBLE else View.GONE
+            rowPasswordSecurity?.setOnClickListener {
+                if (cachedEmail.isNotEmpty()) {
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Password & Security")
+                        .setMessage("Send a password reset email to $cachedEmail?")
+                        .setPositiveButton("Send Reset Email") { _, _ ->
+                            FirebaseAuthManager.sendPasswordReset(cachedEmail,
+                                onSuccess = {
+                                    Toast.makeText(requireContext(), "Password reset email sent to $cachedEmail", Toast.LENGTH_LONG).show()
+                                },
+                                onFailure = { e ->
+                                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
+            }
+
+            val sessionRole = (cachedProfile?.get("role") as? String).orEmpty()
+            val isAdminUser = sessionRole.equals("ADMIN", ignoreCase = true)
+            rowAdminWorkspace?.visibility = if (isAdminUser) View.VISIBLE else View.GONE
+            rowAdminWorkspace?.setOnClickListener {
+                (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
+            }
+
+            // Sync with Firestore if cloud account exists
+            if (currentUser != null) {
+                progressBar?.visibility = View.VISIBLE
+                UserRepository.getProfile(currentUser.uid,
+                    onSuccess = { profile ->
+                        if (!isAdded) return@getProfile
+                        tvName?.text = profile.fullName
+                        tvEmail?.text = profile.email
+                        if (profile.phone.isNotEmpty()) {
+                            tvPhone?.visibility = View.VISIBLE
+                            tvPhone?.text = profile.phone
+                        }
+                        val effectiveImageUrl = if (profile.profileImageUrl.isNotBlank()) {
+                            profile.profileImageUrl
+                        } else {
+                            (UserSessionManager.getProfile()?.get("profileImageUrl") as? String).orEmpty()
+                        }
+                        if (effectiveImageUrl.isNotBlank()) {
+                            ivPhoto?.visibility = View.VISIBLE
+                            tvInitials?.visibility = View.GONE
+                            if (ivPhoto != null) {
+                                com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, effectiveImageUrl, R.drawable.bg_score_badge)
+                            }
+                            UserSessionManager.updateProfileImage(effectiveImageUrl)
+                        }
+                        val updatedMap = profile.toMap().toMutableMap()
+                        if (effectiveImageUrl.isNotBlank()) {
+                            updatedMap["profileImageUrl"] = effectiveImageUrl
+                        }
+                        UserSessionManager.saveProfile(updatedMap)
+                        progressBar?.visibility = View.GONE
+                    },
+                    onFailure = {
+                        if (isAdded) {
+                            progressBar?.visibility = View.GONE
+                        }
+                    }
+                )
+            } else {
+                progressBar?.visibility = View.GONE
+            }
+
+        } else {
+            // ─── GUEST STATE (NOT LOGGED IN) ──────────────────────────────
+            progressBar?.visibility = View.GONE
+            tvName?.text = "Guest Customer"
+            tvEmail?.text = "Sign in to manage your appointments & profile"
+            tvPhone?.visibility = View.GONE
+            tvInitials?.text = "G"
+            ivPhoto?.visibility = View.GONE
+            tvInitials?.visibility = View.VISIBLE
+
+            view.findViewById<View>(R.id.btn_edit_avatar)?.setOnClickListener {
+                Toast.makeText(requireContext(), "Please log in to add a profile photo.", Toast.LENGTH_SHORT).show()
+            }
+
+            btnEditProfile?.text = "Log In / Register"
+            btnEditProfile?.setOnClickListener {
+                (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = true)
+            }
+
+            btnLogout?.visibility = View.VISIBLE
+            btnLogout?.text = "Log In to Account"
+            btnLogout?.setOnClickListener {
+                (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = true)
+            }
+
+            rowPasswordSecurity?.visibility = View.GONE
+            rowAdminWorkspace?.visibility = View.GONE
         }
 
-        // Settings items
+        // Common settings items
         view.findViewById<LinearLayout>(R.id.row_notifications_pref)?.setOnClickListener {
             val options = arrayOf("Booking updates & reminders", "Promotions & local deals")
             val checked = booleanArrayOf(true, true)
@@ -199,33 +358,6 @@ class CustomerProfileFragment : Fragment() {
                 .show()
         }
 
-        view.findViewById<LinearLayout>(R.id.row_password_security)?.setOnClickListener {
-            val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
-            if (email.isNotEmpty()) {
-                androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Password & Security")
-                    .setMessage("Send a password reset email to $email?")
-                    .setPositiveButton("Send Reset Email") { _, _ ->
-                        FirebaseAuthManager.sendPasswordReset(email,
-                            onSuccess = {
-                                Toast.makeText(requireContext(), "Password reset email sent to $email", Toast.LENGTH_LONG).show()
-                            },
-                            onFailure = { e ->
-                                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                    }
-                    .setNegativeButton("Cancel", null)
-                    .show()
-            }
-        }
-        val sessionRole = UserSessionManager.getProfile()?.get("role") as? String
-        val isAdminUser = sessionRole.equals("ADMIN", ignoreCase = true)
-        val adminRow = view.findViewById<LinearLayout>(R.id.row_admin_workspace)
-        adminRow?.visibility = if (isAdminUser) View.VISIBLE else View.GONE
-        adminRow?.setOnClickListener {
-            (activity as? MainActivity)?.navigateTo(AdminOverviewFragment(), addToBackStack = true)
-        }
         view.findViewById<LinearLayout>(R.id.row_privacy_policy)?.setOnClickListener {
             Toast.makeText(requireContext(), "BizBridge connects customers to local verified businesses. Your data is protected.", Toast.LENGTH_LONG).show()
         }
@@ -234,57 +366,6 @@ class CustomerProfileFragment : Fragment() {
         }
         view.findViewById<LinearLayout>(R.id.row_help_support)?.setOnClickListener {
             Toast.makeText(requireContext(), "Help & Support: support@bizbridge.local", Toast.LENGTH_SHORT).show()
-        }
-
-        // Fetch and display profile
-        val progressBar = view.findViewById<ProgressBar>(R.id.profile_progress)
-        progressBar?.visibility = View.VISIBLE
-
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser == null) {
-            progressBar?.visibility = View.GONE
-            (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = false)
-        } else {
-            UserRepository.getProfile(currentUser.uid,
-                onSuccess = { profile ->
-                    view.findViewById<TextView>(R.id.tv_profile_name)?.text = profile.fullName
-                    view.findViewById<TextView>(R.id.tv_profile_email)?.text = profile.email
-                    view.findViewById<TextView>(R.id.tv_profile_phone)?.text = profile.phone
-
-                    val effectiveImageUrl = if (profile.profileImageUrl.isNotBlank()) {
-                        profile.profileImageUrl
-                    } else {
-                        (UserSessionManager.getProfile()?.get("profileImageUrl") as? String).orEmpty()
-                    }
-
-                    if (effectiveImageUrl.isNotBlank()) {
-                        ivPhoto?.visibility = View.VISIBLE
-                        tvInitials?.visibility = View.GONE
-                        if (ivPhoto != null) {
-                            com.example.bizbridgeapp.utils.ImageLoader.loadImage(ivPhoto, effectiveImageUrl, R.drawable.bg_score_badge)
-                        }
-                        UserSessionManager.updateProfileImage(effectiveImageUrl)
-                    }
-
-                    val updatedMap = profile.toMap().toMutableMap()
-                    if (effectiveImageUrl.isNotBlank()) {
-                        updatedMap["profileImageUrl"] = effectiveImageUrl
-                    }
-                    UserSessionManager.saveProfile(updatedMap)
-                    progressBar?.visibility = View.GONE
-                },
-                onFailure = { e ->
-                    progressBar?.visibility = View.GONE
-                    Toast.makeText(requireContext(), e.localizedMessage ?: "Failed to load profile", Toast.LENGTH_LONG).show()
-                })
-        }
-
-        // Log out - single clean implementation
-        view.findViewById<TextView>(R.id.btn_logout)?.setOnClickListener {
-            FirebaseAuthManager.signOut()
-            UserSessionManager.clear()
-            Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
-            (activity as? MainActivity)?.navigateTo(LoginFragment(), addToBackStack = false)
         }
 
         // Bottom Navigation

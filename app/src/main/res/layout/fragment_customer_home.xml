@@ -182,7 +182,7 @@
                             android:layout_height="match_parent"
                             android:fontFamily="@font/inter_variable"
                             android:gravity="center"
-                            android:text="MD"
+                            android:text="G"
                             android:textColor="@color/primary"
                             android:textSize="11sp"
                             android:textStyle="bold" />
