@@ -67,6 +67,11 @@ object PromotionRepository {
         // Always save locally immediately
         UserSessionManager.savePromotion(toSave)
 
+        // If the promotion is active, immediately dispatch notification to customers
+        if (toSave.status == "ACTIVE") {
+            NotificationRepository.dispatchPromotionNotification(toSave)
+        }
+
         val docRef = db.collection(PROMOTIONS).document(docId)
         docRef.set(toSave.toMap())
             .addOnSuccessListener { onSuccess() }
@@ -79,8 +84,12 @@ object PromotionRepository {
     /** Toggle or change promotion status (ACTIVE, PAUSED, EXPIRED) */
     fun togglePromotionStatus(promotionId: String, status: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit = {}) {
         val local = UserSessionManager.getAllPromotions().firstOrNull { it.id == promotionId }
-        if (local != null) {
-            UserSessionManager.savePromotion(local.copy(status = status))
+        val updated = local?.copy(status = status)
+        if (updated != null) {
+            UserSessionManager.savePromotion(updated)
+            if (status == "ACTIVE") {
+                NotificationRepository.dispatchPromotionNotification(updated)
+            }
         }
 
         db.collection(PROMOTIONS).document(promotionId)

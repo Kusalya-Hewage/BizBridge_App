@@ -986,7 +986,11 @@ object UserSessionManager {
     fun markAllNotificationsRead(userId: String) {
         if (!::prefs.isInitialized) return
         val current = getAllNotifications().map {
-            if (it.userId == userId) it.copy(isRead = true) else it
+            if (it.userId == userId || it.userId == "ALL" || it.userId.isBlank() || it.category.equals("OFFER", ignoreCase = true) || it.category.equals("PROMOTION", ignoreCase = true)) {
+                it.copy(isRead = true)
+            } else {
+                it
+            }
         }
         val array = JSONArray()
         for (n in current) {
