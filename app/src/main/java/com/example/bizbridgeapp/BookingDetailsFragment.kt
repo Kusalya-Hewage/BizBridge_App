@@ -90,16 +90,28 @@ class BookingDetailsFragment : Fragment() {
                         view.findViewById<TextView>(R.id.tv_booking_id)?.text = b.qrReference.ifEmpty { b.id }
                         view.findViewById<TextView>(R.id.tv_booking_status)?.text = b.status
                         view.findViewById<TextView>(R.id.tv_business_name)?.text = b.businessNameSnapshot
-                        view.findViewById<TextView>(R.id.tv_service_info)?.text = "${b.serviceNameSnapshot} • $${b.priceAtBooking.toInt()}"
+                        view.findViewById<TextView>(R.id.tv_service_info)?.text = "${b.serviceNameSnapshot} â€¢ $${b.priceAtBooking.toInt()}"
                         view.findViewById<TextView>(R.id.tv_appointment_date)?.text = b.appointmentDate
-                        view.findViewById<TextView>(R.id.tv_appointment_time)?.text = "${b.appointmentTime} • ${b.durationMinutes} min"
+                        view.findViewById<TextView>(R.id.tv_appointment_time)?.text = "${b.appointmentTime} â€¢ ${b.durationMinutes} min"
                         if (b.businessAddressSnapshot.isNotEmpty()) {
                             view.findViewById<TextView>(R.id.tv_address)?.text = b.businessAddressSnapshot
                         }
 
-                        // Disable cancel if already completed or cancelled
-                        if (b.status == "COMPLETED" || b.status == "CANCELLED") {
-                            view.findViewById<Button>(R.id.btn_cancel_booking)?.isEnabled = false
+                        val btnCancel = view.findViewById<Button>(R.id.btn_cancel_booking)
+                        if (b.status.equals("COMPLETED", ignoreCase = true)) {
+                            btnCancel?.text = "Write a review"
+                            btnCancel?.isEnabled = true
+                            btnCancel?.setOnClickListener {
+                                val frag = WriteReviewFragment.newInstance(
+                                    bookingId = b.id,
+                                    businessId = b.businessId,
+                                    businessName = b.businessNameSnapshot
+                                )
+                                (activity as? MainActivity)?.navigateTo(frag, addToBackStack = true)
+                            }
+                        } else if (b.status.equals("CANCELLED", ignoreCase = true)) {
+                            btnCancel?.isEnabled = false
+                            btnCancel?.text = "Booking Cancelled"
                         }
                     }
                 },
