@@ -241,14 +241,17 @@ object UserSessionManager {
                     email = normalizedEmail,
                     contactNumber = phone,
                     category = category,
-                    address = existingBiz?.address?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka",
+                    val effectiveAddr = existingBiz?.address?.ifBlank { (profileData["address"] as? String)?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka" } ?: ((profileData["address"] as? String)?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka")
+                    address = effectiveAddr,
                     status = approvalStatus
                 )
             )
 
-            val hash = Math.abs(bizId.hashCode())
-            val defaultLat = existingBiz?.latitude ?: (6.9271 + ((hash % 100) - 50) * 0.0003)
-            val defaultLng = existingBiz?.longitude ?: (79.8612 + (((hash / 100) % 100) - 50) * 0.0003)
+            val (defaultLat, defaultLng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(
+                address = effectiveAddr,
+                existingLat = existingBiz?.latitude ?: (profileData["latitude"] as? Double),
+                existingLng = existingBiz?.longitude ?: (profileData["longitude"] as? Double)
+            )
 
             saveBusiness(
                 Business(
@@ -257,7 +260,7 @@ object UserSessionManager {
                     name = bizName,
                     category = category,
                     contactNumber = phone,
-                    address = existingBiz?.address?.ifBlank { "Colombo, Sri Lanka" } ?: "Colombo, Sri Lanka",
+                    address = effectiveAddr,
                     imageUrl = imageUrl,
                     approved = isApproved,
                     active = isActive,
@@ -491,10 +494,14 @@ object UserSessionManager {
         if (!::prefs.isInitialized) return
         val currentList = getAllBusinesses().toMutableList()
         val index = currentList.indexOfFirst { it.id == businessId }
+        val effectiveAddr = if (address.isNotBlank()) address else if (index >= 0) currentList[index].address else "Colombo, Sri Lanka"
+        val (resolvedLat, resolvedLng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(
+            address = effectiveAddr,
+            existingLat = if (index >= 0) currentList[index].latitude else null,
+            existingLng = if (index >= 0) currentList[index].longitude else null
+        )
+
         if (index >= 0) {
-            val hash = Math.abs(businessId.hashCode())
-            val defaultLat = currentList[index].latitude ?: (6.9271 + ((hash % 100) - 50) * 0.0003)
-            val defaultLng = currentList[index].longitude ?: (79.8612 + (((hash / 100) % 100) - 50) * 0.0003)
             currentList[index] = currentList[index].copy(
                 approved = approved,
                 active = active,
@@ -502,16 +509,13 @@ object UserSessionManager {
                 verificationStatus = verificationStatus,
                 name = if (name.isNotBlank()) name else currentList[index].name,
                 category = if (category.isNotBlank()) category else currentList[index].category,
-                address = if (address.isNotBlank()) address else currentList[index].address,
+                address = effectiveAddr,
                 ownerId = if (ownerId.isNotBlank()) ownerId else currentList[index].ownerId,
                 contactNumber = if (contactNumber.isNotBlank()) contactNumber else currentList[index].contactNumber,
-                latitude = defaultLat,
-                longitude = defaultLng
+                latitude = resolvedLat,
+                longitude = resolvedLng
             )
         } else {
-            val hash = Math.abs(businessId.hashCode())
-            val defaultLat = 6.9271 + ((hash % 100) - 50) * 0.0003
-            val defaultLng = 79.8612 + (((hash / 100) % 100) - 50) * 0.0003
             val existing = currentList.firstOrNull { it.id == businessId || (name.isNotBlank() && it.name.trim().equals(name.trim(), ignoreCase = true)) }
             currentList.add(
                 0,
@@ -520,7 +524,7 @@ object UserSessionManager {
                     ownerId = ownerId,
                     name = name.ifBlank { "Approved Business" },
                     category = category.ifBlank { "Services" },
-                    address = address.ifBlank { "Colombo, Sri Lanka" },
+                    address = effectiveAddr,
                     contactNumber = contactNumber,
                     approved = approved,
                     active = active,
@@ -529,8 +533,8 @@ object UserSessionManager {
                     trustScore = existing?.trustScore ?: 0,
                     rating = existing?.rating ?: 0.0,
                     reviewCount = existing?.reviewCount ?: 0,
-                    latitude = defaultLat,
-                    longitude = defaultLng
+                    latitude = resolvedLat,
+                    longitude = resolvedLng
                 )
             )
         }
