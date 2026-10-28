@@ -163,11 +163,16 @@ class WriteReviewFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // â”€â”€â”€ Submit Review Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Submit Review Button ──────────────────────────────────────
         btnSubmit?.setOnClickListener {
             val user = FirebaseAuth.getInstance().currentUser
             if (user == null) {
                 Toast.makeText(requireContext(), "Please log in to submit a review.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (bookingStatus.isNotBlank() && !bookingStatus.equals("COMPLETED", ignoreCase = true)) {
+                Toast.makeText(requireContext(), "Reviews can only be submitted for completed appointments.", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
 
