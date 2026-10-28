@@ -91,7 +91,8 @@ class WriteReviewFragment : Fragment() {
                     if (!isAdded || b == null) return@getBookingById
                     businessId = b.businessId.ifEmpty { businessId }
                     businessName = b.businessNameSnapshot.ifEmpty { businessName }
-                    val dt = "${b.serviceNameSnapshot} â€¢ ${b.appointmentDate}"
+                    bookingStatus = b.status
+                    val dt = "${b.serviceNameSnapshot} • ${b.appointmentDate}"
                     val ref = b.qrReference.ifEmpty { b.id }
                     updateBusinessUI(b.businessNameSnapshot, dt, ref, b.status)
                 },
@@ -109,7 +110,8 @@ class WriteReviewFragment : Fragment() {
                             bookingId = latest.id
                             businessId = latest.businessId
                             businessName = latest.businessNameSnapshot
-                            val dt = "${latest.serviceNameSnapshot} â€¢ ${latest.appointmentDate}"
+                            bookingStatus = latest.status
+                            val dt = "${latest.serviceNameSnapshot} • ${latest.appointmentDate}"
                             val ref = latest.qrReference.ifEmpty { latest.id }
                             updateBusinessUI(latest.businessNameSnapshot, dt, ref, latest.status)
                         }
