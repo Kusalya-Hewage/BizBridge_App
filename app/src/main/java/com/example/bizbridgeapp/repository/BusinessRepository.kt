@@ -508,8 +508,15 @@ object BusinessRepository {
 
         // 2. Immediately persist to local Business cache
         val existingBiz = com.example.bizbridgeapp.UserSessionManager.getAllBusinesses().firstOrNull { it.id == targetId }
-        val defaultLat = existingBiz?.latitude ?: 6.9271
-        val defaultLng = existingBiz?.longitude ?: 79.8612
+        val (resolvedLat, resolvedLng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(
+            address = address,
+            existingLat = existingBiz?.latitude,
+            existingLng = existingBiz?.longitude
+        )
+        sessionProfile["latitude"] = resolvedLat
+        sessionProfile["longitude"] = resolvedLng
+        com.example.bizbridgeapp.UserSessionManager.saveProfile(sessionProfile)
+
         val updatedBiz = Business(
             id = targetId,
             ownerId = currentUid ?: existingBiz?.ownerId ?: "owner_bizbridge",
@@ -527,8 +534,8 @@ object BusinessRepository {
             trustScore = existingBiz?.trustScore ?: (sessionProfile["trustScore"] as? Int) ?: TrustScoreRepository.getLocalTrustScoreBreakdown(targetId).totalScore,
             rating = existingBiz?.rating ?: 0.0,
             reviewCount = existingBiz?.reviewCount ?: 0,
-            latitude = defaultLat,
-            longitude = defaultLng
+            latitude = resolvedLat,
+            longitude = resolvedLng
         )
         com.example.bizbridgeapp.UserSessionManager.saveBusiness(updatedBiz)
 
@@ -552,7 +559,9 @@ object BusinessRepository {
             "category" to category,
             "phone" to contactNumber,
             "address" to address,
-            "description" to description
+            "description" to description,
+            "latitude" to resolvedLat,
+            "longitude" to resolvedLng
         )
         if (!imageUrl.isNullOrBlank()) {
             acctUpdates["imageUrl"] = imageUrl
@@ -571,8 +580,8 @@ object BusinessRepository {
             "address" to address,
             "contactNumber" to contactNumber,
             "openingHours" to openingHours,
-            "latitude" to defaultLat,
-            "longitude" to defaultLng,
+            "latitude" to resolvedLat,
+            "longitude" to resolvedLng,
             "updatedAt" to FieldValue.serverTimestamp()
         )
         if (!currentUid.isNullOrBlank()) {
