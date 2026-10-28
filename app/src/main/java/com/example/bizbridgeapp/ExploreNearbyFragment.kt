@@ -364,7 +364,7 @@ class ExploreNearbyFragment : Fragment(), OnMapReadyCallback {
         tvTrust?.text = "Trust: ${biz.trustScore}/100"
 
         val services = com.example.bizbridgeapp.UserSessionManager.getServicesForBusiness(biz.id)
-        val minPrice = services.mapNotNull { it.price.toDoubleOrNull() ?: it.price.replace(Regex("[^0-9.]"), "").toDoubleOrNull() }.minOrNull()
+        val minPrice = services.map { it.price }.filter { it > 0.0 }.minOrNull()
         val priceText = when {
             minPrice != null && minPrice > 0 -> "From Rs. ${minPrice.toInt()}"
             !biz.price.isNullOrBlank() -> if (biz.price.startsWith("Rs") || biz.price.startsWith("From")) biz.price else "From ${biz.price}"
