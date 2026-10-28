@@ -230,6 +230,7 @@ class NotificationsFragment : Fragment() {
         notificationsListener = NotificationRepository.listenToNotificationsForUser(uid) { list ->
             if (!isAdded) return@listenToNotificationsForUser
             userNotifications = list
+            renderNotifications()
             if (list.isEmpty() && uid.isNotBlank()) {
                 // If there are real customer bookings, automatically generate corresponding notifications
                 BookingRepository.getBookingsForCustomer(uid,
