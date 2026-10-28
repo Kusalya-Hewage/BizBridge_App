@@ -576,23 +576,18 @@ class CustomerHomeFragment : Fragment() {
         val b0 = activeBusinesses[0]
         val tvNearbyDistance = view?.findViewById<TextView>(R.id.tv_nearby_distance) ?: return
 
-        val lat = b0.latitude
-        val lng = b0.longitude
-        if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
-            val bizLoc = Location("").apply {
-                latitude = lat
-                longitude = lng
-            }
-            val meters = location.distanceTo(bizLoc)
-            val distStr = if (meters < 1000) {
-                "${meters.toInt()}m away"
-            } else {
-                String.format(Locale.US, "%.1f km away", meters / 1000f)
-            }
-            tvNearbyDistance.text = if (b0.address.isNotBlank()) "${b0.address} · $distStr" else distStr
-        } else if (b0.address.isNotBlank()) {
-            tvNearbyDistance.text = b0.address
+        val (lat, lng) = com.example.bizbridgeapp.utils.LocationUtils.resolveCoordinates(b0.address, b0.latitude, b0.longitude)
+        val bizLoc = Location("").apply {
+            latitude = lat
+            longitude = lng
         }
+        val meters = location.distanceTo(bizLoc)
+        val distStr = if (meters < 1000) {
+            "${meters.toInt()}m away"
+        } else {
+            String.format(Locale.US, "%.1f km away", meters / 1000f)
+        }
+        tvNearbyDistance.text = if (b0.address.isNotBlank()) "${b0.address} · $distStr" else distStr
     }
 
     override fun onDestroyView() {
